@@ -1,7 +1,7 @@
 #pragma once
-#include ".\Soulworker Packet\SWPacket.h"
 #include ".\Damage Meter\Damage Meter.h"
 #include ".\Damage Meter\MonsterList.h"
+#include ".\Soulworker Packet\SWPacket.h"
 
 #pragma pack(push, 1)
 
@@ -15,18 +15,18 @@ typedef struct _SWPACKETDAMAGE_MONSTER {
 	float _unknownF1; // 4
 	float _unknownF2; // 4
 	float _unknownF3; // 4
-	BYTE _unknown02[22]; // 0605
+	BYTE _unknown02[30]; // 0605
 }SWPACKETDAMAGE_MONSTER;
 
 typedef struct _SWPACKETDAMAGE_PLAYER {
 	uint32_t _playerID;
 	BYTE _unknown01[20]; //0403new
-	uint32_t _skillID; 
+	uint32_t _skillID;
 	BYTE _unknown02[2]; //0403new
 	unsigned short _maxCombo;
 	BYTE _unknown03[2]; //0403new
 }SWPACKETDAMAGE_PLAYER;
-	
+
 #pragma pack(pop)
 
 class SWPacketDamage : public SWPacket {

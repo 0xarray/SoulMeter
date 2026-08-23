@@ -7,15 +7,29 @@
 
 #include <MinHook.h>
 
+#include <cstring>
+
 ByteQueue g_frameQueue(8 * 1024 * 1024);
 volatile LONG g_pingMs = 0;
 volatile LONG64 g_lastPingAt = 0;
 
 namespace {
 
-// SoulWorker64.dll, imagebase 0x180000000, GB build 01317b93.
-// Only the netMgr global is pinned; both targets come from its vtable.
-constexpr uint32_t kNetMgrRva = 0x195D178;
+// Slot-1 mode dispatcher. Verified unique in both the GB (01317b93) and KR
+// (b3e171a2) clients, which share this netcode.
+constexpr uint8_t kSerializeSig[] = {
+    0x49, 0x8B, 0xC0,               // mov  rax, r8
+    0x83, 0xFA, 0x01,               // cmp  edx, 1
+    0x75, 0x10,                     // jnz  plaintext
+    0x4C, 0x8B, 0x44, 0x24, 0x28,   // mov  r8, [rsp+28]
+    0x49, 0x8B, 0xD1,               // mov  rdx, r9
+    0x48, 0x8B, 0xC8,               // mov  rcx, rax
+    0xE9, 0x00, 0x00, 0x00, 0x00,   // jmp  serialise_obfuscated
+    0x85, 0xD2,                     // test edx, edx
+    0x75, 0x10,                     // jnz  fail
+    0x4C, 0x8B, 0x44, 0x24, 0x28,   // mov  r8, [rsp+28]
+};
+constexpr char kSerializeMask[] = "xxxxxxxxxxxxxxxxxxxx????xxxxxxxxx";
 
 constexpr int kVtSlotSerialize = 1;
 constexpr int kVtSlotDeobf = 2;
@@ -108,8 +122,66 @@ char __fastcall HookedSerialize(void* self, uint32_t mode, uint8_t* pkt, uint8_t
     return ret;
 }
 
-// Fails until the game has loaded its module and constructed the netMgr; the
-// vtable pointer and both slots must land inside the module for that to pass.
+struct Section {
+    uint8_t* data;
+    size_t size;
+};
+
+// The module is mapped, so spans come from VirtualSize rather than the raw size.
+bool FindSection(uint8_t* base, const char* name, Section* out) {
+    IMAGE_DOS_HEADER* dos = (IMAGE_DOS_HEADER*)base;
+    if (dos->e_magic != IMAGE_DOS_SIGNATURE)
+        return false;
+    IMAGE_NT_HEADERS64* nt = (IMAGE_NT_HEADERS64*)(base + dos->e_lfanew);
+    if (nt->Signature != IMAGE_NT_SIGNATURE)
+        return false;
+
+    IMAGE_SECTION_HEADER* sec = IMAGE_FIRST_SECTION(nt);
+    for (unsigned i = 0; i < nt->FileHeader.NumberOfSections; i++) {
+        char n[9] = { 0 };
+        memcpy(n, sec[i].Name, 8);
+        if (strcmp(n, name) != 0)
+            continue;
+        out->data = base + sec[i].VirtualAddress;
+        out->size = sec[i].Misc.VirtualSize;
+        return out->size != 0;
+    }
+    return false;
+}
+
+// Null unless the pattern occurs exactly once; ambiguity means the signature
+// stopped identifying the function, so fail rather than hook the wrong one.
+const uint8_t* FindUnique(const Section& s, const uint8_t* pat, const char* mask) {
+    size_t len = strlen(mask);
+    if (mask[0] != 'x' || s.size < len)
+        return nullptr;
+
+    const uint8_t* found = nullptr;
+    const uint8_t* p = s.data;
+    const uint8_t* limit = s.data + s.size - len;
+    while (p <= limit) {
+        p = (const uint8_t*)memchr(p, pat[0], (size_t)(limit - p) + 1);
+        if (!p)
+            break;
+        bool hit = true;
+        for (size_t k = 1; k < len; k++) {
+            if (mask[k] == 'x' && p[k] != pat[k]) {
+                hit = false;
+                break;
+            }
+        }
+        if (hit) {
+            if (found)
+                return nullptr;
+            found = p;
+        }
+        p++;
+    }
+    return found;
+}
+
+// Fails until SoulWorker64.dll is loaded. Both targets come out of the image
+// itself, so this does not wait on the netMgr being constructed.
 bool ResolveTargets(void** outSerialize, void** outDeobf) {
     HMODULE game = GetModuleHandleW(L"SoulWorker64.dll");
     if (!game)
@@ -125,17 +197,38 @@ bool ResolveTargets(void** outSerialize, void** outDeobf) {
             return false;
         uint8_t* imgEnd = base + nt->OptionalHeader.SizeOfImage;
 
-        void** netMgr = (void**)(base + kNetMgrRva);
-        uint8_t** vtbl = (uint8_t**)*netMgr;
-        if ((uint8_t*)vtbl < base || (uint8_t*)vtbl >= imgEnd)
+        Section text = { nullptr, 0 };
+        Section rdata = { nullptr, 0 };
+        if (!FindSection(base, ".text", &text) || !FindSection(base, ".rdata", &rdata))
             return false;
 
-        uint8_t* fnSer = vtbl[kVtSlotSerialize];
+        const uint8_t* fnSer = FindUnique(text, kSerializeSig, kSerializeMask);
+        if (!fnSer)
+            return false;
+
+        // The dispatcher is only reached through the vtable, so the lone
+        // .rdata pointer to it fixes the table.
+        const uint8_t* slot = nullptr;
+        for (size_t off = 0; off + sizeof(void*) <= rdata.size; off += sizeof(void*)) {
+            if (*(const uint8_t* const*)(rdata.data + off) != fnSer)
+                continue;
+            if (slot)
+                return false;
+            slot = rdata.data + off;
+        }
+        if (!slot)
+            return false;
+
+        uint8_t** vtbl = (uint8_t**)(slot - kVtSlotSerialize * sizeof(void*));
+        if ((uint8_t*)vtbl < rdata.data ||
+            (uint8_t*)(vtbl + kVtSlotDeobf + 1) > rdata.data + rdata.size)
+            return false;
+
         uint8_t* fnDeo = vtbl[kVtSlotDeobf];
-        if (fnSer < base || fnSer >= imgEnd || fnDeo < base || fnDeo >= imgEnd)
+        if (fnDeo < base || fnDeo >= imgEnd)
             return false;
 
-        *outSerialize = fnSer;
+        *outSerialize = (void*)fnSer;
         *outDeobf = fnDeo;
         return true;
     } __except (EXCEPTION_EXECUTE_HANDLER) {

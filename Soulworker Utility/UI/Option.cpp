@@ -118,7 +118,7 @@ bool UiOption::ShowTableOption() {
 	ImGuiStyle& style = ImGui::GetStyle();
 	float width = ImGui::CalcItemWidth();
 	ImGui::PushItemWidth(width - 200.0f);
-	ImGui::SliderInt("Timer accuracy", &DAMAGEMETER.mswideness, 1, 3);
+	ImGui::SliderInt(LANGMANAGER.GetText("STR_OPTION_TIMER_ACCURACY").data(), &DAMAGEMETER.mswideness, 1, 3);
 	ImGui::SliderFloat(LANGMANAGER.GetText("STR_OPTION_WINDOW_BORDER_SIZE").data(), &_windowBorderSize, 0.0f, 1.0f, "%.0f");
 	style.WindowBorderSize = _windowBorderSize;
 	ImGui::SliderFloat2(LANGMANAGER.GetText("STR_OPTION_CELL_PADDING").data(), (float*)&_cellPadding, 0.0f, 20.0f, "%.0f");
@@ -173,18 +173,99 @@ bool UiOption::ShowTableOption() {
 	return TRUE;
 }
 
+static const char* GetHotkeyActionText(const char* name) {
+
+	if (strcmp(name, u8"Clear") == 0)
+		return LANGMANAGER.GetText("STR_OPTION_HOTKEY_ACTION_CLEAR").data();
+
+	if (strcmp(name, u8"Toogle") == 0)
+		return LANGMANAGER.GetText("STR_OPTION_HOTKEY_ACTION_TOGGLE").data();
+
+	return name;
+}
+
 bool UiOption::ShowHotkeySetting() {
 
-	char text[4096] = { 0 };
-	sprintf_s(text, "%s%s%s%s%s",
-		LANGMANAGER.GetText("STR_OPTION_HOTKEY_DESC_1").data(),
-		LANGMANAGER.GetText("STR_OPTION_HOTKEY_DESC_2").data(),
-		LANGMANAGER.GetText("STR_OPTION_HOTKEY_DESC_3").data(),
-		LANGMANAGER.GetText("STR_OPTION_HOTKEY_DESC_4").data(),
-		LANGMANAGER.GetText("STR_OPTION_HOTKEY_DESC_5").data()
-	);
+	ImGuiStyle& style = ImGui::GetStyle();
 
-	ImGui::Text(text);
+	// Column offsets are measured from the widest label so nothing overlaps in any language.
+	float actionWidth = ImGui::CalcTextSize(LANGMANAGER.GetText("STR_OPTION_HOTKEY_COL_ACTION").data()).x;
+	float bindWidth = ImMax(
+		ImGui::CalcTextSize(LANGMANAGER.GetText("STR_OPTION_HOTKEY_PRESS_KEY").data()).x,
+		ImGui::CalcTextSize(LANGMANAGER.GetText("STR_OPTION_HOTKEY_UNBOUND").data()).x);
+
+	for (auto itr = HOTKEY.begin(); itr != HOTKEY.end(); itr++) {
+
+		char combo[HOTKEY_COMBO_LEN] = { 0 };
+		HotKey::GetComboName((*itr)->GetKey(), (*itr)->GetKeyCount(), combo, HOTKEY_COMBO_LEN);
+
+		actionWidth = ImMax(actionWidth, ImGui::CalcTextSize(GetHotkeyActionText((*itr)->GetName())).x);
+		bindWidth = ImMax(bindWidth, ImGui::CalcTextSize(combo).x);
+	}
+
+	const float bindOffset = actionWidth + style.ItemSpacing.x * 2.0f;
+	const float bindButtonWidth = bindWidth + style.FramePadding.x * 4.0f;
+
+	ImGui::TextWrapped("%s", LANGMANAGER.GetText("STR_OPTION_HOTKEY_HELP").data());
+	ImGui::Separator();
+
+	ImGui::TextDisabled("%s", LANGMANAGER.GetText("STR_OPTION_HOTKEY_COL_ACTION").data());
+	ImGui::SameLine(bindOffset);
+	ImGui::TextDisabled("%s", LANGMANAGER.GetText("STR_OPTION_HOTKEY_COL_KEY").data());
+
+	int id = 0;
+
+	for (auto itr = HOTKEY.begin(); itr != HOTKEY.end(); itr++) {
+
+		AutoHotKey* hotkey = *itr;
+
+		ImGui::PushID(id++);
+
+		ImGui::AlignTextToFramePadding();
+		ImGui::Text("%s", GetHotkeyActionText(hotkey->GetName()));
+		ImGui::SameLine(bindOffset);
+
+		char label[HOTKEY_COMBO_LEN + 32] = { 0 };
+
+		if (HOTKEY.isCapturing(hotkey)) {
+			sprintf_s(label, "%s###HotKeyBind", LANGMANAGER.GetText("STR_OPTION_HOTKEY_PRESS_KEY").data());
+		}
+		else if (hotkey->GetKeyCount() < 1) {
+			sprintf_s(label, "%s###HotKeyBind", LANGMANAGER.GetText("STR_OPTION_HOTKEY_UNBOUND").data());
+		}
+		else {
+			char combo[HOTKEY_COMBO_LEN] = { 0 };
+			HotKey::GetComboName(hotkey->GetKey(), hotkey->GetKeyCount(), combo, HOTKEY_COMBO_LEN);
+			sprintf_s(label, "%s###HotKeyBind", combo);
+		}
+
+		if (ImGui::Button(label, ImVec2(bindButtonWidth, 0.0f))) {
+			if (HOTKEY.isCapturing(hotkey))
+				HOTKEY.CancelCapture();
+			else
+				HOTKEY.BeginCapture(hotkey);
+		}
+
+		if (!hotkey->isDefaultKey()) {
+			ImGui::SameLine(0.0f, style.ItemInnerSpacing.x);
+			if (ImGui::Button(LANGMANAGER.GetText("STR_OPTION_HOTKEY_RESET").data())) {
+				hotkey->ResetKey();
+				SaveOption(TRUE);
+			}
+		}
+
+		ImGui::PopID();
+	}
+
+	if (HOTKEY.isCapturing())
+		ImGui::TextWrapped("%s", LANGMANAGER.GetText("STR_OPTION_HOTKEY_CAPTURING").data());
+
+	if (HOTKEY.ConsumeChanged())
+		SaveOption(TRUE);
+
+	ImGui::Separator();
+	ImGui::Text(LANGMANAGER.GetText("STR_OPTION_HOTKEY_DESC_5").data());
+
 	ImGui::TextAlignCenter::SetTextAlignCenter();
 	{
 		ImGui::Text("\n\n\n\nRainy");
@@ -405,6 +486,9 @@ void UiOption::OpenOption() {
 				ShowHotkeySetting();
 				ImGui::EndTabItem();
 			}
+			else if (HOTKEY.isCapturing()) {
+				HOTKEY.CancelCapture();
+			}
 
 			ImGui::EndTabBar();
 		}
@@ -413,6 +497,8 @@ void UiOption::OpenOption() {
 }
 
 void UiOption::Init() {
+
+	HOTKEY.Init();
 
 	if (!GetOption()) {
 		SetBasicOption();
@@ -903,11 +989,8 @@ bool UiOption::GetOption() {
 		LogInstance.WriteLog("Read Hotkey %s, key1 = %d, key2 = %d, key3 = %d", name2, key[0], key[1], key[2]);
 #endif
 		
-		if (strcmp(name2, u8"Toogle") == 0)
-			HOTKEY.InsertHotkeyToogle(key[0], key[1], key[2]);
-		else if (strcmp(name2, u8"Clear") == 0)
-			HOTKEY.InsertHotkeyStop(key[0], key[1], key[2]);
-		
+		HOTKEY.SetKeyByName(name2, key[0], key[1], key[2]);
+
 	} while (TRUE);
 
 	return TRUE;
@@ -1047,9 +1130,6 @@ bool UiOption::SetBasicOption() {
 	_textColor = style.Colors[0];
 	_windowBg = style.Colors[2];
 
-	HOTKEY.InsertHotkeyToogle(DIK_LCONTROL, DIK_END, -1);
-	HOTKEY.InsertHotkeyStop(DIK_LCONTROL, DIK_DELETE, -1);
-
 	Helper();
 	PLAYERTABLE.ResizeTalbe();
 	_open = TRUE;
@@ -1162,6 +1242,8 @@ void UiOption::Update() {
 
 	if (_open)
 		OpenOption();
+	else if (HOTKEY.isCapturing())
+		HOTKEY.CancelCapture();
 
 #if DEBUG_COLUMN_WIDTH == 1
 	for (int i = 0; i < 8; i++)

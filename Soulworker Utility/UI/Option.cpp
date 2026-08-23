@@ -614,8 +614,12 @@ bool UiOption::GetOption() {
 		attr->QueryIntValue(&_teamTA_LF_Mode);
 
 	attr = ele->FindAttribute("LogFile");
-	if (attr != nullptr)
+	if (attr != nullptr) {
 		attr->QueryboolValue(&LogInstance.shouldLog);
+		// shouldLog alone never opens the file
+		if (LogInstance.shouldLog)
+			LogInstance.Enable();
+	}
 
 	attr = ele->FindAttribute("LogMonsterStats");
 	if (attr != nullptr)

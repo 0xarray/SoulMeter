@@ -11,7 +11,7 @@ SWPacketInInfoMonster::SWPacketInInfoMonster(SWHEADER* swheader, BYTE* data) : S
 void SWPacketInInfoMonster::Do() {
 
 	BYTE counts = *(_data + sizeof(SWHEADER));
-	short offset = sizeof(SWHEADER) + sizeof(counts);
+	uint32_t offset = sizeof(SWHEADER) + sizeof(counts);
 	for (BYTE i = 0; i < counts; i++) {
 
 		SWPACKET_IN_INFO_MONSTER1* pktHeader = (SWPACKET_IN_INFO_MONSTER1*)(_data + offset);

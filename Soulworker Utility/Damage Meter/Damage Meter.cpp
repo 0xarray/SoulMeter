@@ -121,7 +121,8 @@ void SWDamageMeter::AddDamage(uint32_t id, uint64_t totalDMG, uint64_t soulstone
 		if (rankMap.find(usWorldID) == rankMap.end())
 		{
 			// suspend by boss is god mode
-			if ((bIsListMap && bIsListBoss) || (db != NULL && db->_type == 4))
+			if ((bIsListMap && bIsListBoss) || (db != NULL && db->_type == 4)
+				|| godModeIdList.find(monsterId) != godModeIdList.end())
 			{
 				DAMAGEMETER.Suspend();
 				return;

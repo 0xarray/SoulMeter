@@ -238,6 +238,7 @@
     <ClInclude Include="Soulworker Packet\SWPacketWorldChange.h" />
     <ClInclude Include="Soulworker Packet\SWSPacketMyDodgeUsed.h" />
     <ClInclude Include="Soulworker Packet\SWSPacketMySkillUsed.h" />
+    <ClInclude Include="Soulworker Packet\HookCommand.h" />
     <ClInclude Include="Soulworker Packet\Injector.h" />
     <ClInclude Include="Soulworker Packet\PipeReceiver.h" />
     <ClInclude Include="stb_image.h" />
@@ -324,6 +325,7 @@
     <ClCompile Include="Soulworker Packet\SWPacketWorldChange.cpp" />
     <ClCompile Include="Soulworker Packet\SWSPacketMyDodgeUsed.cpp" />
     <ClCompile Include="Soulworker Packet\SWSPacketMySkillUsed.cpp" />
+    <ClCompile Include="Soulworker Packet\HookCommand.cpp" />
     <ClCompile Include="Soulworker Packet\Injector.cpp" />
     <ClCompile Include="Soulworker Packet\PipeReceiver.cpp" />
     <ClCompile Include="Third Party\imgui\backends\imgui_impl_dx11.cpp" />

@@ -9,6 +9,9 @@
 
 #include <cstring>
 
+#include "gamecmd.h"
+#include "peutil.h"
+
 ByteQueue g_frameQueue(8 * 1024 * 1024);
 volatile LONG g_pingMs = 0;
 volatile LONG64 g_lastPingAt = 0;
@@ -102,6 +105,8 @@ char __fastcall HookedDeobf(void* self, uint32_t mode, uint32_t seq, uint8_t* sr
 char __fastcall HookedSerialize(void* self, uint32_t mode, uint8_t* pkt, uint8_t* dst,
                                 uint16_t* outLen) {
     char ret = OrigSerialize(self, mode, pkt, dst, outLen);
+    // `self` is the netMgr the maze senders take as `this`.
+    GameCmdSetNetMgr(self);
     __try {
         if (ret && pkt) {
             uint16_t bodyLen = *(uint16_t*)(pkt + kPktOffBodyLen);
@@ -122,64 +127,6 @@ char __fastcall HookedSerialize(void* self, uint32_t mode, uint8_t* pkt, uint8_t
     return ret;
 }
 
-struct Section {
-    uint8_t* data;
-    size_t size;
-};
-
-// The module is mapped, so spans come from VirtualSize rather than the raw size.
-bool FindSection(uint8_t* base, const char* name, Section* out) {
-    IMAGE_DOS_HEADER* dos = (IMAGE_DOS_HEADER*)base;
-    if (dos->e_magic != IMAGE_DOS_SIGNATURE)
-        return false;
-    IMAGE_NT_HEADERS64* nt = (IMAGE_NT_HEADERS64*)(base + dos->e_lfanew);
-    if (nt->Signature != IMAGE_NT_SIGNATURE)
-        return false;
-
-    IMAGE_SECTION_HEADER* sec = IMAGE_FIRST_SECTION(nt);
-    for (unsigned i = 0; i < nt->FileHeader.NumberOfSections; i++) {
-        char n[9] = { 0 };
-        memcpy(n, sec[i].Name, 8);
-        if (strcmp(n, name) != 0)
-            continue;
-        out->data = base + sec[i].VirtualAddress;
-        out->size = sec[i].Misc.VirtualSize;
-        return out->size != 0;
-    }
-    return false;
-}
-
-// Null unless the pattern occurs exactly once; ambiguity means the signature
-// stopped identifying the function, so fail rather than hook the wrong one.
-const uint8_t* FindUnique(const Section& s, const uint8_t* pat, const char* mask) {
-    size_t len = strlen(mask);
-    if (mask[0] != 'x' || s.size < len)
-        return nullptr;
-
-    const uint8_t* found = nullptr;
-    const uint8_t* p = s.data;
-    const uint8_t* limit = s.data + s.size - len;
-    while (p <= limit) {
-        p = (const uint8_t*)memchr(p, pat[0], (size_t)(limit - p) + 1);
-        if (!p)
-            break;
-        bool hit = true;
-        for (size_t k = 1; k < len; k++) {
-            if (mask[k] == 'x' && p[k] != pat[k]) {
-                hit = false;
-                break;
-            }
-        }
-        if (hit) {
-            if (found)
-                return nullptr;
-            found = p;
-        }
-        p++;
-    }
-    return found;
-}
-
 // Fails until SoulWorker64.dll is loaded. Both targets come out of the image
 // itself, so this does not wait on the netMgr being constructed.
 bool ResolveTargets(void** outSerialize, void** outDeobf) {
@@ -189,20 +136,17 @@ bool ResolveTargets(void** outSerialize, void** outDeobf) {
 
     uint8_t* base = (uint8_t*)game;
     __try {
-        IMAGE_DOS_HEADER* dos = (IMAGE_DOS_HEADER*)base;
-        if (dos->e_magic != IMAGE_DOS_SIGNATURE)
-            return false;
-        IMAGE_NT_HEADERS64* nt = (IMAGE_NT_HEADERS64*)(base + dos->e_lfanew);
-        if (nt->Signature != IMAGE_NT_SIGNATURE)
+        IMAGE_NT_HEADERS64* nt = pe::NtHeaders(base);
+        if (!nt)
             return false;
         uint8_t* imgEnd = base + nt->OptionalHeader.SizeOfImage;
 
-        Section text = { nullptr, 0 };
-        Section rdata = { nullptr, 0 };
-        if (!FindSection(base, ".text", &text) || !FindSection(base, ".rdata", &rdata))
+        pe::Section text = { nullptr, 0 };
+        pe::Section rdata = { nullptr, 0 };
+        if (!pe::FindSection(base, ".text", &text) || !pe::FindSection(base, ".rdata", &rdata))
             return false;
 
-        const uint8_t* fnSer = FindUnique(text, kSerializeSig, kSerializeMask);
+        const uint8_t* fnSer = pe::FindUnique(text, kSerializeSig, kSerializeMask);
         if (!fnSer)
             return false;
 

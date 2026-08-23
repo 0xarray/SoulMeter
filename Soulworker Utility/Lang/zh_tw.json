@@ -108,6 +108,8 @@
     "STR_OPTION_HOTKEY_CAPTURING": "等待按鍵輸入 - 按 Esc 取消",
     "STR_OPTION_HOTKEY_ACTION_CLEAR": "重置計量表",
     "STR_OPTION_HOTKEY_ACTION_TOGGLE": "暫停 / 繼續計量表",
+    "STR_OPTION_HOTKEY_ACTION_RESTART_MAZE": "重新開始副本",
+    "STR_OPTION_HOTKEY_ACTION_EXIT_MAZE": "離開副本",
     "STR_OPTION_HOTKEY_DESC_5": "獲取更新: https://github.com/0xarray/SoulMeter",
     "STR_OPTION_TEST_VALUE_PLAYER": "測試資料",
     "STR_OPTION_ADD_TEST_VALUE": "加入測試資料",

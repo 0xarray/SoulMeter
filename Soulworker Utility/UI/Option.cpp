@@ -181,6 +181,12 @@ static const char* GetHotkeyActionText(const char* name) {
 	if (strcmp(name, u8"Toogle") == 0)
 		return LANGMANAGER.GetText("STR_OPTION_HOTKEY_ACTION_TOGGLE").data();
 
+	if (strcmp(name, u8"RestartMaze") == 0)
+		return LANGMANAGER.GetText("STR_OPTION_HOTKEY_ACTION_RESTART_MAZE").data();
+
+	if (strcmp(name, u8"ExitMaze") == 0)
+		return LANGMANAGER.GetText("STR_OPTION_HOTKEY_ACTION_EXIT_MAZE").data();
+
 	return name;
 }
 

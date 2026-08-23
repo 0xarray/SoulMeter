@@ -21,7 +21,7 @@ Live damage tables, per-player breakdowns, buff uptime, DPS graphs and a combat 
 
 SoulMeter reads the game's network traffic and turns it into a live picture of your run — who is doing what damage, which buffs are up, when the boss died and why your numbers look the way they do.
 
-| | |
+| Feature | What you get |
 |---|---|
 | **Damage table** | Live DPS, total damage, share %, crit rate and hit counts for every player in your party |
 | **Per-player detail** | Click a name to break a player down by skill — damage, casts, crit rate, average hit |
@@ -110,7 +110,7 @@ Output lands in `x64\Release\`. The solution builds two projects — `Soulworker
 
 This project stands on the work of the people who built and maintained SoulMeter before it.
 
-| | |
+| Author | Contribution |
 |---|---|
 | **[FeAr](https://github.com/fearek/DPSMeter/)** | `fearek/DPSMeter` — the Global-server meter this repository continues from |
 | **[AFNGP](https://github.com/AFNGP/SoulMeter)** | `AFNGP/SoulMeter` — long-running maintenance and feature work |

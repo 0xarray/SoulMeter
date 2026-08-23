@@ -11,7 +11,7 @@ Live damage tables, per-player breakdowns, buff uptime, DPS graphs and a combat 
 ![Platform](https://img.shields.io/badge/platform-Windows%20x64-0078D6)
 ![Language](https://img.shields.io/badge/C%2B%2B-20-00599C)
 ![UI](https://img.shields.io/badge/UI-ImGui%20%2B%20DirectX%2011-5C2D91)
-![Version](https://img.shields.io/badge/version-1.7.1.8-brightgreen)
+![Version](https://img.shields.io/badge/version-1.7.1.9-brightgreen)
 
 [<img src="https://cdn.buymeacoffee.com/buttons/v2/default-blue.png" height="48" alt="Buy me a coffee">](https://www.buymeacoffee.com/rainyyy)
 

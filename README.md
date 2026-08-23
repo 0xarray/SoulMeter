@@ -13,6 +13,8 @@ Live damage tables, per-player breakdowns, buff uptime, DPS graphs and a combat 
 ![UI](https://img.shields.io/badge/UI-ImGui%20%2B%20DirectX%2011-5C2D91)
 ![Version](https://img.shields.io/badge/version-1.7.1.8-brightgreen)
 
+[<img src="https://cdn.buymeacoffee.com/buttons/v2/default-blue.png" height="48" alt="Buy me a coffee">](https://www.buymeacoffee.com/rainyyy)
+
 </div>
 
 ---
@@ -102,7 +104,7 @@ MSBuild "Soulworker Utility.sln" -m -p:Configuration=Release -p:Platform=x64
 Output lands in `x64\Release\`. The solution builds two projects — `Soulworker Utility` (the meter) and `SoulMeterHook` (the injected DLL) — and copies `Lang\*.json` into the output folder automatically.
 
 > [!NOTE]
-> The hook resolves the game's packet functions from a pinned offset into `SoulWorker64.dll`. A game patch can move it, in which case the address in `SoulMeterHook/sockethooks.cpp` needs re-extracting.
+> The hook locates the game's packet functions at runtime by signature-scanning `SoulWorker64.dll`, so a game patch that merely moves them needs no changes here. The scan fails closed — if the signature is missing or matches more than once, the hook simply never attaches rather than detouring the wrong code. If that happens, `kSerializeSig` in `SoulMeterHook/sockethooks.cpp` needs re-extracting.
 
 ---
 

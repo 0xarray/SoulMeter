@@ -109,6 +109,8 @@
     "STR_OPTION_HOTKEY_CAPTURING": "Listening for keys - press Esc to cancel.",
     "STR_OPTION_HOTKEY_ACTION_CLEAR": "Reset meter",
     "STR_OPTION_HOTKEY_ACTION_TOGGLE": "Pause / resume meter",
+    "STR_OPTION_HOTKEY_ACTION_RESTART_MAZE": "Restart maze",
+    "STR_OPTION_HOTKEY_ACTION_EXIT_MAZE": "Leave maze",
     "STR_OPTION_HOTKEY_DESC_5": "Get update: https://github.com/0xarray/SoulMeter",
     "STR_OPTION_TEST_VALUE_PLAYER": "Test Data",
     "STR_OPTION_ADD_TEST_VALUE": "Add Test Value",

@@ -4,6 +4,7 @@
 #include ".\Soulworker Packet\SWCPacket.h"
 #include ".\Soulworker Packet\PipeReceiver.h"
 #include ".\Soulworker Packet\Injector.h"
+#include ".\Soulworker Packet\HookCommand.h"
 #include ".\UI\PlayerTable.h"
 #include "SWConfig.h"
 
@@ -36,6 +37,11 @@ bool SWPacketMaker::Init() {
 		LogInstance.WriteLog("Injector init failed: %lu", injErr);
 	else
 		LogInstance.WriteLog("Injector started");
+
+	// Outbound channel for the maze hotkeys.
+	DWORD cmdErr = HookCommandStart();
+	if (cmdErr != ERROR_SUCCESS)
+		LogInstance.WriteLog("Hook command channel init failed: %lu", cmdErr);
 
 	return ERROR_SUCCESS;
 }

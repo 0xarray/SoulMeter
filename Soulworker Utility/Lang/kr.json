@@ -108,6 +108,8 @@
     "STR_OPTION_HOTKEY_CAPTURING": "키 입력 대기 중 - Esc로 취소",
     "STR_OPTION_HOTKEY_ACTION_CLEAR": "미터 리셋",
     "STR_OPTION_HOTKEY_ACTION_TOGGLE": "미터 일시정지 / 재개",
+    "STR_OPTION_HOTKEY_ACTION_RESTART_MAZE": "던전 다시 시작",
+    "STR_OPTION_HOTKEY_ACTION_EXIT_MAZE": "던전 나가기",
     "STR_OPTION_HOTKEY_DESC_5": "업데이트는 이곳에서: https://github.com/0xarray/SoulMeter",
     "STR_OPTION_TEST_VALUE_PLAYER": "Test Data",
     "STR_OPTION_ADD_TEST_VALUE": "Test Value 추가",

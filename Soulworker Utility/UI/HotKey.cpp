@@ -3,6 +3,7 @@
 #include ".\UI\DX Input.h"
 #include ".\UI\PlayerTable.h"
 #include ".\Damage Meter\Damage Meter.h"
+#include ".\Soulworker Packet\HookCommand.h"
 
 namespace {
 	struct KEYNAME {
@@ -290,6 +291,11 @@ void HotKey::Init() {
 
 	InsertHotkeyToogle(DIK_LCONTROL, DIK_END, -1);
 	InsertHotkeyStop(DIK_LCONTROL, DIK_DELETE, -1);
+
+	// Unbound by default: these send real packets, and the meter does not
+	// swallow the key, so the game still sees whatever it is bound to.
+	InsertHotkeyRestartMaze(-1, -1, -1);
+	InsertHotkeyExitMaze(-1, -1, -1);
 }
 
 void HotKey::InsertHotkeyToogle(int key1, int key2, int key3) {
@@ -309,6 +315,26 @@ void HotKey::InsertHotkeyStop(int key1, int key2, int key3) {
 
 	AutoHotKey* hotkey = new AutoHotKey(key1, key2, key3, "Clear", 2, &callback1, &callback2);
 	hotkey->SetDefaultKey(DIK_LCONTROL, DIK_DELETE, -1);
+
+	_hotkeys.push_back(hotkey);
+}
+
+void HotKey::InsertHotkeyRestartMaze(int key1, int key2, int key3) {
+
+	HOTKEYCALLBACK callback = std::bind(&HookCommandRestartMaze);
+
+	AutoHotKey* hotkey = new AutoHotKey(key1, key2, key3, "RestartMaze", 1, &callback);
+	hotkey->SetDefaultKey(-1, -1, -1);
+
+	_hotkeys.push_back(hotkey);
+}
+
+void HotKey::InsertHotkeyExitMaze(int key1, int key2, int key3) {
+
+	HOTKEYCALLBACK callback = std::bind(&HookCommandExitMaze);
+
+	AutoHotKey* hotkey = new AutoHotKey(key1, key2, key3, "ExitMaze", 1, &callback);
+	hotkey->SetDefaultKey(-1, -1, -1);
 
 	_hotkeys.push_back(hotkey);
 }

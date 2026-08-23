@@ -109,6 +109,8 @@
   "STR_OPTION_HOTKEY_CAPTURING": "キー入力待ち - Escでキャンセル",
   "STR_OPTION_HOTKEY_ACTION_CLEAR": "メーターをリセット",
   "STR_OPTION_HOTKEY_ACTION_TOGGLE": "メーターの一時停止 / 再開",
+  "STR_OPTION_HOTKEY_ACTION_RESTART_MAZE": "ダンジョンをやり直す",
+  "STR_OPTION_HOTKEY_ACTION_EXIT_MAZE": "ダンジョンから出る",
   "STR_OPTION_HOTKEY_DESC_5": "アプデート: https://github.com/0xarray/SoulMeter",
   "STR_OPTION_TEST_VALUE_PLAYER": "テストプレーヤー",
   "STR_OPTION_ADD_TEST_VALUE": "テストバリューを追加",

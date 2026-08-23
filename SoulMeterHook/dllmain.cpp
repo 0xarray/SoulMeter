@@ -7,13 +7,16 @@
 #include <windows.h>
 #include <cstdint>
 
+#include "gamecmd.h"
 #include "sockethooks.h"
 #include "stream.h"
 
 namespace {
 
 const wchar_t* kPipeName = L"\\\\.\\pipe\\SoulMeterHook";
+const wchar_t* kCmdPipeName = L"\\\\.\\pipe\\SoulMeterHookCmd";
 constexpr size_t kBatchCap = 256 * 1024;
+constexpr DWORD kMaxCmdLen = 64;
 
 volatile LONG g_running = 1;
 HANDLE g_hPipe = INVALID_HANDLE_VALUE;
@@ -94,6 +97,50 @@ DWORD WINAPI WriterThread(LPVOID) {
     return 0;
 }
 
+bool ReadAll(HANDLE h, uint8_t* buf, DWORD len) {
+    DWORD off = 0;
+    while (off < len) {
+        DWORD rd = 0;
+        if (!ReadFile(h, buf + off, len - off, &rd, nullptr) || rd == 0)
+            return false;
+        off += rd;
+    }
+    return true;
+}
+
+// Hotkey commands from the meter. Separate from the capture pipe so a command
+// channel that never connects cannot disturb the packet stream.
+DWORD WINAPI CommandThread(LPVOID) {
+    while (g_running) {
+        // Arming needs the game window, which exists long before the meter has
+        // anything to send.
+        if (!GameCmdInit()) {
+            Sleep(500);
+            continue;
+        }
+
+        HANDLE h = CreateFileW(kCmdPipeName, GENERIC_READ, 0, nullptr, OPEN_EXISTING, 0, nullptr);
+        if (h == INVALID_HANDLE_VALUE) {
+            Sleep(500);
+            continue;
+        }
+
+        for (;;) {
+            uint32_t len = 0;
+            if (!ReadAll(h, (uint8_t*)&len, 4))
+                break;
+            if (len < 5 || len > kMaxCmdLen)
+                break;
+            uint8_t body[kMaxCmdLen];
+            if (!ReadAll(h, body, len))
+                break;
+            GameCmdPost(body[0], *(uint32_t*)(body + 1));
+        }
+        CloseHandle(h);
+    }
+    return 0;
+}
+
 DWORD WINAPI SetupThread(LPVOID) {
     // Injection happens ~30ms after process start, so SoulWorker64.dll is not
     // loaded yet and its netMgr is constructed later still.
@@ -106,9 +153,14 @@ DWORD WINAPI SetupThread(LPVOID) {
     if (hWriter)
         CloseHandle(hWriter);
 
+    HANDLE hCmd = CreateThread(nullptr, 0, CommandThread, nullptr, 0, nullptr);
+    if (hCmd)
+        CloseHandle(hCmd);
+
     while (g_running)
         Sleep(1000);
     HookUninstall();
+    GameCmdShutdown();
     return 0;
 }
 

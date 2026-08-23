@@ -66,6 +66,8 @@ public:
 
 	void InsertHotkeyToogle(int key1, int key2, int key3);
 	void InsertHotkeyStop(int key1, int key2, int key3);
+	void InsertHotkeyRestartMaze(int key1, int key2, int key3);
+	void InsertHotkeyExitMaze(int key1, int key2, int key3);
 
 	AutoHotKey* Find(const char* name);
 	bool SetKeyByName(const char* name, int key1, int key2, int key3);

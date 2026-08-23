@@ -366,6 +366,9 @@
     <ClInclude Include="Soulworker Packet\SWCPresence.h">
       <Filter>SWPacket</Filter>
     </ClInclude>
+    <ClInclude Include="Soulworker Packet\HookCommand.h">
+      <Filter>SWPacket</Filter>
+    </ClInclude>
     <ClInclude Include="Soulworker Packet\Injector.h">
       <Filter>SWPacket</Filter>
     </ClInclude>
@@ -609,6 +612,9 @@
       <Filter>SWPacket</Filter>
     </ClCompile>
     <ClCompile Include="Soulworker Packet\SWCPresence.cpp">
+      <Filter>SWPacket</Filter>
+    </ClCompile>
+    <ClCompile Include="Soulworker Packet\HookCommand.cpp">
       <Filter>SWPacket</Filter>
     </ClCompile>
     <ClCompile Include="Soulworker Packet\Injector.cpp">

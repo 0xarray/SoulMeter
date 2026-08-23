@@ -2,7 +2,7 @@
 #define MAJORNUMBER 1
 #define MINORNUMBER 7
 #define BUILDNUMBER 1
-#define MODIFICATIONNUMBER 10
+#define MODIFICATIONNUMBER 11
 #define STR(value) #value
 #define STRINGIZE(value) STR(value)
 #define APP_VERSION \

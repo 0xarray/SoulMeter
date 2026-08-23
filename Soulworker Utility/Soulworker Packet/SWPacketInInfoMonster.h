@@ -24,6 +24,7 @@ typedef struct _SWPACKET_IN_INFO_MONSTER1 {
 	uint32_t unk11;
 	uint32_t unk12;
 	BYTE unk13;
+	uint32_t unk13b;
 	double unk14;
 	double unk15;
 	BYTE data1Count;
@@ -42,6 +43,7 @@ typedef struct _SWPACKET_IN_INFO_MONSTER2 {
 	uint64_t unk01;
 	uint64_t unk02;
 	float unk03;
+	float unk03b;
 	BYTE data2Count;
 
 }SWPACKET_IN_INFO_MONSTER2;

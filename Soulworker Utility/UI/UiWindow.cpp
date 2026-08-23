@@ -9,6 +9,7 @@
 #include ".\UI\UtillWindow.h"
 #include ".\UI\PlotWindow.h"
 #include ".\Damage Meter\Damage Meter.h"
+#include ".\resource.h"
 #include <io.h>
 #include <chrono>
 #include <thread>
@@ -52,6 +53,13 @@ bool UiWindow::Init(unsigned int x, unsigned int y, unsigned int width, unsigned
 	WNDCLASSEX wc;
 	_hInst = GetModuleHandle(NULL);
 
+	// Taskbar reads the window's own icon; with NULL it falls back to the
+	// shell's cached association for the exe path, which goes stale.
+	HICON hIconBig = (HICON)LoadImage(_hInst, MAKEINTRESOURCE(IDI_ICON1), IMAGE_ICON,
+		GetSystemMetrics(SM_CXICON), GetSystemMetrics(SM_CYICON), 0);
+	HICON hIconSmall = (HICON)LoadImage(_hInst, MAKEINTRESOURCE(IDI_ICON1), IMAGE_ICON,
+		GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), 0);
+
 	if (!GetClassInfoEx(_hInst, UI_WINDOW_CLASSNAME, &wc)) {
 		wc.cbSize = sizeof(WNDCLASSEX);
 		wc.style = CS_HREDRAW | CS_VREDRAW | CS_CLASSDC;
@@ -59,14 +67,14 @@ bool UiWindow::Init(unsigned int x, unsigned int y, unsigned int width, unsigned
 		wc.cbClsExtra = 0;
 		wc.cbWndExtra = 0;
 		wc.hInstance = _hInst;
-		wc.hIcon = NULL;
+		wc.hIcon = hIconBig;
 		wc.hCursor = NULL;
 		wc.hbrBackground = NULL;
 		wc.lpszMenuName = NULL;
 		wc.lpszClassName = UI_WINDOW_CLASSNAME;
-		wc.hIconSm = NULL;
+		wc.hIconSm = hIconSmall;
 	}
-	
+
 	if (!RegisterClassEx(&wc)) {
 		LogInstance.WriteLog("Error in RegisterClassEx");
 		return FALSE;
@@ -76,6 +84,12 @@ bool UiWindow::Init(unsigned int x, unsigned int y, unsigned int width, unsigned
 		LogInstance.WriteLog("Error in CreateWindowEx : %x", GetLastError());
 		return FALSE;
 	}
+
+	// also per-window, so an already-registered class cannot leave it iconless
+	if (hIconBig)
+		SendMessage(_hWnd, WM_SETICON, ICON_BIG, (LPARAM)hIconBig);
+	if (hIconSmall)
+		SendMessage(_hWnd, WM_SETICON, ICON_SMALL, (LPARAM)hIconSmall);
 //	SetLayeredWindowAttributes(_hWnd, 0, 180, LWA_ALPHA);
 //	SetLayeredWindowAttributes(_hWnd, 0, RGB(0, 0, 0), LWA_COLORKEY);
 

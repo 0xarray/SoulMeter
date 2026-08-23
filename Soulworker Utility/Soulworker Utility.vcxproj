@@ -358,7 +358,7 @@
     <ResourceCompile Include="Soulworker Utility.rc" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="meter_icon_1.ico" />
+    <Image Include="meter_ico.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

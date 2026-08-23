@@ -9,6 +9,7 @@
 #include ".\UI\PlotWindow.h"
 #include ".\Soulworker Packet\PacketInfo.h"
 #include ".\Soulworker Packet\SWPacketMaker.h"
+#include ".\Soulworker Packet\PipeReceiver.h"
 #include "SWConfig.h"
 #include ".\UI\DX11.h"
 
@@ -99,13 +100,23 @@ void PlayerTable::Update() {
 		//and if 3 then do nothing basically so we display all to 999
 		std::string milisecondsstring = std::to_string(miliseconds);
 		//turning it into a string before so we dont display leading 0's so timer is more readable
-		sprintf_s(title, 1024, "%s - %02d:%02d.%s [v%s_@FeAr&AFN] %s: %ums ###DamageMeter",
-			DAMAGEMETER.GetWorldName(),
-			(unsigned int)DAMAGEMETER.GetTime() / (60 * 1000), (unsigned int)(DAMAGEMETER.GetTime() / 1000) % 60, milisecondsstring.c_str(),
-			APP_VERSION,
-			LANGMANAGER.GetText("STR_MENU_PING").data(),
-			DAMAGEMETER.GetPing()
-		);
+
+		if (!PipeReceiverIsConnected()) {
+			// game not hooked yet - the player launches it themselves
+			sprintf_s(title, 1024, "%s [v%s] ###DamageMeter",
+				LANGMANAGER.GetText("STR_WAITING_FOR_GAME").data(),
+				APP_VERSION
+			);
+		}
+		else {
+			sprintf_s(title, 1024, "%s - %02d:%02d.%s [v%s_@Rainy] %s: %ums ###DamageMeter",
+				DAMAGEMETER.GetWorldName(),
+				(unsigned int)DAMAGEMETER.GetTime() / (60 * 1000), (unsigned int)(DAMAGEMETER.GetTime() / 1000) % 60, milisecondsstring.c_str(),
+				APP_VERSION,
+				LANGMANAGER.GetText("STR_MENU_PING").data(),
+				DAMAGEMETER.GetPing()
+			);
+		}
 
 		ImGui::Begin(title, 0, windowFlag);
 		{

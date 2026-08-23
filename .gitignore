@@ -374,3 +374,8 @@ MigrationBackup/
 
 # Agent docs
 AGENTS.md
+CLAUDE.md
+cc-whiletrue0x
+
+# MinHook prebuilt artifacts
+Soulworker Utility/Third Party/minhook/build/

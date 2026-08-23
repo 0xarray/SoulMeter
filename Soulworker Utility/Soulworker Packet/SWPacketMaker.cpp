@@ -2,6 +2,8 @@
 #include ".\Soulworker Packet\PacketType.h"
 #include ".\Soulworker Packet\SWPacketMaker.h"
 #include ".\Soulworker Packet\SWCPacket.h"
+#include ".\Soulworker Packet\PipeReceiver.h"
+#include ".\Soulworker Packet\Injector.h"
 #include ".\UI\PlayerTable.h"
 #include "SWConfig.h"
 
@@ -19,40 +21,23 @@ SWHEADER* SWPacketMaker::GetSWHeader(std::vector<unsigned char>& packet) {
 
 }
 
-typedef void (*RunPacketLoopFunc)(SWPacketMaker* obj, void (SWPacketMaker::* func)(std::vector<unsigned char>&));
-DWORD ReceiveCallback(void* prc)
-{
-	auto dll = LoadLibraryA("SoulMeterIPC.dll");
-	if (dll == NULL)
-	{
-		LogInstance.WriteLog("Failed loading IPC dll, handle null. %d",GetLastError());
-		MessageBoxA(NULL, "Failed to load IPC DLL, check logs for error code.", "ERROR", MB_OK);
-		return FALSE;
-	}
-	auto func = (RunPacketLoopFunc)GetProcAddress(dll, "?runPacketLoop@@YAXPEAVSWPacketMaker@@P81@EAAXAEAV?$vector@EV?$allocator@E@std@@@std@@@Z@Z");
-	if (func == NULL)
-	{
-		LogInstance.WriteLog("Failed retrieving IPC func pointer. %d",GetLastError());
-		MessageBoxA(NULL, "Failed retrieving IPC func pointer, check logs for error code.", "ERROR", MB_OK);
-		return FALSE;
-	}
-	func(&SWPACKETMAKER, &SWPacketMaker::CreateSWPacket);
-	return TRUE;
-}
 bool SWPacketMaker::Init() {
-	
-	HANDLE thread = CreateThread(NULL, 0, ReceiveCallback, this, 0, NULL);
-	if (thread != NULL)
-	{
-		LogInstance.WriteLog("Module Listener Init");
-		return ERROR_SUCCESS;
-	}
+	// Packet capture is now DLL-injection based: SoulMeterHook.dll is injected
+	// into the game process and streams captured frames over a named pipe.
+	// The pipe server feeds every frame into CreateSWPacket below.
+	DWORD pipeErr = PipeReceiverStart();
+	if (pipeErr != ERROR_SUCCESS)
+		LogInstance.WriteLog("Pipe receiver init failed: %lu", pipeErr);
 	else
-	{
-		DWORD error = GetLastError();
-		LogInstance.WriteLog("CreateThread failed: %d", error);
-		return error;
-	}
+		LogInstance.WriteLog("Pipe receiver started");
+
+	DWORD injErr = InjectorStart();
+	if (injErr != ERROR_SUCCESS)
+		LogInstance.WriteLog("Injector init failed: %lu", injErr);
+	else
+		LogInstance.WriteLog("Injector started");
+
+	return ERROR_SUCCESS;
 }
 
 void SWPacketMaker::CreateSWPacket(std::vector<unsigned char>& packet) {

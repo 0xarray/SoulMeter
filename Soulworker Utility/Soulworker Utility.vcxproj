@@ -113,8 +113,8 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>..\Soulworker Utility\Third Party\WinDivert\x64;..\Soulworker Utility\Third Party\SQLite\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>WinDivert.lib;d3d11.lib;d3dcompiler.lib;dxgi.lib;SQLite.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\Soulworker Utility\Third Party\SQLite\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>d3d11.lib;d3dcompiler.lib;dxgi.lib;SQLite.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
     </Link>
@@ -136,8 +136,8 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>..\Soulworker Utility\Third Party\openssl\lib\VC;..\Soulworker Utility\Third Party\WinDivert\x64;..\Soulworker Utility\Third Party\SQLite\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>WinDivert.lib;d3d11.lib;d3dcompiler.lib;dxgi.lib;SQLite.lib;Iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\Soulworker Utility\Third Party\openssl\lib\VC;..\Soulworker Utility\Third Party\SQLite\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>d3d11.lib;d3dcompiler.lib;dxgi.lib;SQLite.lib;Iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>
       </ModuleDefinitionFile>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
@@ -169,7 +169,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>false</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>..\Soulworker Utility\Third Party\openssl\lib\VC;..\Soulworker Utility\Third Party\WinDivert\x64;..\Soulworker Utility\Third Party\SQLite\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\Soulworker Utility\Third Party\openssl\lib\VC;..\Soulworker Utility\Third Party\SQLite\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>d3d11.lib;d3dcompiler.lib;dxgi.lib;SQLite.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>
       </ModuleDefinitionFile>
@@ -238,6 +238,8 @@
     <ClInclude Include="Soulworker Packet\SWPacketWorldChange.h" />
     <ClInclude Include="Soulworker Packet\SWSPacketMyDodgeUsed.h" />
     <ClInclude Include="Soulworker Packet\SWSPacketMySkillUsed.h" />
+    <ClInclude Include="Soulworker Packet\Injector.h" />
+    <ClInclude Include="Soulworker Packet\PipeReceiver.h" />
     <ClInclude Include="stb_image.h" />
     <ClInclude Include="SWConfig.h" />
     <ClInclude Include="Third Party\imgui\backends\imgui_impl_dx11.h" />
@@ -322,6 +324,8 @@
     <ClCompile Include="Soulworker Packet\SWPacketWorldChange.cpp" />
     <ClCompile Include="Soulworker Packet\SWSPacketMyDodgeUsed.cpp" />
     <ClCompile Include="Soulworker Packet\SWSPacketMySkillUsed.cpp" />
+    <ClCompile Include="Soulworker Packet\Injector.cpp" />
+    <ClCompile Include="Soulworker Packet\PipeReceiver.cpp" />
     <ClCompile Include="Third Party\imgui\backends\imgui_impl_dx11.cpp" />
     <ClCompile Include="Third Party\imgui\backends\imgui_impl_win32.cpp" />
     <ClCompile Include="Third Party\imgui\Custom.cpp" />
@@ -359,4 +363,13 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
+  <!-- The i18n files were previously copied to the output folder by hand, so a
+       newly added STR_ key resolved at runtime to the raw key name. Deploy them
+       with the build instead. -->
+  <Target Name="CopyLangFiles" AfterTargets="Build">
+    <ItemGroup>
+      <LangFiles Include="Lang\*.json" />
+    </ItemGroup>
+    <Copy SourceFiles="@(LangFiles)" DestinationFolder="$(OutDir)Lang" SkipUnchangedFiles="true" />
+  </Target>
 </Project>

@@ -5,6 +5,8 @@ VisualStudioVersion = 17.13.35507.96 d17.13
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Soulworker Utility", "Soulworker Utility\Soulworker Utility.vcxproj", "{B4FC54F3-38E8-4D35-86B6-D874C0AC6813}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SoulMeterHook", "SoulMeterHook\SoulMeterHook.vcxproj", "{8F5D3A2B-6C1E-4D9F-9A3B-2E7F5C4D8A01}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -27,6 +29,18 @@ Global
 		{B4FC54F3-38E8-4D35-86B6-D874C0AC6813}.Release|x64.Build.0 = Release|x64
 		{B4FC54F3-38E8-4D35-86B6-D874C0AC6813}.Release|x86.ActiveCfg = Release|Win32
 		{B4FC54F3-38E8-4D35-86B6-D874C0AC6813}.Release|x86.Build.0 = Release|Win32
+		{8F5D3A2B-6C1E-4D9F-9A3B-2E7F5C4D8A01}.Debug|Win32.ActiveCfg = Debug|Win32
+		{8F5D3A2B-6C1E-4D9F-9A3B-2E7F5C4D8A01}.Debug|Win32.Build.0 = Debug|Win32
+		{8F5D3A2B-6C1E-4D9F-9A3B-2E7F5C4D8A01}.Debug|x64.ActiveCfg = Debug|x64
+		{8F5D3A2B-6C1E-4D9F-9A3B-2E7F5C4D8A01}.Debug|x64.Build.0 = Debug|x64
+		{8F5D3A2B-6C1E-4D9F-9A3B-2E7F5C4D8A01}.Debug|x86.ActiveCfg = Debug|Win32
+		{8F5D3A2B-6C1E-4D9F-9A3B-2E7F5C4D8A01}.Debug|x86.Build.0 = Debug|Win32
+		{8F5D3A2B-6C1E-4D9F-9A3B-2E7F5C4D8A01}.Release|Win32.ActiveCfg = Release|Win32
+		{8F5D3A2B-6C1E-4D9F-9A3B-2E7F5C4D8A01}.Release|Win32.Build.0 = Release|Win32
+		{8F5D3A2B-6C1E-4D9F-9A3B-2E7F5C4D8A01}.Release|x64.ActiveCfg = Release|x64
+		{8F5D3A2B-6C1E-4D9F-9A3B-2E7F5C4D8A01}.Release|x64.Build.0 = Release|x64
+		{8F5D3A2B-6C1E-4D9F-9A3B-2E7F5C4D8A01}.Release|x86.ActiveCfg = Release|Win32
+		{8F5D3A2B-6C1E-4D9F-9A3B-2E7F5C4D8A01}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

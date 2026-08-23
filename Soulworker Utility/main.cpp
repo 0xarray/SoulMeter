@@ -13,9 +13,9 @@
 //int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE prevInstance, PSTR cmdLine, int showCmd) 
 int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 	_In_ PSTR szCmdLine, _In_ int iCmdShow) {
-	auto m_singleInstanceMutex = CreateMutex(NULL, TRUE, L"FeArSoulMeter137cf5f8-a5c7-4261-9806-c2be88b23e48");
+	auto m_singleInstanceMutex = CreateMutex(NULL, TRUE, L"SoulMeter137cf5f8-a5c7-4261-9806-c2be88b23e48");
 	if (GetLastError() == ERROR_ALREADY_EXISTS) {
-		HWND existingApp = FindWindow(0, L"FeAr SoulMeter");
+		HWND existingApp = FindWindow(0, L"SoulMeter");
 		if (existingApp) SetForegroundWindow(existingApp);
 		return FALSE; // Exit the app. For MFC, return false from InitInstance.
 	}

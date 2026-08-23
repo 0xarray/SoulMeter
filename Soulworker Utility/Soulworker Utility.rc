@@ -80,7 +80,7 @@ BEGIN
 VALUE "FileDescription", "SoulMeter"
 VALUE "FileVersion", APP_VERSION
 VALUE "InternalName", "SoulMeter.exe"
-VALUE "LegalCopyright", "FeAr & AFN"
+VALUE "LegalCopyright", "Rainy"
 VALUE "OriginalFilename", "SoulMeter.exe"
 VALUE "ProductName", "SoulMeter"
 VALUE "ProductVersion", APP_VERSION

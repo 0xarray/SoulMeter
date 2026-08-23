@@ -72,7 +72,7 @@ bool UiWindow::Init(unsigned int x, unsigned int y, unsigned int width, unsigned
 		return FALSE;
 	}
 
-	if ((_hWnd = CreateWindowEx(WS_EX_TOPMOST, wc.lpszClassName, L"FeAr SoulMeter", WS_POPUP, x, y, width, height, NULL, NULL, _hInst, NULL)) == NULL) {
+	if ((_hWnd = CreateWindowEx(WS_EX_TOPMOST, wc.lpszClassName, L"SoulMeter", WS_POPUP, x, y, width, height, NULL, NULL, _hInst, NULL)) == NULL) {
 		LogInstance.WriteLog("Error in CreateWindowEx : %x", GetLastError());
 		return FALSE;
 	}

@@ -187,7 +187,7 @@ bool UiOption::ShowHotkeySetting() {
 	ImGui::Text(text);
 	ImGui::TextAlignCenter::SetTextAlignCenter();
 	{
-		ImGui::Text("\n\n\n\nFeAr & AFNGP");
+		ImGui::Text("\n\n\n\nRainy");
 	}
 	ImGui::TextAlignCenter::UnSetTextAlignCenter();
 

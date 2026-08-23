@@ -5,8 +5,6 @@ VisualStudioVersion = 17.13.35507.96 d17.13
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Soulworker Utility", "Soulworker Utility\Soulworker Utility.vcxproj", "{B4FC54F3-38E8-4D35-86B6-D874C0AC6813}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "discord_integration", "discord_integration\discord_integration.vcxproj", "{B53056E7-C9C6-46F4-BA4B-68BABE29182A}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -29,18 +27,6 @@ Global
 		{B4FC54F3-38E8-4D35-86B6-D874C0AC6813}.Release|x64.Build.0 = Release|x64
 		{B4FC54F3-38E8-4D35-86B6-D874C0AC6813}.Release|x86.ActiveCfg = Release|Win32
 		{B4FC54F3-38E8-4D35-86B6-D874C0AC6813}.Release|x86.Build.0 = Release|Win32
-		{B53056E7-C9C6-46F4-BA4B-68BABE29182A}.Debug|Win32.ActiveCfg = Debug|Win32
-		{B53056E7-C9C6-46F4-BA4B-68BABE29182A}.Debug|Win32.Build.0 = Debug|Win32
-		{B53056E7-C9C6-46F4-BA4B-68BABE29182A}.Debug|x64.ActiveCfg = Debug|x64
-		{B53056E7-C9C6-46F4-BA4B-68BABE29182A}.Debug|x64.Build.0 = Debug|x64
-		{B53056E7-C9C6-46F4-BA4B-68BABE29182A}.Debug|x86.ActiveCfg = Debug|Win32
-		{B53056E7-C9C6-46F4-BA4B-68BABE29182A}.Debug|x86.Build.0 = Debug|Win32
-		{B53056E7-C9C6-46F4-BA4B-68BABE29182A}.Release|Win32.ActiveCfg = Release|Win32
-		{B53056E7-C9C6-46F4-BA4B-68BABE29182A}.Release|Win32.Build.0 = Release|Win32
-		{B53056E7-C9C6-46F4-BA4B-68BABE29182A}.Release|x64.ActiveCfg = Release|x64
-		{B53056E7-C9C6-46F4-BA4B-68BABE29182A}.Release|x64.Build.0 = Release|x64
-		{B53056E7-C9C6-46F4-BA4B-68BABE29182A}.Release|x86.ActiveCfg = Release|Win32
-		{B53056E7-C9C6-46F4-BA4B-68BABE29182A}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

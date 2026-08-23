@@ -1,7 +1,6 @@
 #include "pch.h"
 #include ".\Soulworker Packet\SWCPresence.h"
 #include ".\Damage Meter\Damage Meter.h"
-#include ".\discord\DiscordPresence.h"
 SWCPresence::SWCPresence(SWHEADER* swheader, uint8_t* data) {
 	_swheader = swheader;
 	_data = data;
@@ -16,7 +15,6 @@ void SWCPresence::Do() {
 	{
 		meta->_job = presencepacket->playerclass;
 	}
-	DISCORD.UpdatePresence(utf8name, presencepacket->maze, presencepacket->playerclass);
 	DAMAGEMETER.SetWorldID(presencepacket->maze);
 	return;
 }

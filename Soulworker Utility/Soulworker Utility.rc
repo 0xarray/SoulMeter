@@ -13,7 +13,7 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// Koreañski (Korea) resources
+// Koreaï¿½ski (Korea) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_KOR)
 LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
@@ -44,12 +44,12 @@ END
 
 #endif    // APSTUDIO_INVOKED
 
-#endif    // Koreañski (Korea) resources
+#endif    // Koreaï¿½ski (Korea) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
 /////////////////////////////////////////////////////////////////////////////
-// Chiñski (tradycyjny, Tajwan) resources
+// Chiï¿½ski (tradycyjny, Tajwan) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHT)
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
@@ -77,7 +77,7 @@ BLOCK "StringFileInfo"
 BEGIN
 BLOCK "040904b0"
 BEGIN
-VALUE "FileDescription", "https://discord.gg/qefpmJXGRu"
+VALUE "FileDescription", "SoulMeter"
 VALUE "FileVersion", APP_VERSION
 VALUE "InternalName", "SoulMeter.exe"
 VALUE "LegalCopyright", "FeAr & AFN"
@@ -92,7 +92,7 @@ VALUE "Translation", 0x409, 1200
 END
 END
 
-#endif    // Chiñski (tradycyjny, Tajwan) resources
+#endif    // Chiï¿½ski (tradycyjny, Tajwan) resources
 /////////////////////////////////////////////////////////////////////////////
 
 

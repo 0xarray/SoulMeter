@@ -170,7 +170,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <AdditionalLibraryDirectories>..\Soulworker Utility\Third Party\openssl\lib\VC;..\Soulworker Utility\Third Party\WinDivert\x64;..\Soulworker Utility\Third Party\SQLite\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>d3d11.lib;d3dcompiler.lib;dxgi.lib;SQLite.lib;discord_integration.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>d3d11.lib;d3dcompiler.lib;dxgi.lib;SQLite.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>
       </ModuleDefinitionFile>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
@@ -240,7 +240,6 @@
     <ClInclude Include="Soulworker Packet\SWSPacketMySkillUsed.h" />
     <ClInclude Include="stb_image.h" />
     <ClInclude Include="SWConfig.h" />
-    <ClInclude Include="Third Party\discord\DiscordPresence.h" />
     <ClInclude Include="Third Party\imgui\backends\imgui_impl_dx11.h" />
     <ClInclude Include="Third Party\imgui\backends\imgui_impl_win32.h" />
     <ClInclude Include="Third Party\imgui\Custom.h" />
@@ -323,7 +322,6 @@
     <ClCompile Include="Soulworker Packet\SWPacketWorldChange.cpp" />
     <ClCompile Include="Soulworker Packet\SWSPacketMyDodgeUsed.cpp" />
     <ClCompile Include="Soulworker Packet\SWSPacketMySkillUsed.cpp" />
-    <ClCompile Include="Third Party\discord\DiscordPresence.cpp" />
     <ClCompile Include="Third Party\imgui\backends\imgui_impl_dx11.cpp" />
     <ClCompile Include="Third Party\imgui\backends\imgui_impl_win32.cpp" />
     <ClCompile Include="Third Party\imgui\Custom.cpp" />

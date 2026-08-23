@@ -29,8 +29,6 @@
 #include <codecvt>
 #include <filesystem>
 #include <fstream> 
-// DISCORD
-#include "discord\discord_rpc.h"
 // IMGUI
 #include "imgui\imgui.h"
 #include "imgui\backends\imgui_impl_win32.h"
@@ -60,8 +58,6 @@
 #include ".\Util\MultiThreadSync.h"
 #include ".\Util\MemoryPool.h"
 #include ".\Language\Language.h"
-#include ".\discord\DiscordPresence.h"
-
 
 
 // Json

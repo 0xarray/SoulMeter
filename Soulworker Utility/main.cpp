@@ -2,7 +2,6 @@
 #include ".\Damage Meter/Damage Meter.h"
 #include ".\UI\UiWindow.h"
 #include ".\Damage Meter\MySQLite.h"
-#include ".\Third Party/discord/DiscordPresence.h"
 #include ".\UI\PlayerTable.h"
 #include ".\Damage Meter\SaveData.h"
 #include ".\Soulworker Packet\SWPacketMaker.h"

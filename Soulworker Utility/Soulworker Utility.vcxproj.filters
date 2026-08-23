@@ -112,9 +112,6 @@
     <Filter Include="Damge Meter\Combat Meter">
       <UniqueIdentifier>{658c129f-87f4-4757-a778-a9a9eac9ff2d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Discord">
-      <UniqueIdentifier>{d468da43-42ef-454d-b882-7f26da74da5c}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">
@@ -360,9 +357,6 @@
     <ClInclude Include="SimpleIni.h">
       <Filter>Utiliry\헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="Third Party\discord\DiscordPresence.h">
-      <Filter>Discord</Filter>
-    </ClInclude>
     <ClInclude Include="Soulworker Packet\SWCPacket.h">
       <Filter>SWPacket</Filter>
     </ClInclude>
@@ -601,9 +595,6 @@
     </ClCompile>
     <ClCompile Include="Soulworker Packet\SWPacketBrooch.cpp">
       <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="Third Party\discord\DiscordPresence.cpp">
-      <Filter>Discord</Filter>
     </ClCompile>
     <ClCompile Include="Soulworker Packet\SWCPacket.cpp">
       <Filter>SWPacket</Filter>

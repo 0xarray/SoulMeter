@@ -334,18 +334,6 @@ void UiOption::ShowFeatures()
 	ImGui::Checkbox(LANGMANAGER.GetText("STR_OPTION_SOLO_RANK_MODE").data(), (bool*)&_isSoloRankMode); ImGui::SameLine(); ImGui::Checkbox(LANGMANAGER.GetText("STR_OPTION_DONT_SAVE_UNFINISHED_MAZE").data(), (bool*)&_isDontSaveUnfinishedMaze);
 	ImGui::Checkbox(LANGMANAGER.GetText("STR_OPTION_USE_SAVEDATA").data(), (bool*)&_isUseSaveData);
 	ImGui::Checkbox(LANGMANAGER.GetText("STR_OPTION_USE_IMAGE").data(), (bool*)&_isUseImage);
-	if (ImGui::Checkbox("Rich presence", &DISCORD.shouldUpdate))
-	{
-		
-		if (!DISCORD.shouldUpdate)
-		{
-			DISCORD.ClearPresence();
-		}
-	}
-	ImGui::SameLine();
-	ImGui::Checkbox("Hide character name", &DISCORD.hideName);
-	ImGui::SameLine();
-	ImGui::Checkbox("Hide character class", &DISCORD.hideClass);
 	
 	
 }
@@ -540,18 +528,6 @@ bool UiOption::GetOption() {
 	attr = ele->FindAttribute("LogMonsterStats");
 	if (attr != nullptr)
 		attr->QueryboolValue(&DAMAGEMETER.shouldLogMonsterStats);
-
-	attr = ele->FindAttribute("RichPresence");
-	if (attr != nullptr)
-		attr->QueryboolValue(&DISCORD.shouldUpdate);
-
-	attr = ele->FindAttribute("HideName");
-	if (attr != nullptr)
-		attr->QueryboolValue(&DISCORD.hideName);
-
-	attr = ele->FindAttribute("HideClass");
-	if (attr != nullptr)
-		attr->QueryboolValue(&DISCORD.hideClass);
 
 	attr = ele->FindAttribute("TimerAcc");
 	if (attr != nullptr)
@@ -976,9 +952,6 @@ bool UiOption::SaveOption(bool skipWarning) {
 	option->SetAttribute("LogFile", LogInstance.shouldLog);
 	
 	option->SetAttribute("LogMonsterStats", DAMAGEMETER.shouldLogMonsterStats);
-	option->SetAttribute("RichPresence", DISCORD.shouldUpdate);
-	option->SetAttribute("HideName", DISCORD.hideName);
-	option->SetAttribute("HideClass", DISCORD.hideClass);
 	option->SetAttribute("TimerAcc", DAMAGEMETER.mswideness);
 	option->SetAttribute("UseImage", UIOPTION._isUseImage);
 

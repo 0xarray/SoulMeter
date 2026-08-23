@@ -99,7 +99,7 @@ void PlayerTable::Update() {
 		//and if 3 then do nothing basically so we display all to 999
 		std::string milisecondsstring = std::to_string(miliseconds);
 		//turning it into a string before so we dont display leading 0's so timer is more readable
-		sprintf_s(title, 1024, "%s - %02d:%02d.%s [v%s_@FeAr&AFN] %s: %ums discord.gg/qefpmJXGRu ###DamageMeter",
+		sprintf_s(title, 1024, "%s - %02d:%02d.%s [v%s_@FeAr&AFN] %s: %ums ###DamageMeter",
 			DAMAGEMETER.GetWorldName(),
 			(unsigned int)DAMAGEMETER.GetTime() / (60 * 1000), (unsigned int)(DAMAGEMETER.GetTime() / 1000) % 60, milisecondsstring.c_str(),
 			APP_VERSION,

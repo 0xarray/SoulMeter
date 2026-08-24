@@ -7,6 +7,8 @@
 #include <cstdio>
 #include <cstring>
 
+#include "peutil.h"
+
 namespace {
 
 constexpr size_t kMaxFiles = 512;
@@ -28,6 +30,7 @@ struct FileStat {
     uint64_t sizeHist[kBuckets];
     uint64_t maps;           // MapViewOfFile calls: these bypass ReadFile entirely
     uint64_t mapBytes;
+    uint64_t asyncReads;     // overlapped: bytes land later, so timing here is meaningless
     uint64_t firstTick;
     uint64_t lastTick;
     int64_t  nextOffset;     // -1 when unknown
@@ -46,10 +49,103 @@ CRITICAL_SECTION g_cs;
 bool g_csReady = false;
 volatile LONG g_installed = 0;
 
+// Sampled callers. Knowing which file is read says nothing about which code is
+// reading it, and that is what decides whether a read pattern can be fixed.
+constexpr size_t kMaxCallers = 96;
+constexpr LONG kSampleEvery = 512;
+
+struct CallerSite {
+    const char* mod;
+    uint64_t rva;
+    uint64_t hits;
+};
+
+CallerSite g_callers[kMaxCallers];
+size_t g_callerCount = 0;
+volatile LONG g_sampleCounter = 0;
+
+struct ModRange {
+    const char* name;
+    uint8_t* base;
+    size_t size;
+};
+
+ModRange g_mods[3];
+size_t g_modCount = 0;
+bool g_modsResolved = false;
+
+void ResolveModules() {
+    static const wchar_t* kWanted[] = { L"SoulWorker64.dll", L"GamePlugin.vPlugin",
+                                        L"VisionDX11.dll" };
+    static const char* kNames[] = { "SoulWorker64", "GamePlugin", "VisionDX11" };
+    g_modCount = 0;
+    for (int i = 0; i < 3; i++) {
+        HMODULE m = GetModuleHandleW(kWanted[i]);
+        if (!m)
+            continue;
+        IMAGE_NT_HEADERS64* nt = pe::NtHeaders((uint8_t*)m);
+        if (!nt)
+            continue;
+        g_mods[g_modCount].name = kNames[i];
+        g_mods[g_modCount].base = (uint8_t*)m;
+        g_mods[g_modCount].size = nt->OptionalHeader.SizeOfImage;
+        g_modCount++;
+    }
+    // All three are loaded well before the archive walk; if one is missing the
+    // rest still attribute correctly.
+    g_modsResolved = g_modCount > 0;
+}
+
+// Caller holds the lock.
+void RecordCaller(const char* mod, uint64_t rva) {
+    for (size_t i = 0; i < g_callerCount; i++) {
+        if (g_callers[i].rva == rva && g_callers[i].mod == mod) {
+            g_callers[i].hits++;
+            return;
+        }
+    }
+    if (g_callerCount >= kMaxCallers)
+        return;
+    g_callers[g_callerCount].mod = mod;
+    g_callers[g_callerCount].rva = rva;
+    g_callers[g_callerCount].hits = 1;
+    g_callerCount++;
+}
+
+void SampleCaller() {
+    void* frames[24];
+    USHORT n = CaptureStackBackTrace(1, 24, frames, nullptr);
+    if (!n)
+        return;
+
+    EnterCriticalSection(&g_cs);
+    if (!g_modsResolved)
+        ResolveModules();
+    // The first frame inside game code, skipping our own hook and the CRT.
+    for (USHORT i = 0; i < n; i++) {
+        uint8_t* p = (uint8_t*)frames[i];
+        for (size_t m = 0; m < g_modCount; m++) {
+            if (p >= g_mods[m].base && p < g_mods[m].base + g_mods[m].size) {
+                RecordCaller(g_mods[m].name, (uint64_t)(p - g_mods[m].base));
+                LeaveCriticalSection(&g_cs);
+                return;
+            }
+        }
+    }
+    LeaveCriticalSection(&g_cs);
+}
+
 uint64_t g_qpf = 1;
 uint64_t g_startTick = 0;
 
 char g_reportPath[MAX_PATH] = { 0 };
+char g_timelinePath[MAX_PATH] = { 0 };
+
+// Previous-tick totals, for per-interval deltas.
+uint64_t g_prevReads = 0, g_prevBytes = 0, g_prevTicks = 0, g_prevSeeks = 0;
+uint64_t g_prevPerFileReads[kMaxFiles] = { 0 };
+uint64_t g_prevTickStamp = 0;
+bool g_timelineStarted = false;
 
 // --- originals -------------------------------------------------------------
 
@@ -240,6 +336,13 @@ BOOL WINAPI HookReadFile(HANDLE h, LPVOID buf, DWORD toRead, LPDWORD read, LPOVE
     if (idx < 0)
         return OrigReadFile(h, buf, toRead, read, ov);
 
+    if (InterlockedIncrement(&g_sampleCounter) % kSampleEvery == 0) {
+        __try {
+            SampleCaller();
+        } __except (EXCEPTION_EXECUTE_HANDLER) {
+        }
+    }
+
     uint64_t t0 = Now();
     BOOL ok = OrigReadFile(h, buf, toRead, read, ov);
     uint64_t dt = Now() - t0;
@@ -248,13 +351,20 @@ BOOL WINAPI HookReadFile(HANDLE h, LPVOID buf, DWORD toRead, LPDWORD read, LPOVE
         DWORD got = (read && ok) ? *read : 0;
         EnterCriticalSection(&g_cs);
         FileStat& f = g_files[idx];
-        f.reads++;
-        f.bytes += got;
-        f.readTicks += dt;
-        f.sizeHist[BucketOf(toRead)]++;
+        if (ov) {
+            // Completion is reported through the IOCP, not here. Count it so the
+            // report shows the gap instead of pretending the read was free.
+            f.asyncReads++;
+            f.bytes += toRead;
+        } else {
+            f.reads++;
+            f.bytes += got;
+            f.readTicks += dt;
+            f.sizeHist[BucketOf(toRead)]++;
+            if (f.nextOffset >= 0)
+                f.nextOffset += got;
+        }
         f.lastTick = Now();
-        if (f.nextOffset >= 0)
-            f.nextOffset += got;
         LeaveCriticalSection(&g_cs);
     } __except (EXCEPTION_EXECUTE_HANDLER) {
     }
@@ -367,6 +477,7 @@ void BuildReportPath() {
     DWORD n = GetModuleFileNameA(nullptr, exe, MAX_PATH);
     if (n == 0 || n >= MAX_PATH) {
         strcpy_s(g_reportPath, "swloadprof.log");
+        strcpy_s(g_timelinePath, "swloadtimeline.log");
         return;
     }
     for (DWORD i = n; i > 0; i--) {
@@ -376,9 +487,72 @@ void BuildReportPath() {
         }
     }
     sprintf_s(g_reportPath, "%sswloadprof.log", exe);
+    sprintf_s(g_timelinePath, "%sswloadtimeline.log", exe);
 }
 
 } // namespace
+
+void LoadProfTick() {
+    if (!g_csReady)
+        return;
+
+    uint64_t now = Now();
+    uint64_t reads = 0, bytes = 0, ticks = 0, seeks = 0;
+
+    // Busiest file this interval, which is what identifies the phase.
+    char topName[kPathMax] = { 0 };
+    uint64_t topReads = 0;
+
+    EnterCriticalSection(&g_cs);
+    for (size_t i = 0; i < g_fileCount; i++) {
+        const FileStat& f = g_files[i];
+        reads += f.reads;
+        bytes += f.bytes;
+        ticks += f.readTicks;
+        seeks += f.seeks;
+        uint64_t d = f.reads - g_prevPerFileReads[i];
+        if (d > topReads) {
+            topReads = d;
+            strncpy_s(topName, f.path, _TRUNCATE);
+        }
+        g_prevPerFileReads[i] = f.reads;
+    }
+    LeaveCriticalSection(&g_cs);
+
+    if (!g_timelineStarted) {
+        g_timelineStarted = true;
+        g_prevTickStamp = now;
+        FILE* fh = nullptr;
+        if (fopen_s(&fh, g_timelinePath, "w") == 0 && fh) {
+            fprintf(fh, "%8s %10s %10s %10s %10s  %s\n", "t(s)", "reads", "MB", "ms", "seeks",
+                    "busiest file");
+            fclose(fh);
+        }
+    }
+
+    uint64_t dReads = reads - g_prevReads;
+    g_prevTickStamp = now;
+    g_prevReads = reads;
+
+    if (dReads == 0) {
+        g_prevBytes = bytes;
+        g_prevTicks = ticks;
+        g_prevSeeks = seeks;
+        return;
+    }
+
+    FILE* fp = nullptr;
+    if (fopen_s(&fp, g_timelinePath, "a") != 0 || !fp)
+        return;
+    fprintf(fp, "%8.1f %10llu %10.2f %10.1f %10llu  %s\n", MsSince(now - g_startTick) / 1000.0,
+            (unsigned long long)dReads, (double)(bytes - g_prevBytes) / (1024.0 * 1024.0),
+            MsSince(ticks - g_prevTicks), (unsigned long long)(seeks - g_prevSeeks), topName);
+    fclose(fp);
+
+    g_prevBytes = bytes;
+    g_prevTicks = ticks;
+    g_prevSeeks = seeks;
+}
 
 void LoadProfDumpReport() {
     if (!g_csReady)
@@ -432,8 +606,29 @@ void LoadProfDumpReport() {
         if (f.maps)
             fprintf(fp, "  mapped %llu/%.1fMB", (unsigned long long)f.maps,
                     (double)f.mapBytes / (1024.0 * 1024.0));
+        if (f.asyncReads)
+            fprintf(fp, "  async %llu", (unsigned long long)f.asyncReads);
         fprintf(fp, "\n");
     }
+
+    // Sorted on a copy: the report is rewritten every second and must not
+    // disturb the counters it reads.
+    fprintf(fp, "\nread callers, sampled 1 in %d (rva is module-relative)\n", (int)kSampleEvery);
+    CallerSite sorted[kMaxCallers];
+    size_t sortedCount = g_callerCount;
+    memcpy(sorted, g_callers, sortedCount * sizeof(CallerSite));
+    for (size_t i = 1; i < sortedCount; i++) {
+        CallerSite key = sorted[i];
+        size_t j = i;
+        while (j > 0 && sorted[j - 1].hits < key.hits) {
+            sorted[j] = sorted[j - 1];
+            j--;
+        }
+        sorted[j] = key;
+    }
+    for (size_t i = 0; i < sortedCount && i < 25; i++)
+        fprintf(fp, "  %-14s +%08llX  %llu\n", sorted[i].mod,
+                (unsigned long long)sorted[i].rva, (unsigned long long)sorted[i].hits);
 
     fprintf(fp, "\nfirst/last access, seconds since inject\n");
     for (size_t i = 0; i < g_fileCount; i++) {

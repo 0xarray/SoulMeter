@@ -10,3 +10,8 @@ void LoadProfShutdown();
 
 // Rewrites the report. Safe to call from any thread.
 void LoadProfDumpReport();
+
+// Appends one delta line covering the interval since the previous call, so the
+// startup archive walk and an individual zone load can be separated from the
+// session totals. Call about once a second.
+void LoadProfTick();

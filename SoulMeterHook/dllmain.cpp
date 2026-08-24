@@ -169,6 +169,7 @@ DWORD WINAPI SetupThread(LPVOID) {
 
     while (g_running) {
         Sleep(1000);
+        LoadProfTick();
         LoadProfDumpReport();
     }
     HookUninstall();

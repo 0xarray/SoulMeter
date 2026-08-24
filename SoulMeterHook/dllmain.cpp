@@ -10,6 +10,7 @@
 #include "gamecmd.h"
 #include "loadopt.h"
 #include "loadprof.h"
+#include "md5cache.h"
 #include "sockethooks.h"
 #include "stream.h"
 
@@ -159,6 +160,10 @@ DWORD WINAPI SetupThread(LPVOID) {
     // image patches need.
     LoadOptApply();
 
+    // Must be armed before the client starts hashing the archives, which is
+    // ~30s into a cold start -- long after SoulWorker64.dll is mapped.
+    Md5CacheInstall();
+
     HANDLE hWriter = CreateThread(nullptr, 0, WriterThread, nullptr, 0, nullptr);
     if (hWriter)
         CloseHandle(hWriter);
@@ -173,6 +178,7 @@ DWORD WINAPI SetupThread(LPVOID) {
         LoadProfDumpReport();
     }
     HookUninstall();
+    Md5CacheShutdown();
     LoadProfShutdown();
     GameCmdShutdown();
     return 0;

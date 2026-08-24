@@ -155,6 +155,7 @@
     <ClCompile Include="gamecmd.cpp" />
     <ClCompile Include="loadopt.cpp" />
     <ClCompile Include="loadprof.cpp" />
+    <ClCompile Include="md5cache.cpp" />
     <ClCompile Include="sockethooks.cpp" />
     <ClCompile Include="..\Soulworker Utility\Third Party\minhook\src\buffer.c" />
     <ClCompile Include="..\Soulworker Utility\Third Party\minhook\src\hook.c" />
@@ -170,6 +171,7 @@
     <ClInclude Include="gamecmd.h" />
     <ClInclude Include="loadopt.h" />
     <ClInclude Include="loadprof.h" />
+    <ClInclude Include="md5cache.h" />
     <ClInclude Include="peutil.h" />
     <ClInclude Include="sockethooks.h" />
     <ClInclude Include="stream.h" />

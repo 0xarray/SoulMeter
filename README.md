@@ -11,7 +11,7 @@ Live damage tables, per-player breakdowns, buff uptime, DPS graphs and a combat 
 ![Platform](https://img.shields.io/badge/platform-Windows%20x64-0078D6)
 ![Language](https://img.shields.io/badge/C%2B%2B-20-00599C)
 ![UI](https://img.shields.io/badge/UI-ImGui%20%2B%20DirectX%2011-5C2D91)
-![Version](https://img.shields.io/badge/version-1.7.1.11-brightgreen)
+![Version](https://img.shields.io/badge/version-1.7.1.12-brightgreen)
 
 [<img src="https://cdn.buymeacoffee.com/buttons/v2/default-blue.png" height="48" alt="Buy me a coffee">](https://www.buymeacoffee.com/rainyyy)
 
@@ -32,6 +32,7 @@ SoulMeter reads the game's network traffic and turns it into a live picture of y
 | **Combat log** | A recorded blow-by-blow of the encounter |
 | **History** | The last 50 runs are kept and can be reopened and compared |
 | **Ping** | Live latency, measured from the game's own heartbeat exchange |
+| **Faster loading** | Cuts cold game startup from ~95s to ~38s — see [Load-time optimisations](#load-time-optimisations) |
 | **Localised** | English, 日本語, 한국어, 繁體中文 |
 
 ---
@@ -90,6 +91,25 @@ SoulMeter.exe                              SoulWorker (game process)
 The hook attaches to the client's own serialiser and deserialiser rather than to `ws2_32`. That matters: the client is an IOCP application issuing overlapped `WSARecv`, so socket-level hooks never observe a single byte. Hooking the game's own functions also means the client has already reassembled the TCP stream and decrypted the packet body by the time we see it — so frames arrive complete, in order, and exactly once, with no reassembly on our side to fall out of sync.
 
 **Built with** ImGui + ImPlot on DirectX 11 · SQLite for game data · FlatBuffers for history · MinHook for the detours · nlohmann/json for i18n · tinyxml2 for settings.
+
+---
+
+## Load-time optimisations
+
+Since the hook is already inside the game process, it also removes the work that dominates a cold start — plus a delay paid on every zone change. Measured on a 511199 client, startup went from **~95s to ~38s**.
+
+| What the client does | What the hook does | Saved |
+|---|---|---|
+| MD5-hashes `data01.v`–`data60.v` and `packinginfo.dat` — **9.2 GiB of file content** — on *every* launch | Memoises each hash against the file's size and last-write time | **~57s** |
+| Reads archive file tables in ~194-byte chunks, seeking before nearly every one — 2.57M reads in ~5s, ~80% of it inside `ReadFile` | Serves those reads from 32 KB blocks in a 32 MB cache, collapsing ~2.5M syscalls to ~26k | **~3s** |
+| Holds the zone loading screen for a hardcoded 0.5s *after* the map is already resident | Zeroes that one timer | 0.5s per warp |
+
+The hash is **memoised, not skipped** — the value handed back is the one the client would have computed, so a local comparison or a server-side check sees no difference. Archives that change on patch day are rehashed automatically, so updates need no action.
+
+Hashes are cached in `swmd5cache.txt` next to the game executable, or in `%LOCALAPPDATA%\SoulMeter\` when the install folder isn't writable (Steam, Program Files). Deleting it costs one slow launch, nothing more.
+
+> [!NOTE]
+> Each optimisation locates its target by signature and **fails closed** — if a game patch moves or changes the code, that optimisation quietly disables itself rather than acting on the wrong bytes, and the meter carries on as normal. All three were verified against GB 511199, GB 0820, KR and KR 2.4.27.0.
 
 ---
 

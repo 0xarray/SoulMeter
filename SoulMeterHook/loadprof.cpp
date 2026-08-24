@@ -26,6 +26,8 @@ struct FileStat {
     uint64_t seekBytes;      // total absolute distance skipped
     uint64_t backSeeks;      // seeks to a lower offset: read-ahead cannot help these
     uint64_t sizeHist[kBuckets];
+    uint64_t maps;           // MapViewOfFile calls: these bypass ReadFile entirely
+    uint64_t mapBytes;
     uint64_t firstTick;
     uint64_t lastTick;
     int64_t  nextOffset;     // -1 when unknown
@@ -58,12 +60,20 @@ typedef HANDLE(WINAPI* CreateFileAFn)(LPCSTR, DWORD, DWORD, LPSECURITY_ATTRIBUTE
 typedef BOOL(WINAPI* ReadFileFn)(HANDLE, LPVOID, DWORD, LPDWORD, LPOVERLAPPED);
 typedef DWORD(WINAPI* SetFilePointerFn)(HANDLE, LONG, PLONG, DWORD);
 typedef BOOL(WINAPI* SetFilePointerExFn)(HANDLE, LARGE_INTEGER, PLARGE_INTEGER, DWORD);
+typedef HANDLE(WINAPI* CreateFileMappingAFn)(HANDLE, LPSECURITY_ATTRIBUTES, DWORD, DWORD, DWORD,
+                                             LPCSTR);
+typedef HANDLE(WINAPI* CreateFileMappingWFn)(HANDLE, LPSECURITY_ATTRIBUTES, DWORD, DWORD, DWORD,
+                                             LPCWSTR);
+typedef LPVOID(WINAPI* MapViewOfFileFn)(HANDLE, DWORD, DWORD, DWORD, SIZE_T);
 
 CreateFileWFn OrigCreateFileW = nullptr;
 CreateFileAFn OrigCreateFileA = nullptr;
 ReadFileFn OrigReadFile = nullptr;
 SetFilePointerFn OrigSetFilePointer = nullptr;
 SetFilePointerExFn OrigSetFilePointerEx = nullptr;
+CreateFileMappingAFn OrigCreateFileMappingA = nullptr;
+CreateFileMappingWFn OrigCreateFileMappingW = nullptr;
+MapViewOfFileFn OrigMapViewOfFile = nullptr;
 
 // --- helpers ---------------------------------------------------------------
 
@@ -299,6 +309,57 @@ BOOL WINAPI HookSetFilePointerEx(HANDLE h, LARGE_INTEGER dist, PLARGE_INTEGER ne
     return ok;
 }
 
+// A mapping handle inherits the file's slot, so a later MapViewOfFile can be
+// charged to the file it actually reads.
+void NoteMapping(HANDLE file, HANDLE mapping) {
+    if (!g_csReady || !mapping)
+        return;
+    EnterCriticalSection(&g_cs);
+    int idx = LookupHandle(file);
+    if (idx >= 0)
+        BindHandle(mapping, idx);
+    LeaveCriticalSection(&g_cs);
+}
+
+HANDLE WINAPI HookCreateFileMappingA(HANDLE file, LPSECURITY_ATTRIBUTES sa, DWORD prot,
+                                     DWORD hi, DWORD lo, LPCSTR name) {
+    HANDLE m = OrigCreateFileMappingA(file, sa, prot, hi, lo, name);
+    __try {
+        NoteMapping(file, m);
+    } __except (EXCEPTION_EXECUTE_HANDLER) {
+    }
+    return m;
+}
+
+HANDLE WINAPI HookCreateFileMappingW(HANDLE file, LPSECURITY_ATTRIBUTES sa, DWORD prot,
+                                     DWORD hi, DWORD lo, LPCWSTR name) {
+    HANDLE m = OrigCreateFileMappingW(file, sa, prot, hi, lo, name);
+    __try {
+        NoteMapping(file, m);
+    } __except (EXCEPTION_EXECUTE_HANDLER) {
+    }
+    return m;
+}
+
+LPVOID WINAPI HookMapViewOfFile(HANDLE mapping, DWORD access, DWORD offHi, DWORD offLo,
+                                SIZE_T bytes) {
+    LPVOID p = OrigMapViewOfFile(mapping, access, offHi, offLo, bytes);
+    __try {
+        if (p && g_csReady) {
+            EnterCriticalSection(&g_cs);
+            int idx = LookupHandle(mapping);
+            if (idx >= 0) {
+                g_files[idx].maps++;
+                g_files[idx].mapBytes += bytes;
+                g_files[idx].lastTick = Now();
+            }
+            LeaveCriticalSection(&g_cs);
+        }
+    } __except (EXCEPTION_EXECUTE_HANDLER) {
+    }
+    return p;
+}
+
 // --- reporting -------------------------------------------------------------
 
 void BuildReportPath() {
@@ -330,12 +391,15 @@ void LoadProfDumpReport() {
     EnterCriticalSection(&g_cs);
 
     uint64_t totalBytes = 0, totalReads = 0, totalTicks = 0, totalSeeks = 0, totalBack = 0;
+    uint64_t totalMaps = 0, totalMapBytes = 0;
     for (size_t i = 0; i < g_fileCount; i++) {
         totalBytes += g_files[i].bytes;
         totalReads += g_files[i].reads;
         totalTicks += g_files[i].readTicks;
         totalSeeks += g_files[i].seeks;
         totalBack += g_files[i].backSeeks;
+        totalMaps += g_files[i].maps;
+        totalMapBytes += g_files[i].mapBytes;
     }
 
     fprintf(fp, "SoulMeter load profile\n");
@@ -347,6 +411,10 @@ void LoadProfDumpReport() {
     if (totalReads)
         fprintf(fp, "avg read %.0f bytes, avg %.3f ms/read\n",
                 (double)totalBytes / (double)totalReads, MsSince(totalTicks) / (double)totalReads);
+    // Mapped bytes never reach ReadFile, so a file with mappings and few reads
+    // is being paged in, not streamed, and its cost is invisible above.
+    fprintf(fp, "mapped: %llu views, %.1f MB\n", (unsigned long long)totalMaps,
+            (double)totalMapBytes / (1024.0 * 1024.0));
 
     fprintf(fp, "\n%-34s %8s %10s %9s %8s %7s  %s\n", "file", "reads", "MB", "ms", "seeks",
             "back", "read sizes <4K/16K/64K/256K/1M/+");
@@ -354,19 +422,23 @@ void LoadProfDumpReport() {
         const FileStat& f = g_files[i];
         if (!f.reads && !f.opens)
             continue;
-        fprintf(fp, "%-34s %8llu %10.2f %9.1f %8llu %7llu  %llu/%llu/%llu/%llu/%llu/%llu\n",
+        fprintf(fp, "%-34s %8llu %10.2f %9.1f %8llu %7llu  %llu/%llu/%llu/%llu/%llu/%llu",
                 f.path, (unsigned long long)f.reads, (double)f.bytes / (1024.0 * 1024.0),
                 MsSince(f.readTicks), (unsigned long long)f.seeks,
                 (unsigned long long)f.backSeeks,
                 (unsigned long long)f.sizeHist[0], (unsigned long long)f.sizeHist[1],
                 (unsigned long long)f.sizeHist[2], (unsigned long long)f.sizeHist[3],
                 (unsigned long long)f.sizeHist[4], (unsigned long long)f.sizeHist[5]);
+        if (f.maps)
+            fprintf(fp, "  mapped %llu/%.1fMB", (unsigned long long)f.maps,
+                    (double)f.mapBytes / (1024.0 * 1024.0));
+        fprintf(fp, "\n");
     }
 
     fprintf(fp, "\nfirst/last access, seconds since inject\n");
     for (size_t i = 0; i < g_fileCount; i++) {
         const FileStat& f = g_files[i];
-        if (!f.reads)
+        if (!f.reads && !f.maps)
             continue;
         fprintf(fp, "%-34s %8.2f %8.2f  opens %llu\n", f.path,
                 MsSince(f.firstTick - g_startTick) / 1000.0,
@@ -408,6 +480,9 @@ bool LoadProfInstall() {
         { "ReadFile",         (void*)&HookReadFile,         (void**)&OrigReadFile },
         { "SetFilePointer",   (void*)&HookSetFilePointer,   (void**)&OrigSetFilePointer },
         { "SetFilePointerEx", (void*)&HookSetFilePointerEx, (void**)&OrigSetFilePointerEx },
+        { "CreateFileMappingA", (void*)&HookCreateFileMappingA, (void**)&OrigCreateFileMappingA },
+        { "CreateFileMappingW", (void*)&HookCreateFileMappingW, (void**)&OrigCreateFileMappingW },
+        { "MapViewOfFile",    (void*)&HookMapViewOfFile,    (void**)&OrigMapViewOfFile },
     };
 
     for (auto& t : targets) {

@@ -7,7 +7,10 @@
 #include <windows.h>
 #include <cstdint>
 
+#include "blockcache.h"
 #include "gamecmd.h"
+#include "loadopt.h"
+#include "md5cache.h"
 #include "sockethooks.h"
 #include "stream.h"
 
@@ -142,12 +145,24 @@ DWORD WINAPI CommandThread(LPVOID) {
 }
 
 DWORD WINAPI SetupThread(LPVOID) {
+    // Before waiting on SoulWorker64.dll: the archives are mounted during
+    // engine init, which is over before the netMgr exists.
+    BlockCacheInstall();
+
     // Injection happens ~30ms after process start, so SoulWorker64.dll is not
     // loaded yet and its netMgr is constructed later still.
     while (g_running && !HookInstall())
         Sleep(100);
     if (!g_running)
         return 0;
+
+    // HookInstall succeeding means SoulWorker64.dll is mapped, which is all the
+    // image patches need.
+    LoadOptApply();
+
+    // Must be armed before the client starts hashing the archives, which is
+    // ~30s into a cold start -- long after SoulWorker64.dll is mapped.
+    Md5CacheInstall();
 
     HANDLE hWriter = CreateThread(nullptr, 0, WriterThread, nullptr, 0, nullptr);
     if (hWriter)
@@ -160,6 +175,8 @@ DWORD WINAPI SetupThread(LPVOID) {
     while (g_running)
         Sleep(1000);
     HookUninstall();
+    Md5CacheShutdown();
+    BlockCacheShutdown();
     GameCmdShutdown();
     return 0;
 }

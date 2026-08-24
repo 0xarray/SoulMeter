@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -151,8 +151,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="blockcache.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="gamecmd.cpp" />
+    <ClCompile Include="loadopt.cpp" />
+    <ClCompile Include="md5cache.cpp" />
     <ClCompile Include="sockethooks.cpp" />
     <ClCompile Include="..\Soulworker Utility\Third Party\minhook\src\buffer.c" />
     <ClCompile Include="..\Soulworker Utility\Third Party\minhook\src\hook.c" />
@@ -165,7 +168,10 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="blockcache.h" />
     <ClInclude Include="gamecmd.h" />
+    <ClInclude Include="loadopt.h" />
+    <ClInclude Include="md5cache.h" />
     <ClInclude Include="peutil.h" />
     <ClInclude Include="sockethooks.h" />
     <ClInclude Include="stream.h" />

@@ -2,7 +2,7 @@
 
 <img src=".github/logo.png" width="96" alt="SoulMeter">
 
-# SoulMeter
+# [SoulMeter](https://discord.gg/7ynGDqcnPJ)
 
 **A real-time DPS meter and combat overlay for [SoulWorker](https://store.steampowered.com/app/1377580/Soulworker/).**
 

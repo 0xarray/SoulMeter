@@ -8,6 +8,7 @@
 #include <cstdint>
 
 #include "gamecmd.h"
+#include "loadprof.h"
 #include "sockethooks.h"
 #include "stream.h"
 
@@ -142,6 +143,10 @@ DWORD WINAPI CommandThread(LPVOID) {
 }
 
 DWORD WINAPI SetupThread(LPVOID) {
+    // Before waiting on SoulWorker64.dll: the archive mounting this measures
+    // happens during engine init, which is over before the netMgr exists.
+    LoadProfInstall();
+
     // Injection happens ~30ms after process start, so SoulWorker64.dll is not
     // loaded yet and its netMgr is constructed later still.
     while (g_running && !HookInstall())
@@ -157,9 +162,12 @@ DWORD WINAPI SetupThread(LPVOID) {
     if (hCmd)
         CloseHandle(hCmd);
 
-    while (g_running)
+    while (g_running) {
         Sleep(1000);
+        LoadProfDumpReport();
+    }
     HookUninstall();
+    LoadProfShutdown();
     GameCmdShutdown();
     return 0;
 }

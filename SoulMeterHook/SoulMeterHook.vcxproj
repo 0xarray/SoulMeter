@@ -153,6 +153,7 @@
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="gamecmd.cpp" />
+    <ClCompile Include="loadprof.cpp" />
     <ClCompile Include="sockethooks.cpp" />
     <ClCompile Include="..\Soulworker Utility\Third Party\minhook\src\buffer.c" />
     <ClCompile Include="..\Soulworker Utility\Third Party\minhook\src\hook.c" />
@@ -166,6 +167,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="gamecmd.h" />
+    <ClInclude Include="loadprof.h" />
     <ClInclude Include="peutil.h" />
     <ClInclude Include="sockethooks.h" />
     <ClInclude Include="stream.h" />

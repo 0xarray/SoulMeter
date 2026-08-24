@@ -63,7 +63,7 @@ constexpr uint8_t kZeroXmm1[kMovssLen] = {
 constexpr uint8_t kTimerIdMark[] = { 0xBA, 0xEA, 0x03, 0x00, 0x00 };
 constexpr size_t kIdSearchBack = 256;
 
-bool PatchZoneLoadingDelay(uint8_t* base, const pe::Section& text) {
+bool PatchZoneLoadingDelay(const pe::Section& text) {
     const uint8_t* hit = pe::FindUnique(text, kZoneDelaySig, kZoneDelayMask);
     if (!hit) {
         Log("[swopt] zone delay: signature missing or ambiguous, skipped\n");
@@ -87,8 +87,6 @@ bool PatchZoneLoadingDelay(uint8_t* base, const pe::Section& text) {
     VirtualProtect(target, kMovssLen, old, &old);
     FlushInstructionCache(GetCurrentProcess(), target, kMovssLen);
 
-    Log("[swopt] zone loading delay removed at +%llX\n",
-        (unsigned long long)(target - base));
     return true;
 }
 
@@ -108,7 +106,7 @@ int LoadOptApply() {
             return 0;
 
         if (InterlockedCompareExchange(&g_zoneDelayDone, 1, 0) == 0) {
-            if (PatchZoneLoadingDelay(base, text))
+            if (PatchZoneLoadingDelay(text))
                 applied++;
             else
                 InterlockedExchange(&g_zoneDelayDone, 0);

@@ -52,8 +52,6 @@ size_t g_entryCount = 0;
 bool g_dirty = false;
 char g_cachePath[MAX_PATH] = { 0 };
 
-LONG g_hits = 0;
-LONG g_misses = 0;
 
 // MSVC std::string: buffer/pointer at 0, size at 0x10, capacity at 0x18. The
 // game reads it the same way (capacity < 16 means the small-buffer form).
@@ -177,7 +175,6 @@ int64_t __fastcall HookedMd5(void* self, void* relPath, void* outHex) {
             __try {
                 g_assign(outHex, hit, kHexLen);
                 g_release(relPath, 1, 0);
-                InterlockedIncrement(&g_hits);
                 return 0;
             } __except (EXCEPTION_EXECUTE_HANDLER) {
                 return 13;
@@ -187,7 +184,6 @@ int64_t __fastcall HookedMd5(void* self, void* relPath, void* outHex) {
 
     // The original releases relPath itself, so the path was copied above.
     int64_t r = OrigMd5(self, relPath, outHex);
-    InterlockedIncrement(&g_misses);
 
     if (r == 0 && usable) {
         __try {
@@ -302,6 +298,20 @@ bool ResolveHelpers(uint8_t* fn) {
     return true;
 }
 
+bool Writable(const char* path) {
+    FILE* fp = nullptr;
+    if (fopen_s(&fp, path, "a") != 0 || !fp)
+        return false;
+    fclose(fp);
+    return true;
+}
+
+// Beside the game exe when that directory is writable, which keeps the cache
+// with the install it describes. A game under Program Files or Steam is not
+// writable by the non-elevated client, so it falls back to LOCALAPPDATA --
+// tagged with a hash of the install path, because entries are keyed on the
+// relative path and two installs would otherwise overwrite each other's
+// datas\data01.v forever.
 void BuildCachePath() {
     char exe[MAX_PATH];
     DWORD n = GetModuleFileNameA(nullptr, exe, MAX_PATH);
@@ -315,7 +325,28 @@ void BuildCachePath() {
             break;
         }
     }
+
     sprintf_s(g_cachePath, "%sswmd5cache.txt", exe);
+    if (Writable(g_cachePath))
+        return;
+
+    uint64_t tag = 1469598103934665603ull;
+    for (const char* p = exe; *p; p++) {
+        tag ^= (uint64_t)(unsigned char)(*p >= 'A' && *p <= 'Z' ? *p + 32 : *p);
+        tag *= 1099511628211ull;
+    }
+
+    char base[MAX_PATH];
+    DWORD got = GetEnvironmentVariableA("LOCALAPPDATA", base, MAX_PATH);
+    if (got == 0 || got >= MAX_PATH) {
+        strcpy_s(g_cachePath, "swmd5cache.txt");
+        return;
+    }
+
+    char dir[MAX_PATH];
+    sprintf_s(dir, "%s\\SoulMeter", base);
+    CreateDirectoryA(dir, nullptr);
+    sprintf_s(g_cachePath, "%s\\swmd5cache_%016llx.txt", dir, (unsigned long long)tag);
 }
 
 } // namespace
@@ -369,7 +400,6 @@ bool Md5CacheInstall() {
         return false;
     }
 
-    Log("[swopt] md5 cache armed, %zu entries loaded\n", g_entryCount);
     return true;
 }
 
@@ -379,5 +409,4 @@ void Md5CacheShutdown() {
     EnterCriticalSection(&g_cs);
     SaveCache();
     LeaveCriticalSection(&g_cs);
-    Log("[swopt] md5 cache: %ld hits, %ld misses\n", g_hits, g_misses);
 }

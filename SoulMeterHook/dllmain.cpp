@@ -7,9 +7,9 @@
 #include <windows.h>
 #include <cstdint>
 
+#include "blockcache.h"
 #include "gamecmd.h"
 #include "loadopt.h"
-#include "loadprof.h"
 #include "md5cache.h"
 #include "sockethooks.h"
 #include "stream.h"
@@ -145,9 +145,9 @@ DWORD WINAPI CommandThread(LPVOID) {
 }
 
 DWORD WINAPI SetupThread(LPVOID) {
-    // Before waiting on SoulWorker64.dll: the archive mounting this measures
-    // happens during engine init, which is over before the netMgr exists.
-    LoadProfInstall();
+    // Before waiting on SoulWorker64.dll: the archives are mounted during
+    // engine init, which is over before the netMgr exists.
+    BlockCacheInstall();
 
     // Injection happens ~30ms after process start, so SoulWorker64.dll is not
     // loaded yet and its netMgr is constructed later still.
@@ -172,14 +172,11 @@ DWORD WINAPI SetupThread(LPVOID) {
     if (hCmd)
         CloseHandle(hCmd);
 
-    while (g_running) {
+    while (g_running)
         Sleep(1000);
-        LoadProfTick();
-        LoadProfDumpReport();
-    }
     HookUninstall();
     Md5CacheShutdown();
-    LoadProfShutdown();
+    BlockCacheShutdown();
     GameCmdShutdown();
     return 0;
 }

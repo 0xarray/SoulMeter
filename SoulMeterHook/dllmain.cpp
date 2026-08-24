@@ -8,6 +8,7 @@
 #include <cstdint>
 
 #include "gamecmd.h"
+#include "loadopt.h"
 #include "loadprof.h"
 #include "sockethooks.h"
 #include "stream.h"
@@ -153,6 +154,10 @@ DWORD WINAPI SetupThread(LPVOID) {
         Sleep(100);
     if (!g_running)
         return 0;
+
+    // HookInstall succeeding means SoulWorker64.dll is mapped, which is all the
+    // image patches need.
+    LoadOptApply();
 
     HANDLE hWriter = CreateThread(nullptr, 0, WriterThread, nullptr, 0, nullptr);
     if (hWriter)

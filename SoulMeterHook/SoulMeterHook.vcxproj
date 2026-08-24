@@ -151,6 +151,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="blockcache.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="gamecmd.cpp" />
     <ClCompile Include="loadopt.cpp" />
@@ -168,6 +169,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="blockcache.h" />
     <ClInclude Include="gamecmd.h" />
     <ClInclude Include="loadopt.h" />
     <ClInclude Include="loadprof.h" />

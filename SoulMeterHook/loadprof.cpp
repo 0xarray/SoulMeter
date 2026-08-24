@@ -7,6 +7,7 @@
 #include <cstdio>
 #include <cstring>
 
+#include "blockcache.h"
 #include "peutil.h"
 
 namespace {
@@ -31,6 +32,7 @@ struct FileStat {
     uint64_t maps;           // MapViewOfFile calls: these bypass ReadFile entirely
     uint64_t mapBytes;
     uint64_t asyncReads;     // overlapped: bytes land later, so timing here is meaningless
+    uint64_t cacheHits;      // served from the block cache, never reached the kernel
     uint64_t firstTick;
     uint64_t lastTick;
     int64_t  nextOffset;     // -1 when unknown
@@ -156,6 +158,8 @@ typedef HANDLE(WINAPI* CreateFileAFn)(LPCSTR, DWORD, DWORD, LPSECURITY_ATTRIBUTE
 typedef BOOL(WINAPI* ReadFileFn)(HANDLE, LPVOID, DWORD, LPDWORD, LPOVERLAPPED);
 typedef DWORD(WINAPI* SetFilePointerFn)(HANDLE, LONG, PLONG, DWORD);
 typedef BOOL(WINAPI* SetFilePointerExFn)(HANDLE, LARGE_INTEGER, PLARGE_INTEGER, DWORD);
+typedef BOOL(WINAPI* WriteFileFn)(HANDLE, LPCVOID, DWORD, LPDWORD, LPOVERLAPPED);
+typedef BOOL(WINAPI* CloseHandleFn)(HANDLE);
 typedef HANDLE(WINAPI* CreateFileMappingAFn)(HANDLE, LPSECURITY_ATTRIBUTES, DWORD, DWORD, DWORD,
                                              LPCSTR);
 typedef HANDLE(WINAPI* CreateFileMappingWFn)(HANDLE, LPSECURITY_ATTRIBUTES, DWORD, DWORD, DWORD,
@@ -167,6 +171,8 @@ CreateFileAFn OrigCreateFileA = nullptr;
 ReadFileFn OrigReadFile = nullptr;
 SetFilePointerFn OrigSetFilePointer = nullptr;
 SetFilePointerExFn OrigSetFilePointerEx = nullptr;
+WriteFileFn OrigWriteFile = nullptr;
+CloseHandleFn OrigCloseHandle = nullptr;
 CreateFileMappingAFn OrigCreateFileMappingA = nullptr;
 CreateFileMappingWFn OrigCreateFileMappingW = nullptr;
 MapViewOfFileFn OrigMapViewOfFile = nullptr;
@@ -305,8 +311,10 @@ HANDLE WINAPI HookCreateFileW(LPCWSTR name, DWORD access, DWORD share,
             char narrow[kPathMax];
             int n = WideCharToMultiByte(CP_ACP, 0, name, -1, narrow, sizeof(narrow), nullptr,
                                         nullptr);
-            if (n > 0)
+            if (n > 0) {
                 NoteOpen(h, narrow);
+                BlockCacheNoteOpen(h, narrow, access, flags);
+            }
         }
     } __except (EXCEPTION_EXECUTE_HANDLER) {
     }
@@ -317,11 +325,23 @@ HANDLE WINAPI HookCreateFileA(LPCSTR name, DWORD access, DWORD share, LPSECURITY
                               DWORD disp, DWORD flags, HANDLE tmpl) {
     HANDLE h = OrigCreateFileA(name, access, share, sa, disp, flags, tmpl);
     __try {
-        if (h != INVALID_HANDLE_VALUE && name)
+        if (h != INVALID_HANDLE_VALUE && name) {
             NoteOpen(h, name);
+            BlockCacheNoteOpen(h, name, access, flags);
+        }
     } __except (EXCEPTION_EXECUTE_HANDLER) {
     }
     return h;
+}
+
+BOOL WINAPI HookWriteFile(HANDLE h, LPCVOID buf, DWORD n, LPDWORD wrote, LPOVERLAPPED ov) {
+    BlockCacheDisable(h);
+    return OrigWriteFile(h, buf, n, wrote, ov);
+}
+
+BOOL WINAPI HookCloseHandle(HANDLE h) {
+    BlockCacheNoteClose(h);
+    return OrigCloseHandle(h);
 }
 
 BOOL WINAPI HookReadFile(HANDLE h, LPVOID buf, DWORD toRead, LPDWORD read, LPOVERLAPPED ov) {
@@ -333,8 +353,42 @@ BOOL WINAPI HookReadFile(HANDLE h, LPVOID buf, DWORD toRead, LPDWORD read, LPOVE
         idx = LookupHandle(h);
         LeaveCriticalSection(&g_cs);
     }
-    if (idx < 0)
+    if (idx < 0) {
+        // Still cacheable: an archive opened before the profiler was armed has
+        // no stats slot but the cache tracks its own handles.
+        if (!ov) {
+            DWORD served = 0;
+            if (BlockCacheRead(h, buf, toRead, &served)) {
+                if (read)
+                    *read = served;
+                return TRUE;
+            }
+        } else {
+            BlockCacheDisable(h);
+        }
         return OrigReadFile(h, buf, toRead, read, ov);
+    }
+
+    if (ov) {
+        BlockCacheDisable(h);
+    } else {
+        DWORD served = 0;
+        if (BlockCacheRead(h, buf, toRead, &served)) {
+            if (read)
+                *read = served;
+            EnterCriticalSection(&g_cs);
+            FileStat& f = g_files[idx];
+            f.reads++;
+            f.bytes += served;
+            f.cacheHits++;
+            f.sizeHist[BucketOf(toRead)]++;
+            if (f.nextOffset >= 0)
+                f.nextOffset += served;
+            f.lastTick = Now();
+            LeaveCriticalSection(&g_cs);
+            return TRUE;
+        }
+    }
 
     if (InterlockedIncrement(&g_sampleCounter) % kSampleEvery == 0) {
         __try {
@@ -393,6 +447,15 @@ void NoteSeek(HANDLE h, int64_t target) {
 }
 
 DWORD WINAPI HookSetFilePointer(HANDLE h, LONG lo, PLONG hi, DWORD method) {
+    int64_t dist = hi ? (((int64_t)*hi << 32) | (uint32_t)lo) : (int64_t)lo;
+    int64_t pos = 0;
+    if (BlockCacheSeek(h, dist, method, &pos)) {
+        NoteSeek(h, pos);
+        if (hi)
+            *hi = (LONG)(pos >> 32);
+        return (DWORD)(pos & 0xFFFFFFFF);
+    }
+
     DWORD r = OrigSetFilePointer(h, lo, hi, method);
     __try {
         if (r != INVALID_SET_FILE_POINTER || GetLastError() == NO_ERROR) {
@@ -408,6 +471,14 @@ DWORD WINAPI HookSetFilePointer(HANDLE h, LONG lo, PLONG hi, DWORD method) {
 
 BOOL WINAPI HookSetFilePointerEx(HANDLE h, LARGE_INTEGER dist, PLARGE_INTEGER newPos,
                                  DWORD method) {
+    int64_t cached = 0;
+    if (BlockCacheSeek(h, dist.QuadPart, method, &cached)) {
+        NoteSeek(h, cached);
+        if (newPos)
+            newPos->QuadPart = cached;
+        return TRUE;
+    }
+
     LARGE_INTEGER local;
     local.QuadPart = 0;
     BOOL ok = OrigSetFilePointerEx(h, dist, newPos ? newPos : &local, method);
@@ -589,6 +660,9 @@ void LoadProfDumpReport() {
     // is being paged in, not streamed, and its cost is invisible above.
     fprintf(fp, "mapped: %llu views, %.1f MB\n", (unsigned long long)totalMaps,
             (double)totalMapBytes / (1024.0 * 1024.0));
+    char bc[256];
+    BlockCacheStats(bc, sizeof(bc));
+    fputs(bc, fp);
 
     fprintf(fp, "\n%-34s %8s %10s %9s %8s %7s  %s\n", "file", "reads", "MB", "ms", "seeks",
             "back", "read sizes <4K/16K/64K/256K/1M/+");
@@ -608,6 +682,8 @@ void LoadProfDumpReport() {
                     (double)f.mapBytes / (1024.0 * 1024.0));
         if (f.asyncReads)
             fprintf(fp, "  async %llu", (unsigned long long)f.asyncReads);
+        if (f.cacheHits)
+            fprintf(fp, "  cached %llu", (unsigned long long)f.cacheHits);
         fprintf(fp, "\n");
     }
 
@@ -678,6 +754,8 @@ bool LoadProfInstall() {
         { "CreateFileMappingA", (void*)&HookCreateFileMappingA, (void**)&OrigCreateFileMappingA },
         { "CreateFileMappingW", (void*)&HookCreateFileMappingW, (void**)&OrigCreateFileMappingW },
         { "MapViewOfFile",    (void*)&HookMapViewOfFile,    (void**)&OrigMapViewOfFile },
+        { "WriteFile",        (void*)&HookWriteFile,        (void**)&OrigWriteFile },
+        { "CloseHandle",      (void*)&HookCloseHandle,      (void**)&OrigCloseHandle },
     };
 
     for (auto& t : targets) {
@@ -688,7 +766,17 @@ bool LoadProfInstall() {
             MH_EnableHook(fn);
     }
 
-    return OrigReadFile != nullptr;
+    if (!OrigReadFile)
+        return false;
+
+    // The cache needs every one of these to keep a served handle's position
+    // coherent; without the full set it would hand back bytes from the wrong
+    // offset, so it stays off rather than run half-wired.
+    if (OrigSetFilePointerEx && OrigSetFilePointer && OrigCloseHandle && OrigWriteFile &&
+        OrigCreateFileW && OrigCreateFileA)
+        BlockCacheInstall(OrigReadFile, OrigSetFilePointerEx);
+
+    return true;
 }
 
 void LoadProfShutdown() {

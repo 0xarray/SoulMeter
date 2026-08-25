@@ -103,9 +103,10 @@ void PlayerTable::Update() {
 
 		if (!PipeReceiverIsConnected()) {
 			// game not hooked yet - the player launches it themselves
-			sprintf_s(title, 1024, "%s [v%s] ###DamageMeter",
+			sprintf_s(title, 1024, "%s [v%s]  %s ###DamageMeter",
 				LANGMANAGER.GetText("STR_WAITING_FOR_GAME").data(),
-				APP_VERSION
+				APP_VERSION,
+				SOULMETER_DISCORD_INVITE
 			);
 		}
 		else {

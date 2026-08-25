@@ -24,6 +24,7 @@ private:
 	float _fontScale;
 	bool ShowFontSelector();
 	void ShowFeatures();
+	void ShowDiscord();
 
 	float _columnFontScale;
 	float _tableFontScale;

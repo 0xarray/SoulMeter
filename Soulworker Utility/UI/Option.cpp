@@ -8,6 +8,9 @@
 #include ".\Damage Meter\Damage Meter.h"
 #include ".\Buff Meter\Buff Meter.h"
 #include ".\Damage Meter\MySQLite.h"
+#include "SWConfig.h"
+#include <shellapi.h>
+#pragma comment(lib, "shell32.lib")
 
 std::vector<ImFontObj> fonts;
 void UpdateFontList()
@@ -425,6 +428,19 @@ void UiOption::ShowFeatures()
 	
 }
 
+void UiOption::ShowDiscord()
+{
+	ImGui::Text("Discord");
+	ImGui::Separator();
+
+	ImGui::TextWrapped("%s", SOULMETER_DISCORD_INVITE);
+	ImGui::Spacing();
+
+	if (ImGui::Button("Join Discord")) {
+		ShellExecuteA(NULL, "open", SOULMETER_DISCORD_URL, NULL, NULL, SW_SHOWNORMAL);
+	}
+}
+
 void UiOption::OpenOption() {
 
 	_open = TRUE;
@@ -494,6 +510,11 @@ void UiOption::OpenOption() {
 			}
 			else if (HOTKEY.isCapturing()) {
 				HOTKEY.CancelCapture();
+			}
+
+			if (ImGui::BeginTabItem("Discord")) {
+				ShowDiscord();
+				ImGui::EndTabItem();
 			}
 
 			ImGui::EndTabBar();

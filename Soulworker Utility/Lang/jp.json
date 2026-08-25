@@ -1,4 +1,4 @@
-{
+﻿{
 
   "STR_LANG_NAME": "日本語",
   "STR_SQL_SUFFIX": "JP",
@@ -52,14 +52,14 @@
   "STR_TABLE_GET_HIT_INCLUDE_ZERO_DAMAGE": "攻撃を受けた回数(+0ダメ含め)",
   "STR_TABLE_GET_HIT": "攻撃を受けた回数",
   "STR_TABLE_GET_HIT_BS": "攻撃を受けた回数(BS)",
-  "STR_TABLE_ACC1_BS": "アクセサリー1(BS)",
-  "STR_TABLE_ACC2_BS": "アクセサリー2(BS)",
-  "STR_TABLE_ACC3_BS": "アクセサリー3(BS)",
   "STR_TABLE_EVADE_RATE_A": "回避率A",
   "STR_TABLE_EVADE_RATE_B": "回避率B",
   "STR_TABLE_GIGA_ENLIGHTEN": "ギガエンラ",
   "STR_TABLE_TERA_ENLIGHTEN": "テラエンラ",
   "STR_TABLE_TERA_FEVER": "テラフィーバー",
+  "STR_TABLE_TERA_FURY": "テラフューリー",
+  "STR_TABLE_TERA_BACKSTEP": "テラバックステップ",
+  "STR_TABLE_TERA_TECHNIC": "テラテクニック",
   "STR_TABLE_LOSED_HP": "失ったHP",
   "STR_TABLE_DODGE_COUNT": "回避数",
   "STR_TABLE_DEATH": "死亡",

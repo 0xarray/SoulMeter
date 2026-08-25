@@ -15,6 +15,13 @@ struct SkillCount {
 	unsigned short _in_full_ab_count;
 };
 
+enum BroochProc {
+	BROOCH_FEVER,
+	BROOCH_FURY,
+	BROOCH_BACKSTEP,
+	BROOCH_TECHNIC
+};
+
 class SWDamagePlayer : public MemoryPool<SWDamagePlayer, 30> {
 private:
 	uint32_t _id;
@@ -44,7 +51,10 @@ private:
 	float _enlightenSum;
 	unsigned short _gigaEnlightenProc;
 	unsigned short _teraEnlightenProc;
-	unsigned short _teraFeverProc;
+	unsigned short _teraFeverProc = 0;
+	unsigned short _furyProc = 0;
+	unsigned short _backstepProc = 0;
+	unsigned short _technicProc = 0;
 	unsigned short _skillCounts = 0;
 	unsigned short _dodgeCounts = 0;
 	unsigned short _deathCounts = 0;
@@ -53,10 +63,6 @@ private:
 	double _historyAvgABU = 0.0;
 	double _historyAvgBD = 0.0;
 	
-	double _historygear90 = 0.0;
-	double _historygear50 = 0.0;
-	double _historyacc01 = 0.0;
-	double _historyacc02 = 0.0;
 
 	double _historyLosedHP = 0.0;
 	BYTE _JqStack = 0;
@@ -109,7 +115,7 @@ public:
 	float GetEnlightenSum();
 	unsigned short GetGigaEnlighten();
 	unsigned short GetTeraEnlighten();
-	unsigned short GetTeraFever();
+	unsigned short GetBroochProc(BroochProc type);
 	unsigned short GetSkillUsed();
 	unsigned short GetDodgeUsed();
 	unsigned short GetDeathCount();
@@ -136,8 +142,6 @@ public:
 	void SetHistoryAvgAS(double d);
 	double GetHistoryAvgAS();
 
-	void setHistoryBS(int type, double value);
-	double GetHistoryBS(int type);
 
 	void setHistoryLosedHP(double losedHP);
 	double GetHistoryLosedHP();
@@ -147,7 +151,7 @@ public:
 
 	void AddGetDamage(uint64_t totalDMG, SWPACKETDAMAGE_DAMAGETYPE damageType, uint32_t monsterID, uint32_t skillID);
 	void AddEnlighten(float value);
-	void AddFever();
+	void AddBroochProc(BroochProc type);
 	void AddSkillUsed(uint32_t skillId);
 	void AddDodgeUsed();
 	void AddDeathCount();
@@ -217,6 +221,9 @@ public:
 		tdpb.add__gigaenlightenproc(_gigaEnlightenProc);
 		tdpb.add__teraenlightenproc(_teraEnlightenProc);
 		tdpb.add__terafevernproc(_teraFeverProc);
+		tdpb.add__furyproc(_furyProc);
+		tdpb.add__backstepproc(_backstepProc);
+		tdpb.add__technicproc(_technicProc);
 		tdpb.add__skillcounts(_skillCounts);
 		tdpb.add__dodgecounts(_dodgeCounts);
 		tdpb.add__deathcounts(_deathCounts);
@@ -224,11 +231,7 @@ public:
 		tdpb.add__historyavgab(_historyAvgAB);
 		tdpb.add__historyavgabu(_historyAvgABU);
 		tdpb.add__historyavgbd(_historyAvgBD);
-		tdpb.add__historygear90(_historygear90);
-		tdpb.add__historygear50(_historygear50);
-		tdpb.add__historyacc01(_historyacc01);
 
-		tdpb.add__historyacc02(_historyacc02);
 		tdpb.add__historylosedhp(_historyLosedHP);
 		tdpb.add__jqstack(_JqStack);
 		tdpb.add__historyabtime(_historyABTime);
@@ -298,6 +301,9 @@ public:
 		_gigaEnlightenProc = tDamagePlayer->_gigaenlightenproc();
 		_teraEnlightenProc = tDamagePlayer->_teraenlightenproc();
 		_teraFeverProc = tDamagePlayer->_terafevernproc();
+		_furyProc = tDamagePlayer->_furyproc();
+		_backstepProc = tDamagePlayer->_backstepproc();
+		_technicProc = tDamagePlayer->_technicproc();
 		_skillCounts = tDamagePlayer->_skillcounts();
 		_dodgeCounts = tDamagePlayer->_dodgecounts();
 		_deathCounts = tDamagePlayer->_deathcounts();
@@ -305,11 +311,7 @@ public:
 		_historyAvgAB = tDamagePlayer->_historyavgab();
 		_historyAvgABU = tDamagePlayer->_historyavgabu();
 		_historyAvgBD = tDamagePlayer->_historyavgbd();
-		_historygear90 = tDamagePlayer->_historygear90();
-		_historygear50 = tDamagePlayer->_historygear50();
-		_historyacc01 = tDamagePlayer->_historyacc01();
 
-		_historyacc02 = tDamagePlayer->_historyacc02();
 		_historyLosedHP = tDamagePlayer->_historylosedhp();
 		_JqStack = tDamagePlayer->_jqstack();
 		_historyABTime = tDamagePlayer->_historyabtime();

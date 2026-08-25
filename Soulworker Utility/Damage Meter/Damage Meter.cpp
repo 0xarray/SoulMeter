@@ -197,7 +197,7 @@ void SWDamageMeter::AddEnlighten(uint32_t playerId, float value)
 	}
 }
 
-void SWDamageMeter::AddFever(uint32_t playerId)
+void SWDamageMeter::AddBroochProc(uint32_t playerId, BroochProc type)
 {
 	if (!isRun() || GetTime() == 0)
 		return;
@@ -205,14 +205,14 @@ void SWDamageMeter::AddFever(uint32_t playerId)
 	auto itr = _playerInfo.begin();
 	for (; itr != _playerInfo.end(); itr++) {
 		if (playerId == (*itr)->GetID()) {
-			(*itr)->AddFever();
+			(*itr)->AddBroochProc(type);
 			return;
 		}
 	}
 
 	if (CheckPlayer(playerId)) {
 		SWDamagePlayer* newPlayer = new SWDamagePlayer(playerId);
-		newPlayer->AddFever();
+		newPlayer->AddBroochProc(type);
 		_playerInfo.push_back(newPlayer);
 	}
 }

@@ -1,4 +1,4 @@
-{
+﻿{
 
     "STR_LANG_NAME": "English",
     "STR_SQL_SUFFIX": "EN",
@@ -52,14 +52,14 @@
     "STR_TABLE_GET_HIT_INCLUDE_ZERO_DAMAGE": "Get Hit(+0 DMG)",
     "STR_TABLE_GET_HIT": "Get Hit",
     "STR_TABLE_GET_HIT_BS": "Get Hit(BS)",
-    "STR_TABLE_ACC1_BS": "ACC1(BS)",
-    "STR_TABLE_ACC2_BS": "ACC2(BS)",
-    "STR_TABLE_ACC3_BS": "ACC3(BS)",
     "STR_TABLE_EVADE_RATE_A": "Evade Rate A",
     "STR_TABLE_EVADE_RATE_B": "Evade Rate B",
     "STR_TABLE_GIGA_ENLIGHTEN": "Giga.Enli",
     "STR_TABLE_TERA_ENLIGHTEN": "Tera.Enli",
     "STR_TABLE_TERA_FEVER": "Tera.Fever",
+    "STR_TABLE_TERA_FURY": "Tera.Fury",
+    "STR_TABLE_TERA_BACKSTEP": "Tera.Backstep",
+    "STR_TABLE_TERA_TECHNIC": "Tera.Technic",
     "STR_TABLE_LOSED_HP": "Losed HP",
     "STR_TABLE_DODGE_COUNT": "Dodge",
     "STR_TABLE_DEATH": "Death",

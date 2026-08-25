@@ -56,10 +56,6 @@ struct _tDamagePlayer FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
     VT__DEATHCOUNTS = 62,
     VT__HISTORYAVGAB = 64,
     VT__HISTORYAVGBD = 66,
-    VT__HISTORYGEAR90 = 68,
-    VT__HISTORYGEAR50 = 70,
-    VT__HISTORYACC01 = 72,
-    VT__HISTORYACC02 = 74,
     VT__HISTORYLOSEDHP = 76,
     VT__JQSTACK = 78,
     VT__HISTORYABTIME = 80,
@@ -71,6 +67,9 @@ struct _tDamagePlayer FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
     VT__TERAFEVERNPROC = 92,
     VT__HISTORYAVGABU = 94,
     VT__HISTORYABTIMEU = 96,
+    VT__FURYPROC = 98,
+    VT__BACKSTEPPROC = 100,
+    VT__TECHNICPROC = 102
   };
   uint32_t _id() const {
     return GetField<uint32_t>(VT__ID, 0);
@@ -153,9 +152,6 @@ struct _tDamagePlayer FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   uint16_t _teraenlightenproc() const {
     return GetField<uint16_t>(VT__TERAENLIGHTENPROC, 0);
   }
-  uint16_t _terafevernproc() const {
-      return GetField<uint16_t>(VT__TERAFEVERNPROC, 0);
-  }
   uint16_t _skillcounts() const {
     return GetField<uint16_t>(VT__SKILLCOUNTS, 0);
   }
@@ -170,18 +166,6 @@ struct _tDamagePlayer FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   }
   double _historyavgbd() const {
     return GetField<double>(VT__HISTORYAVGBD, 0.0);
-  }
-  double _historygear90() const {
-    return GetField<double>(VT__HISTORYGEAR90, 0.0);
-  }
-  double _historygear50() const {
-    return GetField<double>(VT__HISTORYGEAR50, 0.0);
-  }
-  double _historyacc01() const {
-    return GetField<double>(VT__HISTORYACC01, 0.0);
-  }
-  double _historyacc02() const {
-    return GetField<double>(VT__HISTORYACC02, 0.0);
   }
   double _historylosedhp() const {
     return GetField<double>(VT__HISTORYLOSEDHP, 0.0);
@@ -207,11 +191,23 @@ struct _tDamagePlayer FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   double _historyastime() const {
     return GetField<double>(VT__HISTORYASTIME, 0.0);
   }
+  uint16_t _terafevernproc() const {
+    return GetField<uint16_t>(VT__TERAFEVERNPROC, 0);
+  }
   double _historyavgabu() const {
-      return GetField<double>(VT__HISTORYAVGABU, 0.0);
+    return GetField<double>(VT__HISTORYAVGABU, 0.0);
   }
   double _historyabtimeu() const {
-      return GetField<double>(VT__HISTORYABTIMEU, 0.0);
+    return GetField<double>(VT__HISTORYABTIMEU, 0.0);
+  }
+  uint16_t _furyproc() const {
+    return GetField<uint16_t>(VT__FURYPROC, 0);
+  }
+  uint16_t _backstepproc() const {
+    return GetField<uint16_t>(VT__BACKSTEPPROC, 0);
+  }
+  uint16_t _technicproc() const {
+    return GetField<uint16_t>(VT__TECHNICPROC, 0);
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
@@ -247,10 +243,6 @@ struct _tDamagePlayer FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
            VerifyField<uint16_t>(verifier, VT__DEATHCOUNTS) &&
            VerifyField<double>(verifier, VT__HISTORYAVGAB) &&
            VerifyField<double>(verifier, VT__HISTORYAVGBD) &&
-           VerifyField<double>(verifier, VT__HISTORYGEAR90) &&
-           VerifyField<double>(verifier, VT__HISTORYGEAR50) &&
-           VerifyField<double>(verifier, VT__HISTORYACC01) &&
-           VerifyField<double>(verifier, VT__HISTORYACC02) &&
            VerifyField<double>(verifier, VT__HISTORYLOSEDHP) &&
            VerifyField<uint8_t>(verifier, VT__JQSTACK) &&
            VerifyField<double>(verifier, VT__HISTORYABTIME) &&
@@ -263,6 +255,12 @@ struct _tDamagePlayer FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
            VerifyField<double>(verifier, VT__HISTORYAGGROTIME) &&
            VerifyField<double>(verifier, VT__HISTORYAVGAS) &&
            VerifyField<double>(verifier, VT__HISTORYASTIME) &&
+           VerifyField<uint16_t>(verifier, VT__TERAFEVERNPROC) &&
+           VerifyField<double>(verifier, VT__HISTORYAVGABU) &&
+           VerifyField<double>(verifier, VT__HISTORYABTIMEU) &&
+           VerifyField<uint16_t>(verifier, VT__FURYPROC) &&
+           VerifyField<uint16_t>(verifier, VT__BACKSTEPPROC) &&
+           VerifyField<uint16_t>(verifier, VT__TECHNICPROC) &&
            verifier.EndTable();
   }
 };
@@ -352,9 +350,6 @@ struct _tDamagePlayerBuilder {
   void add__teraenlightenproc(uint16_t _teraenlightenproc) {
     fbb_.AddElement<uint16_t>(_tDamagePlayer::VT__TERAENLIGHTENPROC, _teraenlightenproc, 0);
   }
-  void add__terafevernproc(uint16_t _terafevernproc) {
-      fbb_.AddElement<uint16_t>(_tDamagePlayer::VT__TERAFEVERNPROC, _terafevernproc, 0);
-  }
   void add__skillcounts(uint16_t _skillcounts) {
     fbb_.AddElement<uint16_t>(_tDamagePlayer::VT__SKILLCOUNTS, _skillcounts, 0);
   }
@@ -367,23 +362,8 @@ struct _tDamagePlayerBuilder {
   void add__historyavgab(double _historyavgab) {
     fbb_.AddElement<double>(_tDamagePlayer::VT__HISTORYAVGAB, _historyavgab, 0.0);
   }
-  void add__historyavgabu(double _historyavgab) {
-      fbb_.AddElement<double>(_tDamagePlayer::VT__HISTORYAVGABU, _historyavgab, 0.0);
-  }
   void add__historyavgbd(double _historyavgbd) {
     fbb_.AddElement<double>(_tDamagePlayer::VT__HISTORYAVGBD, _historyavgbd, 0.0);
-  }
-  void add__historygear90(double _historygear90) {
-    fbb_.AddElement<double>(_tDamagePlayer::VT__HISTORYGEAR90, _historygear90, 0.0);
-  }
-  void add__historygear50(double _historygear50) {
-    fbb_.AddElement<double>(_tDamagePlayer::VT__HISTORYGEAR50, _historygear50, 0.0);
-  }
-  void add__historyacc01(double _historyacc01) {
-    fbb_.AddElement<double>(_tDamagePlayer::VT__HISTORYACC01, _historyacc01, 0.0);
-  }
-  void add__historyacc02(double _historyacc02) {
-    fbb_.AddElement<double>(_tDamagePlayer::VT__HISTORYACC02, _historyacc02, 0.0);
   }
   void add__historylosedhp(double _historylosedhp) {
     fbb_.AddElement<double>(_tDamagePlayer::VT__HISTORYLOSEDHP, _historylosedhp, 0.0);
@@ -393,9 +373,6 @@ struct _tDamagePlayerBuilder {
   }
   void add__historyabtime(double _historyabtime) {
     fbb_.AddElement<double>(_tDamagePlayer::VT__HISTORYABTIME, _historyabtime, 0.0);
-  }
-  void add__historyabtimeu(double _historyabtime) {
-      fbb_.AddElement<double>(_tDamagePlayer::VT__HISTORYABTIMEU, _historyabtime, 0.0);
   }
   void add__monsterinfo(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<SoulMeterFBS::History::_tDamageMonster>>> _monsterinfo) {
     fbb_.AddOffset(_tDamagePlayer::VT__MONSTERINFO, _monsterinfo);
@@ -411,6 +388,24 @@ struct _tDamagePlayerBuilder {
   }
   void add__historyastime(double _historyastime) {
     fbb_.AddElement<double>(_tDamagePlayer::VT__HISTORYASTIME, _historyastime, 0.0);
+  }
+  void add__terafevernproc(uint16_t _terafevernproc) {
+    fbb_.AddElement<uint16_t>(_tDamagePlayer::VT__TERAFEVERNPROC, _terafevernproc, 0);
+  }
+  void add__historyavgabu(double _historyavgabu) {
+    fbb_.AddElement<double>(_tDamagePlayer::VT__HISTORYAVGABU, _historyavgabu, 0.0);
+  }
+  void add__historyabtimeu(double _historyabtimeu) {
+    fbb_.AddElement<double>(_tDamagePlayer::VT__HISTORYABTIMEU, _historyabtimeu, 0.0);
+  }
+  void add__furyproc(uint16_t _furyproc) {
+    fbb_.AddElement<uint16_t>(_tDamagePlayer::VT__FURYPROC, _furyproc, 0);
+  }
+  void add__backstepproc(uint16_t _backstepproc) {
+    fbb_.AddElement<uint16_t>(_tDamagePlayer::VT__BACKSTEPPROC, _backstepproc, 0);
+  }
+  void add__technicproc(uint16_t _technicproc) {
+    fbb_.AddElement<uint16_t>(_tDamagePlayer::VT__TECHNICPROC, _technicproc, 0);
   }
   explicit _tDamagePlayerBuilder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
@@ -456,12 +451,7 @@ inline flatbuffers::Offset<_tDamagePlayer> Create_tDamagePlayer(
     uint16_t _dodgecounts = 0,
     uint16_t _deathcounts = 0,
     double _historyavgab = 0.0,
-    double _historyavgabu = 0.0,
     double _historyavgbd = 0.0,
-    double _historygear90 = 0.0,
-    double _historygear50 = 0.0,
-    double _historyacc01 = 0.0,
-    double _historyacc02 = 0.0,
     double _historylosedhp = 0.0,
     uint8_t _jqstack = 0,
     double _historyabtime = 0.0,
@@ -469,20 +459,23 @@ inline flatbuffers::Offset<_tDamagePlayer> Create_tDamagePlayer(
     flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<SoulMeterFBS::History::_tSkillCount>>> _skillcount = 0,
     double _historyaggrotime = 0.0,
     double _historyavgas = 0.0,
-    double _historyastime = 0.0) {
+    double _historyastime = 0.0,
+    uint16_t _terafevernproc = 0,
+    double _historyavgabu = 0.0,
+    double _historyabtimeu = 0.0,
+    uint16_t _furyproc = 0,
+    uint16_t _backstepproc = 0,
+    uint16_t _technicproc = 0) {
   _tDamagePlayerBuilder builder_(_fbb);
+  builder_.add__historyabtimeu(_historyabtimeu);
+  builder_.add__historyavgabu(_historyavgabu);
   builder_.add__historyastime(_historyastime);
   builder_.add__historyavgas(_historyavgas);
   builder_.add__historyaggrotime(_historyaggrotime);
   builder_.add__historyabtime(_historyabtime);
   builder_.add__historylosedhp(_historylosedhp);
-  builder_.add__historyacc02(_historyacc02);
-  builder_.add__historyacc01(_historyacc01);
-  builder_.add__historygear50(_historygear50);
-  builder_.add__historygear90(_historygear90);
   builder_.add__historyavgbd(_historyavgbd);
   builder_.add__historyavgab(_historyavgab);
-  builder_.add__historyavgabu(_historyavgab);
   builder_.add__soulstonedamageforsoulstone(_soulstonedamageforsoulstone);
   builder_.add__damageforsoulstone(_damageforsoulstone);
   builder_.add__soulstonedamage(_soulstonedamage);
@@ -497,6 +490,10 @@ inline flatbuffers::Offset<_tDamagePlayer> Create_tDamagePlayer(
   builder_.add__sg(_sg);
   builder_.add__armorbreak(_armorbreak);
   builder_.add__id(_id);
+  builder_.add__technicproc(_technicproc);
+  builder_.add__backstepproc(_backstepproc);
+  builder_.add__furyproc(_furyproc);
+  builder_.add__terafevernproc(_terafevernproc);
   builder_.add__deathcounts(_deathcounts);
   builder_.add__dodgecounts(_dodgecounts);
   builder_.add__skillcounts(_skillcounts);
@@ -552,12 +549,7 @@ inline flatbuffers::Offset<_tDamagePlayer> Create_tDamagePlayerDirect(
     uint16_t _dodgecounts = 0,
     uint16_t _deathcounts = 0,
     double _historyavgab = 0.0,
-    double _historyavgabu = 0.0,
     double _historyavgbd = 0.0,
-    double _historygear90 = 0.0,
-    double _historygear50 = 0.0,
-    double _historyacc01 = 0.0,
-    double _historyacc02 = 0.0,
     double _historylosedhp = 0.0,
     uint8_t _jqstack = 0,
     double _historyabtime = 0.0,
@@ -565,7 +557,13 @@ inline flatbuffers::Offset<_tDamagePlayer> Create_tDamagePlayerDirect(
     const std::vector<flatbuffers::Offset<SoulMeterFBS::History::_tSkillCount>> *_skillcount = nullptr,
     double _historyaggrotime = 0.0,
     double _historyavgas = 0.0,
-    double _historyastime = 0.0) {
+    double _historyastime = 0.0,
+    uint16_t _terafevernproc = 0,
+    double _historyavgabu = 0.0,
+    double _historyabtimeu = 0.0,
+    uint16_t _furyproc = 0,
+    uint16_t _backstepproc = 0,
+    uint16_t _technicproc = 0) {
   auto _monsterinfo__ = _monsterinfo ? _fbb.CreateVector<flatbuffers::Offset<SoulMeterFBS::History::_tDamageMonster>>(*_monsterinfo) : 0;
   auto _skillcount__ = _skillcount ? _fbb.CreateVector<flatbuffers::Offset<SoulMeterFBS::History::_tSkillCount>>(*_skillcount) : 0;
   return SoulMeterFBS::History::Create_tDamagePlayer(
@@ -601,12 +599,7 @@ inline flatbuffers::Offset<_tDamagePlayer> Create_tDamagePlayerDirect(
       _dodgecounts,
       _deathcounts,
       _historyavgab,
-      _historyavgabu,
       _historyavgbd,
-      _historygear90,
-      _historygear50,
-      _historyacc01,
-      _historyacc02,
       _historylosedhp,
       _jqstack,
       _historyabtime,
@@ -614,7 +607,13 @@ inline flatbuffers::Offset<_tDamagePlayer> Create_tDamagePlayerDirect(
       _skillcount__,
       _historyaggrotime,
       _historyavgas,
-      _historyastime);
+      _historyastime,
+      _terafevernproc,
+      _historyavgabu,
+      _historyabtimeu,
+      _furyproc,
+      _backstepproc,
+      _technicproc);
 }
 
 struct _tSkillCount FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {

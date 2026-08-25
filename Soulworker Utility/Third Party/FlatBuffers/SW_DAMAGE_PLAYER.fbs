@@ -39,11 +39,11 @@ table _tDamagePlayer {
 
   _historyavgab:double;
   _historyavgbd:double;
-  _historygear90:double;
-  _historygear50:double;
-  _historyacc01:double;
-  
-  _historyacc02:double;
+  _historygear90:double (deprecated);
+  _historygear50:double (deprecated);
+  _historyacc01:double (deprecated);
+
+  _historyacc02:double (deprecated);
   _historylosedhp:double;
   _jqstack:ubyte;
   _historyabtime:double;
@@ -52,9 +52,17 @@ table _tDamagePlayer {
   _skillcount:[_tSkillCount];
 
   _historyaggrotime:double;
-  
+
   _historyavgas:double;
   _historyastime:double;
+
+  _terafevernproc:ushort;
+  _historyavgabu:double;
+  _historyabtimeu:double;
+
+  _furyproc:ushort;
+  _backstepproc:ushort;
+  _technicproc:ushort;
 }
 
 table _tSkillCount {

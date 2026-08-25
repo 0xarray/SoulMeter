@@ -1,4 +1,4 @@
-{
+﻿{
 
     "STR_LANG_NAME": "한국어",
     "STR_SQL_SUFFIX": "KR",
@@ -52,14 +52,14 @@
     "STR_TABLE_GET_HIT_INCLUDE_ZERO_DAMAGE": "피격(0뎀 포함)",
     "STR_TABLE_GET_HIT": "피격",
     "STR_TABLE_GET_HIT_BS": "피격(브세)",
-    "STR_TABLE_ACC1_BS": "1번악(브세)",
-    "STR_TABLE_ACC2_BS": "2번악(브세)",
-    "STR_TABLE_ACC3_BS": "3번악(브세)",
     "STR_TABLE_EVADE_RATE_A": "회피율 A",
     "STR_TABLE_EVADE_RATE_B": "회피율 B",
     "STR_TABLE_GIGA_ENLIGHTEN": "기가 인라",
     "STR_TABLE_TERA_ENLIGHTEN": "테라 인라",
     "STR_TABLE_TERA_FEVER": "테라 피버",
+    "STR_TABLE_TERA_FURY": "테라 퓨리",
+    "STR_TABLE_TERA_BACKSTEP": "테라 백스텝",
+    "STR_TABLE_TERA_TECHNIC": "테라 테크닉",
     "STR_TABLE_LOSED_HP": "잃은 HP",
     "STR_TABLE_DODGE_COUNT": "회피기",
     "STR_TABLE_DEATH": "Death",

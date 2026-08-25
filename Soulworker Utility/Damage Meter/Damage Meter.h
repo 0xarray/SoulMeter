@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "pch.h"
 
 #include ".\Damage Meter\Timer.h"
@@ -149,22 +149,6 @@ public:
 
 	uint64_t _avgASSum = 0;
 	uint64_t _avgASPreviousTime = 0;
-
-	bool _gear90EffectStarted = false;
-	uint64_t _gear90Sum = 0;
-	uint64_t _gear90EffectStartedTime = 0;
-
-	bool _gear50EffectStarted = false;
-	uint64_t _gear50Sum = 0;
-	uint64_t _gear50EffectStartedTime = 0;
-
-	bool _acc01EffectStarted = false;
-	uint64_t _acc01Sum = 0;
-	uint64_t _acc01EffectStartedTime = 0;
-
-	bool _acc02EffectStarted = false;
-	uint64_t _acc02Sum = 0;
-	uint64_t _acc02EffectStartedTime = 0;
 
 	double _losedHp = 0;
 
@@ -404,45 +388,6 @@ public:
 					CalcFullASTime();
 				}
 				(*player)->SetHistoryASTime(_fullASTime);
-
-				// 
-				if (_gear90EffectStarted) {
-					uint64_t gear90TimeDiff = currentTime - _gear90EffectStartedTime;
-					gear90TimeDiff = (gear90TimeDiff >= 5000) ? 5000 : gear90TimeDiff;
-					_gear90Sum += gear90TimeDiff * 500;
-					_gear90EffectStarted = false;
-				}
-
-				// 
-				if (_gear50EffectStarted) {
-					uint64_t gear50TimeDiff = currentTime - _gear50EffectStartedTime;
-					gear50TimeDiff = (gear50TimeDiff >= 5000) ? 5000 : gear50TimeDiff;
-					_gear50Sum += gear50TimeDiff * 1000;
-					_gear50EffectStarted = false;
-				}
-
-				//
-				if (_acc01EffectStarted) {
-					uint64_t acc01TimeDiff = currentTime - _acc01EffectStartedTime;
-					acc01TimeDiff = (acc01TimeDiff >= 2000) ? 2000 : acc01TimeDiff;
-					_acc01Sum += acc01TimeDiff * 1200;
-					_acc01EffectStarted = false;
-				}
-
-				// 
-				if (_acc02EffectStarted)
-				{
-					uint64_t acc02TimeDiff = currentTime - _acc02EffectStartedTime;
-					acc02TimeDiff = (acc02TimeDiff >= 10000) ? 10000 : acc02TimeDiff;
-					_acc02Sum += acc02TimeDiff * 3000;
-					_acc02EffectStarted = false;
-				}
-
-				// Save all to history
-				(*player)->setHistoryBS(90, (double)_gear90Sum / currentTime);
-				(*player)->setHistoryBS(50, (double)_gear50Sum / currentTime);
-				(*player)->setHistoryBS(1, (double)_acc01Sum / currentTime);
-				(*player)->setHistoryBS(2, (double)_acc02Sum / currentTime);
 			}
 		}
 
@@ -459,22 +404,6 @@ public:
 
 		_avgASSum = 0;
 		_avgASPreviousTime = 0;
-
-		_gear90EffectStarted = false;
-		_gear90Sum = 0;
-		_gear90EffectStartedTime = 0;
-
-		_gear50EffectStarted = false;
-		_gear50Sum = 0;
-		_gear50EffectStartedTime = 0;
-
-		_acc01EffectStarted = false;
-		_acc01Sum = 0;
-		_acc01EffectStartedTime = 0;
-
-		_acc02EffectStarted = false;
-		_acc02Sum = 0;
-		_acc02EffectStartedTime = 0;
 
 		_fullABStarted = false;
 		_fullABStartTime = 0;
@@ -493,191 +422,6 @@ public:
 		_fullASEndTime = 0;
 		_fullASPrevTime = 0;
 		_fullASTime = 0;
-	}
-
-	void HitEnemy() {
-		if (!DAMAGEMETER.isRun()) {
-			return;
-		}
-		uint64_t currentTime = DAMAGEMETER.GetTime();
-		CalBsGear3Set(true, currentTime);
-		CalBsGear4Set(true, currentTime);
-		CalBsAccSet1(true, currentTime);
-		CalBsAccSet2(true, currentTime);
-	}
-
-	// Add to sum if duration of effect is finished or effect duration is updated
-	// If duration is not finished, calculate it based on table time
-	uint64_t CalBsGear3Set(bool hit, uint64_t currentTime) {
-		const double HP_CONDITION = 90.0;
-		const int DURATION = 5000;
-		const int ATK = 500;
-
-		const double hpPercent = (double)_currentHP / (double)_maxHP * 100;
-
-		if (currentTime - _gear90EffectStartedTime < 0) {
-			return 0;
-		}
-
-		uint64_t _gear90TimeLapse = currentTime - _gear90EffectStartedTime;
-
-		if ((hpPercent >= HP_CONDITION) && hit && !_gear90EffectStarted) { // new start
-			_gear90EffectStarted = true;
-			_gear90EffectStartedTime = currentTime;
-		}
-		else if ((hpPercent >= HP_CONDITION) && hit && _gear90EffectStarted) { // update effect
-			if (_gear90TimeLapse >= DURATION) {
-				_gear90TimeLapse = DURATION;
-			}
-			_gear90Sum += _gear90TimeLapse * ATK;
-			_gear90EffectStartedTime = currentTime;
-		}
-		else if ((hpPercent < HP_CONDITION) && hit && _gear90EffectStarted) { // end effect
-			if (_gear90TimeLapse >= DURATION) {
-				_gear90TimeLapse = DURATION;
-				_gear90Sum += _gear90TimeLapse * ATK;
-				_gear90EffectStarted = false;
-			}
-		}
-		else if (!hit && !_gear90EffectStarted) { // PlayerTable
-			return 0;
-		}
-		else if (!hit && _gear90EffectStarted && (_gear90TimeLapse >= 0)) { // PlayerTable
-			if (_gear90TimeLapse >= DURATION) {
-				_gear90TimeLapse = DURATION;
-			}
-			return _gear90TimeLapse * ATK;
-		}
-		return 0;
-	}
-
-	uint64_t CalBsGear4Set(bool hit, uint64_t currentTime) {
-		const double HP_CONDITION = 50.0;
-		const int DURATION = 5000;
-		const int ATK = 1000;
-
-		const double hpPercent = (double)_currentHP / (double)_maxHP * 100;
-
-		if (currentTime - _gear50EffectStartedTime < 0) {
-			return 0;
-		}
-
-		uint64_t _gear50TimeLapse = currentTime - _gear50EffectStartedTime;
-
-		if ((hpPercent >= HP_CONDITION) && hit && !_gear50EffectStarted) { // new start
-			_gear50EffectStarted = true;
-			_gear50EffectStartedTime = currentTime;
-		}
-		else if ((hpPercent >= HP_CONDITION) && hit && _gear50EffectStarted) { // update effect
-			if (_gear50TimeLapse >= DURATION) {
-				_gear50TimeLapse = DURATION;
-			}
-			_gear50Sum += _gear50TimeLapse * ATK;
-			_gear50EffectStartedTime = currentTime;
-		}
-		else if ((hpPercent < HP_CONDITION) && hit && _gear50EffectStarted) { // end effect
-			if (_gear50TimeLapse >= DURATION) {
-				_gear50TimeLapse = DURATION;
-				_gear50Sum += _gear50TimeLapse * ATK;
-				_gear50EffectStarted = false;
-			}
-		}
-		else if (!hit && !_gear50EffectStarted) { // PlayerTable
-			return 0;
-		}
-		else if (!hit && _gear50EffectStarted && (_gear50TimeLapse >= 0)) { // PlayerTable
-			if (_gear50TimeLapse >= DURATION) {
-				_gear50TimeLapse = DURATION;
-			}
-			return _gear50TimeLapse * ATK;
-		}
-		return 0;
-	}
-
-	uint64_t CalBsAccSet1(bool hit, uint64_t currentTime) {
-		const double HP_CONDITION = 85.0;
-		const int DURATION = 2000;
-		const int ATK = 1200;
-
-		const double hpPercent = (double)_currentHP / (double)_maxHP * 100;
-
-		if (currentTime - _acc01EffectStartedTime < 0) {
-			return 0;
-		}
-
-		uint64_t _acc01TimeLapse = currentTime - _acc01EffectStartedTime;
-
-
-		if ((hpPercent >= HP_CONDITION) && hit && !_acc01EffectStarted) { // new start
-			_acc01EffectStarted = true;
-			_acc01EffectStartedTime = currentTime;
-		}
-		else if ((hpPercent >= HP_CONDITION) && hit && _acc01EffectStarted) { // update effect
-			if (_acc01TimeLapse >= DURATION) {
-				_acc01TimeLapse = DURATION;
-			}
-			_acc01Sum += _acc01TimeLapse * ATK;
-			_acc01EffectStartedTime = currentTime;
-		}
-		else if ((hpPercent < HP_CONDITION) && hit && _acc01EffectStarted) { // end effect
-			if (_acc01TimeLapse >= DURATION) {
-				_acc01TimeLapse = DURATION;
-				_acc01Sum += _acc01TimeLapse * ATK;
-				_acc01EffectStarted = false;
-			}
-		}
-		else if (!hit && !_acc01EffectStarted) { // PlayerTable
-			return 0;
-		}
-		else if (!hit && _acc01EffectStarted && (_acc01TimeLapse >= 0)) { // PlayerTable
-			if (_acc01TimeLapse >= DURATION) {
-				_acc01TimeLapse = DURATION;
-			}
-			return _acc01TimeLapse * ATK;
-		}
-		return 0;
-	}
-
-	uint64_t CalBsAccSet2(bool hit, uint64_t currentTime) {
-		const double HP_CONDITION = 30.0;
-		const int DURATION = 10000;
-		const int ATK = 3000;
-
-		const double hpPercent = (double)_currentHP / (double)_maxHP * 100;
-		if (currentTime - _acc02EffectStartedTime < 0) {
-			return 0;
-		}
-
-		uint64_t _acc02TimeLapse = currentTime - _acc02EffectStartedTime;
-
-		if ((hpPercent < HP_CONDITION) && hit && !_acc02EffectStarted) { // new start
-			_acc02EffectStarted = true;
-			_acc02EffectStartedTime = currentTime;
-		}
-		else if ((hpPercent < HP_CONDITION) && hit && _acc02EffectStarted) { // update effect
-			if (_acc02TimeLapse >= DURATION) {
-				_acc02TimeLapse = DURATION;
-			}
-			_acc02Sum += _acc02TimeLapse * ATK;
-			_acc02EffectStartedTime = currentTime;
-		}
-		else if ((hpPercent >= HP_CONDITION) && hit && _acc02EffectStarted) { // end effect
-			if (_acc02TimeLapse >= DURATION) {
-				_acc02TimeLapse = DURATION;
-				_acc02Sum += _acc02TimeLapse * ATK;
-				_acc02EffectStarted = false;
-			}
-		}
-		else if (!hit && !_acc02EffectStarted) { // PlayerTable
-			return 0;
-		}
-		else if (!hit && _acc02EffectStarted && (_acc02TimeLapse >= 0)) { // PlayerTable
-			if (_acc02TimeLapse >= DURATION) {
-				_acc02TimeLapse = DURATION;
-			}
-			return _acc02TimeLapse * ATK;
-		}
-		return 0;
 	}
 
 	void CalcFullABTime(uint64_t endTime = NULL)
@@ -841,7 +585,7 @@ public:
 	void AddDamage(uint32_t id, uint64_t totalDMG, uint64_t soulstoneDMG, SWPACKETDAMAGE_DAMAGETYPE damageType, unsigned short maxCombo, uint32_t monsterID, uint32_t skillID);
 	void AddPlayerGetDamage(uint32_t playerId, uint64_t totalDMG, SWPACKETDAMAGE_DAMAGETYPE damageType, uint32_t monsterID, uint32_t skillID);
 	void AddEnlighten(uint32_t playerId, float value);
-	void AddFever(uint32_t playerId);
+	void AddBroochProc(uint32_t playerId, BroochProc type);
 	void AddSkillUsed(uint32_t playerId, uint32_t skillId);
 	void AddDodgeUsed(uint32_t playerId);
 	void AddDeath(uint32_t playerId);

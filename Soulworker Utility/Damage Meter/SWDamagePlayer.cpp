@@ -74,14 +74,6 @@ void SWDamagePlayer::AddDamage(uint64_t totalDMG, uint64_t soulstoneDMG, SWPACKE
 	}
 	db2 = db->_db2;
 
-	// 
-	if (!damageType.MISS && _id == DAMAGEMETER.GetMyID()) {
-		auto metadata = DAMAGEMETER.GetPlayerMetaData(_id);
-		if (metadata != nullptr) {
-			metadata->HitEnemy();
-		}
-	}
-
 	_hitCount += 1;
 	_critHitCount += damageType.CRIT;
 	// 
@@ -331,42 +323,19 @@ unsigned short SWDamagePlayer::GetTeraEnlighten()
 	return _teraEnlightenProc;
 }
 
-unsigned short SWDamagePlayer::GetTeraFever()
-{
-	return _teraFeverProc;
-}
-
-void SWDamagePlayer::setHistoryBS(int type, double value)
+unsigned short SWDamagePlayer::GetBroochProc(BroochProc type)
 {
 	switch (type) {
-	case 90:
-		_historygear90 = value;
-		break;
-	case 50:
-		_historygear50 = value;
-		break;
-	case 1:
-		_historyacc01 = value;
-		break;
-	case 2:
-		_historyacc02 = value;
-		break;
-
+	case BROOCH_FEVER:
+		return _teraFeverProc;
+	case BROOCH_FURY:
+		return _furyProc;
+	case BROOCH_BACKSTEP:
+		return _backstepProc;
+	case BROOCH_TECHNIC:
+		return _technicProc;
 	}
-}
 
-double SWDamagePlayer::GetHistoryBS(int type)
-{
-	switch (type) {
-	case 90:
-		return _historygear90;
-	case 50:
-		return _historygear50;
-	case 1:
-		return _historyacc01;
-	case 2:
-		return _historyacc02;
-	}
 	return 0;
 }
 
@@ -450,9 +419,22 @@ void SWDamagePlayer::AddEnlighten(float value)
 	}
 }
 
-void SWDamagePlayer::AddFever()
+void SWDamagePlayer::AddBroochProc(BroochProc type)
 {
-	_teraFeverProc++;
+	switch (type) {
+	case BROOCH_FEVER:
+		_teraFeverProc++;
+		break;
+	case BROOCH_FURY:
+		_furyProc++;
+		break;
+	case BROOCH_BACKSTEP:
+		_backstepProc++;
+		break;
+	case BROOCH_TECHNIC:
+		_technicProc++;
+		break;
+	}
 }
 
 unsigned short SWDamagePlayer::GetSkillUsed()

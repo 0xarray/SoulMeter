@@ -8,6 +8,14 @@ typedef struct _SWPACKETBROOCH {
 }SWPACKETBROOCH;
 #pragma pack(pop)
 
+// tb_CreateOption row ids, one per proc brooch family
+enum BroochID {
+	BROOCHID_FEVER = 0x0431,	// Technical BSK: Fever
+	BROOCHID_FURY = 0x0427,		// Defense BSK: Fury
+	BROOCHID_BACKSTEP = 0x4fcb,	// Defense SIN: Backstep
+	BROOCHID_TECHNIC = 0x4fd2	// Technical SIN: Technic
+};
+
 class SWPacketBrooches : public SWPacket {
 protected:
 	SWPacketBrooches() {}

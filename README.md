@@ -11,7 +11,7 @@ Live damage tables, per-player breakdowns, buff uptime, DPS graphs and a combat 
 ![Platform](https://img.shields.io/badge/platform-Windows%20x64-0078D6)
 ![Language](https://img.shields.io/badge/C%2B%2B-20-00599C)
 ![UI](https://img.shields.io/badge/UI-ImGui%20%2B%20DirectX%2011-5C2D91)
-![Version](https://img.shields.io/badge/version-1.7.1.12-brightgreen)
+![Version](https://img.shields.io/badge/version-1.7.1.13-brightgreen)
 
 [<img src="https://cdn.buymeacoffee.com/buttons/v2/default-blue.png" height="48" alt="Buy me a coffee">](https://www.buymeacoffee.com/rainyyy)
 
@@ -33,6 +33,7 @@ SoulMeter reads the game's network traffic and turns it into a live picture of y
 | **History** | The last 50 runs are kept and can be reopened and compared |
 | **Ping** | Live latency, measured from the game's own heartbeat exchange |
 | **Faster loading** | Cuts cold game startup from ~95s to ~38s — see [Load-time optimisations](#load-time-optimisations) |
+| **QoL Keybinds** | Adds keybinds to restart/exit mazes quicker than in-game |
 | **Localised** | English, 日本語, 한국어, 繁體中文 |
 
 ---

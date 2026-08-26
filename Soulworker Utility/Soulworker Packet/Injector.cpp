@@ -15,14 +15,20 @@ volatile LONG g_injectorRunning = 1;
 constexpr DWORD kPollMs = 20;
 constexpr int kMaxProbeFails = 5;
 
+// Names known to be the game itself, injected into as soon as the loader is
+// done - the block cache has to be armed before the archives are mounted.
 const wchar_t* kGameExeCandidates[] = {
-    L"SoulWorker.exe",
-    L"Soulworker.exe",
-    L"soulworker.exe",
-    L"SoulWorker_Client.exe",
-    L"soulworker_client.exe",
+    L"SoulWorker.exe",         // GB
+    L"SoulWorker_Client.exe",  // KR
+    L"SoulWorker100.exe",      // JP
 };
 
+// Regional builds vary the suffix, so anything else starting with this is a
+// candidate too - but only once SoulWorker64.dll shows up in it, since a
+// launcher or patcher sharing the prefix must not get the file-IO hooks.
+const wchar_t kGameExePrefix[] = L"soulworker";
+
+const wchar_t* kGameModuleName = L"SoulWorker64.dll";
 const wchar_t* kHookDllName = L"SoulMeterHook.dll";
 
 std::wstring GetHookDllPath() {
@@ -52,7 +58,24 @@ bool EnableDebugPrivilege() {
     return ok;
 }
 
-enum class Probe { NotGame, Game, Unknown };
+// Game = a known name, inject as early as possible. Maybe = the prefix only,
+// hold off until the game module confirms it.
+enum class Probe { NotGame, Game, Maybe, Unknown };
+
+Probe ClassifyExe(const wchar_t* name) {
+    for (const wchar_t* candidate : kGameExeCandidates) {
+        if (_wcsicmp(name, candidate) == 0)
+            return Probe::Game;
+    }
+
+    size_t len = wcslen(name);
+    size_t prefix = _countof(kGameExePrefix) - 1;
+    if (len >= prefix + 4 && _wcsnicmp(name, kGameExePrefix, prefix) == 0 &&
+        _wcsicmp(name + len - 4, L".exe") == 0)
+        return Probe::Maybe;
+
+    return Probe::NotGame;
+}
 
 Probe ProbeProcess(DWORD pid) {
     HANDLE h = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid);
@@ -66,13 +89,7 @@ Probe ProbeProcess(DWORD pid) {
     if (QueryFullProcessImageNameW(h, 0, image, &chars)) {
         const wchar_t* base = wcsrchr(image, L'\\');
         base = base ? base + 1 : image;
-        result = Probe::NotGame;
-        for (const wchar_t* candidate : kGameExeCandidates) {
-            if (_wcsicmp(base, candidate) == 0) {
-                result = Probe::Game;
-                break;
-            }
-        }
+        result = ClassifyExe(base);
     }
 
     CloseHandle(h);
@@ -83,7 +100,7 @@ enum class Target { NotReady, Ready, AlreadyHooked, WrongArch };
 
 // A freshly created process has no module list until ntdll has finished loader
 // init, so the module snapshot failing doubles as the "safe to inject yet" gate.
-Target InspectTarget(DWORD pid) {
+Target InspectTarget(DWORD pid, bool needGameModule) {
     HANDLE h = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid);
     if (h) {
         BOOL wow64 = FALSE;
@@ -99,6 +116,7 @@ Target InspectTarget(DWORD pid) {
 
     MODULEENTRY32W me = { sizeof(me) };
     bool haveKernel32 = false;
+    bool haveGame = false;
     if (Module32FirstW(snap, &me)) {
         do {
             if (_wcsicmp(me.szModule, kHookDllName) == 0) {
@@ -107,10 +125,14 @@ Target InspectTarget(DWORD pid) {
             }
             if (_wcsicmp(me.szModule, L"kernel32.dll") == 0)
                 haveKernel32 = true;
+            else if (_wcsicmp(me.szModule, kGameModuleName) == 0)
+                haveGame = true;
         } while (Module32NextW(snap, &me));
     }
     CloseHandle(snap);
 
+    if (needGameModule && !haveGame)
+        return Target::NotReady;
     return haveKernel32 ? Target::Ready : Target::NotReady;
 }
 
@@ -157,6 +179,7 @@ bool InjectInto(DWORD pid, const std::wstring& dllPath) {
 
 struct ProcState {
     bool isGame = false;
+    bool needGameModule = false;
     bool done = false;
     int probeFails = 0;
     int attempts = 0;
@@ -172,7 +195,7 @@ void ServiceGameProcess(DWORD pid, ProcState& st, const std::wstring& dllPath) {
     if (GetTickCount64() < st.nextAttemptTick)
         return;
 
-    switch (InspectTarget(pid)) {
+    switch (InspectTarget(pid, st.needGameModule)) {
     case Target::WrongArch:
     case Target::AlreadyHooked:
         st.done = true;
@@ -220,8 +243,9 @@ DWORD WINAPI InjectorThread(LPVOID) {
                 if ((it == procs.end() || (!st.isGame && st.probeFails > 0)) &&
                     st.probeFails < kMaxProbeFails) {
                     Probe p = ProbeProcess(pid);
-                    if (p == Probe::Game) {
+                    if (p == Probe::Game || p == Probe::Maybe) {
                         st.isGame = true;
+                        st.needGameModule = (p == Probe::Maybe);
                         st.probeFails = 0;
                     } else if (p == Probe::NotGame) {
                         st.isGame = false;

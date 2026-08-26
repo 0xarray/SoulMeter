@@ -10,6 +10,8 @@
 #include <cstdint>
 #include <cstring>
 
+// Header size the meter parses. Wire headers wider than this (KR 2.4.28.5) are
+// normalised down to it before a frame is pushed.
 #ifndef SMH_HEADER_SIZE
 #define SMH_HEADER_SIZE 6
 #endif

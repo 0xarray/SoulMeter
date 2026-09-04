@@ -18,36 +18,62 @@ void SWSaveData::Reset()
 	_saveFile.clear();
 }
 
+std::string SWSaveData::InstanceSaveFileName(int instance)
+{
+	if (instance <= 1)
+		return _oriSaveFileName;
+
+	std::string suffix = "_" + std::to_string(instance);
+	size_t dot = _oriSaveFileName.find_last_of('.');
+	if (dot == std::string::npos)
+		return _oriSaveFileName + suffix;
+	return _oriSaveFileName.substr(0, dot) + suffix + _oriSaveFileName.substr(dot);
+}
+
 DWORD SWSaveData::Init(std::string fileName)
 {
 	DWORD error = ERROR_FILE_NOT_FOUND;
 
+	// The history file is held deny read/write, so meters cannot share one.
+	// A second instance therefore falls through to SoulMeter_2.dat, a third to
+	// SoulMeter_3.dat, and so on; the first one started keeps the plain name.
+	const bool useDefaultName = fileName.size() == 0;
+
 	do
 	{
-		if (fileName.size() == 0)
-			_saveFileName = _oriSaveFileName;
-		else
-			_saveFileName = fileName;
-		// Open save data, set deny read/write
-		while (TRUE)
+		for (int instance = 1; instance <= _maxInstances; instance++)
 		{
-			_saveFile.open(_saveFileName, std::ios::in | std::ios::out | std::ios::binary, _SH_DENYRW);
-			if (!_saveFile.is_open())
+			if (useDefaultName)
+				_saveFileName = InstanceSaveFileName(instance);
+			else
+				_saveFileName = fileName;
+			// Open save data, set deny read/write
+			while (TRUE)
 			{
-				_saveFile.close();
-
-				_saveFile.open(_saveFileName, std::ios::out, _SH_DENYRW);
-				if (!_saveFile)
+				_saveFile.open(_saveFileName, std::ios::in | std::ios::out | std::ios::binary, _SH_DENYRW);
+				if (!_saveFile.is_open())
 				{
-					error = ERROR_FILE_SYSTEM_LIMITATION;
+					_saveFile.close();
+
+					_saveFile.open(_saveFileName, std::ios::out, _SH_DENYRW);
+					if (!_saveFile)
+					{
+						error = ERROR_FILE_SYSTEM_LIMITATION;
+						break;
+					}
+					_saveFile.close();
+				}
+				else {
+					error = ERROR_SUCCESS;
 					break;
 				}
-				_saveFile.close();
 			}
-			else {
-				error = ERROR_SUCCESS;
+
+			// Anything but another meter holding this name is a real failure.
+			if (error != ERROR_FILE_SYSTEM_LIMITATION || !useDefaultName)
 				break;
-			}
+
+			_saveFile.clear();
 		}
 
 		if (!_inited && error == ERROR_SUCCESS)

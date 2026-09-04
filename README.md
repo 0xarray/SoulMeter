@@ -72,6 +72,7 @@ Both are rebindable in `option.xml` using [DirectInput key codes](https://learn.
 - **Left-click a character's row** to open their detailed breakdown.
 - Non-Latin text not rendering? Drop a font covering your language into `Font/` and pick it in the Font Selector.
 - User settings live in `option.xml` and `imgui.ini`; saved history in `SoulMeter.dat`.
+- Several meters can be open at once — every one of them gets the same live capture. They share `option.xml` and `imgui.ini` (last one closed wins), and each takes its own history file: `SoulMeter.dat`, then `SoulMeter_2.dat`, and so on.
 
 ---
 
@@ -90,6 +91,8 @@ SoulMeter.exe                              SoulWorker (game process)
 ```
 
 The hook attaches to the client's own serialiser and deserialiser rather than to `ws2_32`. That matters: the client is an IOCP application issuing overlapped `WSARecv`, so socket-level hooks never observe a single byte. Hooking the game's own functions also means the client has already reassembled the TCP stream and decrypted the packet body by the time we see it — so frames arrive complete, in order, and exactly once, with no reassembly on our side to fall out of sync.
+
+The pipe is one-to-many: every running meter is its own server instance, and the hook writes each batch of frames to all of them, so a second meter opened mid-session picks the stream up within a quarter second.
 
 **Built with** ImGui + ImPlot on DirectX 11 · SQLite for game data · FlatBuffers for history · MinHook for the detours · nlohmann/json for i18n · tinyxml2 for settings.
 

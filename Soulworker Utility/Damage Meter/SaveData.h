@@ -19,11 +19,18 @@ class SWSaveData : public Singleton<SWSaveData> {
 private:
 	const uint32_t _saveVersion = 1;
 	const std::string _oriSaveFileName = "SoulMeter.dat";
+	// How many meters can run side by side, each on its own history file.
+	// Matches kMaxMeters in the hook, which is what caps how many of them the
+	// capture pipe actually feeds.
+	static const int _maxInstances = 8;
 	std::string _saveFileName;
 	std::fstream _saveFile;
 
 	bool _fileNotExist = FALSE;
 	bool _inited = FALSE;
+
+	// 1 -> "SoulMeter.dat", 2 -> "SoulMeter_2.dat", ...
+	std::string InstanceSaveFileName(int instance);
 
 	bool Load();
 	void Crypt(unsigned char* src, unsigned char* dest, LONG64 len);

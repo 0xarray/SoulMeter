@@ -5,9 +5,14 @@ typedef struct _SELECTED_PLAYER {
 	
 	uint32_t _playerID;
 	bool _isSelected;
+	// TRUE when this window follows the local player instead of a fixed id.
+	bool _isMe;
+	// Stays the same for the life of the window so the imgui window keeps its
+	// position when other detail windows are removed.
+	int64_t _windowIndex;
 	SpecificInformation* _specificInfo;
 
-	_SELECTED_PLAYER(uint32_t playerID, bool isSelected, SpecificInformation* specificInfo) : _playerID(playerID), _isSelected(isSelected), _specificInfo(specificInfo) { }
+	_SELECTED_PLAYER(uint32_t playerID, bool isSelected, bool isMe, int64_t windowIndex, SpecificInformation* specificInfo) : _playerID(playerID), _isSelected(isSelected), _isMe(isMe), _windowIndex(windowIndex), _specificInfo(specificInfo) { }
 }SELECTED_PLAYER;
 
 #define PLAYERTABLE PlayerTable::getInstance()
@@ -18,6 +23,8 @@ private:
 
 	bool ToggleSelectInfo(uint32_t id);
 	void ShowSelectedTable();
+	void FollowMyID();
+	void ClearSelectInfo(bool all);
 	void BeginPopupMenu();
 
 	void SetWindowSize();
@@ -39,6 +46,8 @@ private:
 
 	float _tableTime;
 	float _accumulatedTime;
+
+	int64_t _nextWindowIndex;
 
 public:
 	PlayerTable();

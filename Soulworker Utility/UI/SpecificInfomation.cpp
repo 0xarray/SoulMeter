@@ -19,6 +19,19 @@ void SpecificInformation::Clear() {
 
 }
 
+void SpecificInformation::SetPlayerID(uint32_t playerID) {
+
+	if (_playerID == playerID)
+		return;
+
+	_playerID = playerID;
+	ResetMonsterSelection();
+}
+
+void SpecificInformation::ResetMonsterSelection() {
+	_monsterID_SKILL = 0;
+}
+
 void SpecificInformation::SetupFontScale() {
 	ImFont* font = ImGui::GetFont();
 
@@ -168,6 +181,13 @@ void SpecificInformation::UpdateMonsterCombo() {
 	const char* comboPreview = nullptr;
 
 	auto monster = (*player)->GetMonsterInfo(_monsterID_SKILL);
+
+	// Nothing picked yet, or the pick died with the previous run: latch onto
+	// the first mob that got hit so the table is filled without a manual pick.
+	if (monster == (*player)->end() && (*player)->begin() != (*player)->end()) {
+		monster = (*player)->begin();
+		_monsterID_SKILL = (*monster)->GetID();
+	}
 
 	if (monster != (*player)->end()) {
 		comboPreview = (*monster)->GetName();

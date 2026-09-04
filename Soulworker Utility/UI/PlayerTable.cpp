@@ -13,26 +13,37 @@
 #include "SWConfig.h"
 #include ".\UI\DX11.h"
 
-PlayerTable::PlayerTable() : _tableResize(0), _globalFontScale(0), _columnFontScale(0), _tableFontScale(0), _curWindowSize(0), _tableTime(0), _accumulatedTime(0)
+PlayerTable::PlayerTable() : _tableResize(0), _globalFontScale(0), _columnFontScale(0), _tableFontScale(0), _curWindowSize(0), _tableTime(0), _accumulatedTime(0), _nextWindowIndex(0)
 {
 
 }
 
 PlayerTable::~PlayerTable() {
-	ClearTable();
+	ClearSelectInfo(TRUE);
 }
 
 void PlayerTable::ClearTable() {
+	ClearSelectInfo(FALSE);
+}
 
-	for (auto itr = _selectInfo.begin(); itr != _selectInfo.end(); itr++) {
+void PlayerTable::ClearSelectInfo(bool all) {
+
+	for (auto itr = _selectInfo.begin(); itr != _selectInfo.end();) {
+
+		// An open detail window for the local player survives a reset: its id
+		// is refreshed by FollowMyID, so reopening it every run is just noise.
+		if (!all && (*itr)->_isMe && (*itr)->_isSelected) {
+			(*itr)->_specificInfo->ResetMonsterSelection();
+			itr++;
+			continue;
+		}
+
 		delete (*itr)->_specificInfo;
-	}
-
-	for (auto itr = _selectInfo.begin(); itr != _selectInfo.end(); itr++) {
 		delete (*itr);
+
+		itr = _selectInfo.erase(itr);
 	}
 
-	_selectInfo.clear();
 	_curWindowSize = 0;
 }
 
@@ -80,6 +91,10 @@ void PlayerTable::Update() {
 		}
 
 		SetupFontScale();
+
+		// Before the table is drawn, so a click on the YOU row this frame hits
+		// the refreshed entry instead of opening a second window for it.
+		FollowMyID();
 
 		ImGuiWindowFlags windowFlag = ImGuiWindowFlags_None;
 		windowFlag |= (ImGuiWindowFlags_NoNavInputs | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse);
@@ -1089,17 +1104,38 @@ bool PlayerTable::ToggleSelectInfo(uint32_t id) {
 		}
 	}
 
-	SELECTED_PLAYER* selectinfo = new SELECTED_PLAYER(id, TRUE, new SpecificInformation(id));
+	bool isMe = id != 0 && id == DAMAGEMETER.GetMyID(TRUE);
+
+	SELECTED_PLAYER* selectinfo = new SELECTED_PLAYER(id, TRUE, isMe, _nextWindowIndex++, new SpecificInformation(id));
 	_selectInfo.push_back(selectinfo);
 
 	return selectinfo->_isSelected;
+}
+
+void PlayerTable::FollowMyID() {
+
+	uint32_t myID = DAMAGEMETER.GetMyID(TRUE);
+
+	if (myID == 0)
+		return;
+
+	for (auto itr = _selectInfo.begin(); itr != _selectInfo.end(); itr++) {
+
+		if (!(*itr)->_isMe || (*itr)->_playerID == myID)
+			continue;
+
+		// Restarting a run hands the local player a brand new id, which would
+		// leave this window pointing at a player that no longer exists.
+		(*itr)->_playerID = myID;
+		(*itr)->_specificInfo->SetPlayerID(myID);
+	}
 }
 
 void PlayerTable::ShowSelectedTable() {
 
 	for (auto itr = _selectInfo.begin(); itr != _selectInfo.end(); itr++) {
 		if ((*itr)->_isSelected == TRUE) {
-			(*itr)->_specificInfo->Update(&(*itr)->_isSelected, itr - _selectInfo.begin());
+			(*itr)->_specificInfo->Update(&(*itr)->_isSelected, (*itr)->_windowIndex);
 		}
 	}
 }

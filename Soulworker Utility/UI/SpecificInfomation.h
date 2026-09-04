@@ -35,5 +35,10 @@ public:
 	SpecificInformation(uint32_t playerID);
 	~SpecificInformation();
 
+	// The local player gets a new id on every world change, so the window has
+	// to be able to follow it instead of being thrown away and reopened.
+	void SetPlayerID(uint32_t playerID);
+	void ResetMonsterSelection();
+
 	void Update(bool* open, int64_t index);
 };

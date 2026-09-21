@@ -7,7 +7,7 @@
 #include ".\Damage Meter\MySQLite.h"
 
 
-SpecificInformation::SpecificInformation(uint32_t playerID) : _playerID(playerID), _monsterID_SKILL(0), _globalFontScale(0), _columnFontScale(0), _tableFontScale(0), _tableTime(0), _accumulatedTime(0) {
+SpecificInformation::SpecificInformation(uint32_t playerID) : _playerID(playerID), _monsterID_SKILL(0), _monsterFilter(MonsterFilter::Single), _customWindowOpen(false), _comboPreview(), _skillTotalsDamage(0), _globalFontScale(0), _columnFontScale(0), _tableFontScale(0), _tableTime(0), _accumulatedTime(0) {
 
 }
 
@@ -30,6 +30,94 @@ void SpecificInformation::SetPlayerID(uint32_t playerID) {
 
 void SpecificInformation::ResetMonsterSelection() {
 	_monsterID_SKILL = 0;
+
+	// Monster ids are per-run, so a subset picked for the previous run means
+	// nothing here - drop it and fall back to the auto-latching single pick.
+	_customMonsters.clear();
+
+	if (_monsterFilter == MonsterFilter::Custom)
+		_monsterFilter = MonsterFilter::Single;
+}
+
+bool SpecificInformation::IsMonsterSelected(uint32_t monsterID) const {
+
+	switch (_monsterFilter) {
+	case MonsterFilter::All:
+		return true;
+	case MonsterFilter::Custom:
+		return _customMonsters.find(monsterID) != _customMonsters.end();
+	default:
+		return monsterID == _monsterID_SKILL;
+	}
+}
+
+void SpecificInformation::BuildSkillTotals() {
+
+	_skillTotals.clear();
+	_skillTotalsDamage = 0;
+
+	auto player = DAMAGEMETER.GetPlayerInfo(_playerID);
+
+	if (player == DAMAGEMETER.end())
+		return;
+
+	// Every monster is walked, not just the selected ones: the TOTAL column is
+	// the skill's whole output for the run and must not follow the selection.
+	for (auto monster = (*player)->begin(); monster != (*player)->end(); monster++) {
+
+		bool selected = IsMonsterSelected((*monster)->GetID());
+
+		for (auto skill = (*monster)->begin(); skill != (*monster)->end(); skill++) {
+
+			uint32_t skillID = (*skill)->GetID();
+
+			auto row = std::find_if(_skillTotals.begin(), _skillTotals.end(), [skillID](const SKILL_TOTAL& total) { return total._id == skillID; });
+
+			if (row == _skillTotals.end()) {
+				_skillTotals.push_back({ skillID, (*skill)->GetName(), 0, 0, 0, 0, false });
+				row = _skillTotals.end() - 1;
+			}
+
+			row->_totalDamage += (*skill)->GetDamage();
+
+			if (!selected)
+				continue;
+
+			row->_inSelection = true;
+			row->_damage += (*skill)->GetDamage();
+			row->_hitCount += (*skill)->GetHitCount();
+			row->_critHitCount += (*skill)->GetCritHitCount();
+
+			_skillTotalsDamage += (*skill)->GetDamage();
+		}
+	}
+
+	// Skills only ever used on deselected mobs have no row in this breakdown.
+	_skillTotals.erase(std::remove_if(_skillTotals.begin(), _skillTotals.end(), [](const SKILL_TOTAL& total) { return !total._inSelection; }), _skillTotals.end());
+
+	std::sort(_skillTotals.begin(), _skillTotals.end(), [](const SKILL_TOTAL& a, const SKILL_TOTAL& b) { return a._damage > b._damage; });
+}
+
+void SpecificInformation::FormatDamage(uint64_t damage, char* dest, size_t destLen) {
+
+	char label[128] = { 0 };
+
+	if (UIOPTION.is1K())
+		damage /= 1000;
+	else if (UIOPTION.is1M())
+		damage /= 1000000;
+	else if (UIOPTION.is10K())
+		damage /= 10000;
+
+	sprintf_s(label, 128, "%llu", damage);
+	TextCommma(label, dest);
+
+	if (UIOPTION.is1K())
+		strcat_s(dest, destLen, LANGMANAGER.GetText("STR_DISPLAY_UNIT_1K").data());
+	else if (UIOPTION.is1M())
+		strcat_s(dest, destLen, LANGMANAGER.GetText("STR_DISPLAY_UNIT_1M").data());
+	else if (UIOPTION.is10K())
+		strcat_s(dest, destLen, LANGMANAGER.GetText("STR_DISPLAY_UNIT_10K").data());
 }
 
 void SpecificInformation::SetupFontScale() {
@@ -68,6 +156,8 @@ void SpecificInformation::Update(bool* open, int64_t index) {
 		}
 	}
 	ImGui::End();
+
+	UpdateMonsterFilterWindow(index);
 }
 
 void SpecificInformation::UpdateSkillInfo() {
@@ -178,28 +268,52 @@ void SpecificInformation::UpdateMonsterCombo() {
 	if (player == DAMAGEMETER.end())
 		return;
 
-	const char* comboPreview = nullptr;
+	_comboPreview[0] = 0;
 
-	auto monster = (*player)->GetMonsterInfo(_monsterID_SKILL);
+	if (_monsterFilter == MonsterFilter::All)
+		strcpy_s(_comboPreview, LANGMANAGER.GetText("STR_SPECIFICINFO_MONSTER_ALL").data());
+	else if (_monsterFilter == MonsterFilter::Custom)
+		sprintf_s(_comboPreview, "%s (%zu)", LANGMANAGER.GetText("STR_SPECIFICINFO_MONSTER_CUSTOM").data(), _customMonsters.size());
+	else {
+		auto monster = (*player)->GetMonsterInfo(_monsterID_SKILL);
 
-	// Nothing picked yet, or the pick died with the previous run: latch onto
-	// the first mob that got hit so the table is filled without a manual pick.
-	if (monster == (*player)->end() && (*player)->begin() != (*player)->end()) {
-		monster = (*player)->begin();
-		_monsterID_SKILL = (*monster)->GetID();
-	}
+		// Nothing picked yet, or the pick died with the previous run: latch onto
+		// the first mob that got hit so the table is filled without a manual pick.
+		if (monster == (*player)->end() && (*player)->begin() != (*player)->end()) {
+			monster = (*player)->begin();
+			_monsterID_SKILL = (*monster)->GetID();
+		}
 
-	if (monster != (*player)->end()) {
-		comboPreview = (*monster)->GetName();
+		if (monster != (*player)->end())
+			strcpy_s(_comboPreview, (*monster)->GetName());
 	}
 
 	char label[128] = { 0 };
 	sprintf_s(label, "%s###DetailMonster", LANGMANAGER.GetText("STR_SPECIFICINFO_MONSTER").data());
-	if(ImGui::BeginCombo(label, comboPreview, ImGuiComboFlags_HeightLarge)) {
-	
-		for (auto itr = (*player)->begin(); itr != (*player)->end(); itr++) 
+	if(ImGui::BeginCombo(label, _comboPreview[0] ? _comboPreview : nullptr, ImGuiComboFlags_HeightLarge)) {
+
+		sprintf_s(label, "%s##all", LANGMANAGER.GetText("STR_SPECIFICINFO_MONSTER_ALL").data());
+		if (ImGui::Selectable(label, _monsterFilter == MonsterFilter::All))
+			_monsterFilter = MonsterFilter::All;
+
+		sprintf_s(label, "%s##custom", LANGMANAGER.GetText("STR_SPECIFICINFO_MONSTER_CUSTOM").data());
+		if (ImGui::Selectable(label, _monsterFilter == MonsterFilter::Custom)) {
+
+			// Start from everything checked so the list reads as a filter to
+			// narrow down rather than an empty table to fill in.
+			if (_customMonsters.empty())
+				for (auto itr = (*player)->begin(); itr != (*player)->end(); itr++)
+					_customMonsters.insert((*itr)->GetID());
+
+			_monsterFilter = MonsterFilter::Custom;
+			_customWindowOpen = true;
+		}
+
+		ImGui::Separator();
+
+		for (auto itr = (*player)->begin(); itr != (*player)->end(); itr++)
 		{
-		
+
 			char ext[MONSTER_NAME_LEN] = { 0 };
 #ifdef _DEBUG
 			sprintf_s(ext, "(%d)", (*itr)->GetDB2());
@@ -208,8 +322,9 @@ void SpecificInformation::UpdateMonsterCombo() {
 			char label[MONSTER_NAME_LEN + MONSTER_NAME_LEN] = { 0 };
 			sprintf_s(label, MONSTER_NAME_LEN + MONSTER_NAME_LEN, "%s%s##%d", (*itr)->GetName(), ext, (*itr)->GetID());
 
-			if (ImGui::Selectable(label, _monsterID_SKILL == (*itr)->GetID())) {
+			if (ImGui::Selectable(label, _monsterFilter == MonsterFilter::Single && _monsterID_SKILL == (*itr)->GetID())) {
 				_monsterID_SKILL = (*itr)->GetID();
+				_monsterFilter = MonsterFilter::Single;
 			}
 		}
 
@@ -217,16 +332,57 @@ void SpecificInformation::UpdateMonsterCombo() {
 	}
 }
 
-void SpecificInformation::UpdateSkillTable() {
+void SpecificInformation::UpdateMonsterFilterWindow(int64_t index) {
+
+	if (!_customWindowOpen || _monsterFilter != MonsterFilter::Custom)
+		return;
 
 	auto player = DAMAGEMETER.GetPlayerInfo(_playerID);
 
 	if (player == DAMAGEMETER.end())
 		return;
 
-	auto monster = (*player)->GetMonsterInfo(_monsterID_SKILL);
+	char title[192] = { 0 };
+	sprintf_s(title, 192, "%s %s###DetailMonsterFilter%lld", DAMAGEMETER.GetPlayerName(_playerID), LANGMANAGER.GetText("STR_SPECIFICINFO_MONSTER_FILTER").data(), index);
 
-	if (monster == (*player)->end())
+	ImGui::SetNextWindowSize(ImVec2(280, 320), ImGuiCond_FirstUseEver);
+	ImGui::Begin(title, &_customWindowOpen, ImGuiWindowFlags_None);
+	{
+		if (ImGui::Button(LANGMANAGER.GetText("STR_SPECIFICINFO_MONSTER_FILTER_CHECK_ALL").data()))
+			for (auto itr = (*player)->begin(); itr != (*player)->end(); itr++)
+				_customMonsters.insert((*itr)->GetID());
+
+		ImGui::SameLine();
+
+		if (ImGui::Button(LANGMANAGER.GetText("STR_SPECIFICINFO_MONSTER_FILTER_UNCHECK_ALL").data()))
+			_customMonsters.clear();
+
+		ImGui::Separator();
+
+		for (auto itr = (*player)->begin(); itr != (*player)->end(); itr++) {
+
+			uint32_t monsterID = (*itr)->GetID();
+			bool checked = _customMonsters.find(monsterID) != _customMonsters.end();
+
+			char label[MONSTER_NAME_LEN + MONSTER_NAME_LEN] = { 0 };
+			sprintf_s(label, MONSTER_NAME_LEN + MONSTER_NAME_LEN, "%s##filter%d", (*itr)->GetName(), monsterID);
+
+			if (ImGui::Checkbox(label, &checked)) {
+				if (checked)
+					_customMonsters.insert(monsterID);
+				else
+					_customMonsters.erase(monsterID);
+			}
+		}
+	}
+	ImGui::End();
+}
+
+void SpecificInformation::UpdateSkillTable() {
+
+	BuildSkillTotals();
+
+	if (_skillTotals.empty())
 		return;
 
 	ImGuiStyle& style = ImGui::GetStyle();
@@ -236,33 +392,35 @@ void SpecificInformation::UpdateSkillTable() {
 	style.WindowPadding.y = 0;
 
 	char table[128] = { 0 };
-	sprintf_s(table, 128, "##skilltable");
-	if(ImGui::BeginTable(table, 7, ImGuiTableFlags_Resizable | ImGuiTableFlags_Hideable | ImGuiTableFlags_Reorderable)) {
-	
+	sprintf_s(table, 128, "##skillbreakdowntable");
+	if(ImGui::BeginTable(table, 8, ImGuiTableFlags_Resizable | ImGuiTableFlags_Hideable | ImGuiTableFlags_Reorderable)) {
+
 		ImGui::SetWindowFontScale(_columnFontScale);
 
 		ImGui::TableSetupColumn(LANGMANAGER.GetText("STR_TABLE_NAME").data(), ImGuiTableColumnFlags_NoReorder | ImGuiTableColumnFlags_NoHide | ImGuiTableColumnFlags_NoClip | ImGuiTableColumnFlags_WidthFixed, -1);
 		ImGui::TableSetupColumn(LANGMANAGER.GetText("STR_TABLE_DPS").data(), ImGuiTableColumnFlags_WidthFixed, -1);
 		ImGui::TableSetupColumn(LANGMANAGER.GetText("STR_TABLE_DAMAGE_PERCENT").data(), ImGuiTableColumnFlags_WidthFixed, -1);
-		ImGui::TableSetupColumn(LANGMANAGER.GetText("STR_TABLE_TOTAL_DAMAGE").data(), ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_DefaultHide, -1);
+		ImGui::TableSetupColumn(LANGMANAGER.GetText("STR_TABLE_TOTAL_DAMAGE").data(), ImGuiTableColumnFlags_WidthFixed, -1);
+		ImGui::TableSetupColumn(LANGMANAGER.GetText("STR_TABLE_TOTAL_ALL_DAMAGE").data(), ImGuiTableColumnFlags_WidthFixed, -1);
 		ImGui::TableSetupColumn(LANGMANAGER.GetText("STR_TABLE_TOTAL_HIT").data(), ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_DefaultHide, -1);
 		ImGui::TableSetupColumn(LANGMANAGER.GetText("STR_TABLE_CRIT_RATE").data(), ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_DefaultHide, -1);
 		ImGui::TableSetupColumn(LANGMANAGER.GetText("STR_TABLE_HIT_PER_SECOND").data(), ImGuiTableColumnFlags_WidthFixed, -1);
 	// ImGui::TableSetupColumn(STR_TABLE_SKILL_PER_SECOND, ImGuiTableColumnFlags_WidthFixed, -1);
 		ImGui::TableHeadersRow();
 
-		uint64_t max_Damage = 1;
+		uint64_t max_Damage = _skillTotals.front()._damage;
+
+		if (max_Damage == 0)
+			max_Damage = 1;
+
 		char comma[128] = { 0 }; char label[128] = { 0 };
 		float windowWidth = ImGui::GetWindowWidth();
 
 		ImGui::SetWindowFontScale(_tableFontScale);
 
-		for (auto itr = (*monster)->begin(); itr != (*monster)->end(); itr++) {
+		for (auto itr = _skillTotals.begin(); itr != _skillTotals.end(); itr++) {
 
-			if (itr == (*monster)->begin())
-				max_Damage = (*itr)->GetDamage();
-
-			float damage_percent = static_cast<float>((double)(*itr)->GetDamage() / (double)max_Damage);
+			float damage_percent = static_cast<float>((double)itr->_damage / (double)max_Damage);
 
 			if (damage_percent > 1)
 				damage_percent = 1;
@@ -275,12 +433,12 @@ void SpecificInformation::UpdateSkillTable() {
 			DrawBar(windowWidth, damage_percent, UIOPTION.GetJobColor(DAMAGEMETER.GetPlayerJob(_playerID)));
 
 			// NAME
-			ImGui::Text((*itr)->GetName());
+			ImGui::Text(itr->_name);
 
 			ImGui::TableNextColumn();
 
 			// DPS
-			double dps = ((double)(*itr)->GetDamage()) / _tableTime;
+			double dps = ((double)itr->_damage) / _tableTime;
 			if (UIOPTION.is1K()) {
 				dps /= 1000;
 				sprintf_s(label, 128, "%.0lf", dps);
@@ -310,33 +468,25 @@ void SpecificInformation::UpdateSkillTable() {
 			ImGui::TableNextColumn();
 
 			// D%
-			sprintf_s(label, 128, "%.0lf", ((double)(*itr)->GetDamage() / (double)(*monster)->GetSkillTotalDamage() * 100));
+			sprintf_s(label, 128, "%.0lf", _skillTotalsDamage == 0 ? 0.0 : ((double)itr->_damage / (double)_skillTotalsDamage * 100));
 			ImGui::Text(label);
 
 			ImGui::TableNextColumn();
 
-			// DAMAGE
-			uint64_t damage = (*itr)->GetDamage();
-			if (UIOPTION.is1K())
-				damage /= 1000;
-			else if (UIOPTION.is1M())
-				damage /= 1000000;
-			else if (UIOPTION.is10K())
-				damage /= 10000;
-			sprintf_s(label, 128, "%llu", damage);
-			TextCommma(label, comma);
-			if (UIOPTION.is1K())
-				strcat_s(comma, 128, LANGMANAGER.GetText("STR_DISPLAY_UNIT_1K").data());
-			else if (UIOPTION.is1M())
-				strcat_s(comma, 128, LANGMANAGER.GetText("STR_DISPLAY_UNIT_1M").data());
-			else if (UIOPTION.is10K())
-				strcat_s(comma, 128, LANGMANAGER.GetText("STR_DISPLAY_UNIT_10K").data());
+			// DAMAGE (selected enemies)
+			FormatDamage(itr->_damage, comma, sizeof(comma));
+			ImGui::Text(comma);
+
+			ImGui::TableNextColumn();
+
+			// TOTAL (every enemy, selection ignored)
+			FormatDamage(itr->_totalDamage, comma, sizeof(comma));
 			ImGui::Text(comma);
 
 			ImGui::TableNextColumn();
 
 			// HIT
-			sprintf_s(label, 128, "%d", (*itr)->GetHitCount());
+			sprintf_s(label, 128, "%u", itr->_hitCount);
 			TextCommma(label, comma);
 			ImGui::Text(comma);
 
@@ -345,8 +495,8 @@ void SpecificInformation::UpdateSkillTable() {
 			// CRIT
 			float crit = 0;
 
-			if ((*itr)->GetHitCount() != 0)
-				crit = (float)(*itr)->GetCritHitCount() / (float)(*itr)->GetHitCount() * 100;
+			if (itr->_hitCount != 0)
+				crit = (float)itr->_critHitCount / (float)itr->_hitCount * 100;
 
 			sprintf_s(label, 128, "%.0f", crit);
 			ImGui::Text(label);
@@ -354,12 +504,12 @@ void SpecificInformation::UpdateSkillTable() {
 			ImGui::TableNextColumn();
 
 			// HIT/S
-			sprintf_s(label, 128, "%.2lf", (double)(*itr)->GetHitCount() / _tableTime);
+			sprintf_s(label, 128, "%.2lf", (double)itr->_hitCount / _tableTime);
 			ImGui::Text(label);
 
 			ImGui::TableNextColumn();
 		}
-		
+
 		ImGui::SetWindowFontScale(_globalFontScale);
 		ImGui::EndTable();
 	}

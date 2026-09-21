@@ -49,6 +49,12 @@ private:
 	char _selectedFontFile[MAX_PATH] = { 0 };
 	BOOL _isDontSaveUnfinishedMaze;
 
+	BOOL _unlockFps;
+	int32_t _fpsCap;
+	BOOL _unlockFov;
+
+	void ShowGameTweaks();
+
 	bool ShowTableOption();
 	bool ShowHotkeySetting();
 	void ShowLangSelector();
@@ -112,4 +118,7 @@ public:
 
 	bool SaveOption(bool skipWarning = FALSE);
 	BOOL _isUseImage;
+
+	// Pushes both tweaks to the hook. Safe to call when no game is up.
+	void ApplyGameTweaks();
 };

@@ -154,6 +154,7 @@
     <ClCompile Include="blockcache.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="gamecmd.cpp" />
+    <ClCompile Include="gametweak.cpp" />
     <ClCompile Include="loadopt.cpp" />
     <ClCompile Include="md5cache.cpp" />
     <ClCompile Include="sockethooks.cpp" />
@@ -170,6 +171,7 @@
   <ItemGroup>
     <ClInclude Include="blockcache.h" />
     <ClInclude Include="gamecmd.h" />
+    <ClInclude Include="gametweak.h" />
     <ClInclude Include="loadopt.h" />
     <ClInclude Include="md5cache.h" />
     <ClInclude Include="peutil.h" />

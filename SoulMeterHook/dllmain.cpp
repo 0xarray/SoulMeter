@@ -13,6 +13,7 @@
 
 #include "blockcache.h"
 #include "gamecmd.h"
+#include "gametweak.h"
 #include "loadopt.h"
 #include "md5cache.h"
 #include "sockethooks.h"
@@ -265,6 +266,10 @@ DWORD WINAPI SetupThread(LPVOID) {
     // image patches need.
     LoadOptApply();
 
+    // Resolves the frame-cap float and hooks the renderer's SetFOV. Both stay
+    // inert until a meter asks for them.
+    GameTweakInstall();
+
     // Must be armed before the client starts hashing the archives, which is
     // ~30s into a cold start -- long after SoulWorker64.dll is mapped.
     Md5CacheInstall();
@@ -279,6 +284,7 @@ DWORD WINAPI SetupThread(LPVOID) {
 
     while (g_running)
         Sleep(1000);
+    GameTweakShutdown();
     HookUninstall();
     Md5CacheShutdown();
     BlockCacheShutdown();

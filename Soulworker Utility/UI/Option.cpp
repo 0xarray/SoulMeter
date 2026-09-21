@@ -8,6 +8,7 @@
 #include ".\Damage Meter\Damage Meter.h"
 #include ".\Buff Meter\Buff Meter.h"
 #include ".\Damage Meter\MySQLite.h"
+#include ".\Soulworker Packet\HookCommand.h"
 #include "SWConfig.h"
 #include <shellapi.h>
 #pragma comment(lib, "shell32.lib")
@@ -47,6 +48,7 @@ UiOption::UiOption()  :
 	_open(0), _framerate(1), _windowBorderSize(1), _fontScale(1), _columnFontScale(1), _tableFontScale(1), 
 	_is1K(0), _is1M(0), _is10K(0), _isSoloMode(0), _hideName(0), _isTopMost(true), _teamTA_LF(false), _isSoloRankMode(FALSE), _isUseSaveData(FALSE),
 	_isDontSaveUnfinishedMaze(false),
+	_unlockFps(FALSE), _fpsCap(144), _unlockFov(FALSE),
 	_cellPadding(0, 0), _windowWidth(800), _refreshTime((float)0.3), _oriIsUseSaveData(FALSE), _selectedFontFile("NotoSansAll-Bold.ttf")
 {
 	
@@ -193,6 +195,59 @@ static const char* GetHotkeyActionText(const char* name) {
 	return name;
 }
 
+// Frame cap and FOV are applied inside the game by the capture hook, so they
+// only do anything while it is attached.
+void UiOption::ApplyGameTweaks() {
+	uint32_t fps = HOOK_FPS_GAME;
+	if (_unlockFps)
+		fps = _fpsCap > 0 ? (uint32_t)_fpsCap : HOOK_FPS_UNCAPPED;
+
+	HookCommandSetFpsCap(fps);
+	HookCommandSetFovUnlock(_unlockFov != FALSE);
+}
+
+void UiOption::ShowGameTweaks() {
+
+	ImGuiStyle& style = ImGui::GetStyle();
+
+	ImGui::Separator();
+	ImGui::Text("%s", LANGMANAGER.GetText("STR_OPTION_GAME_TWEAKS").data());
+
+	if (!HookCommandIsConnected()) {
+		ImGui::PushStyleColor(ImGuiCol_Text, style.Colors[ImGuiCol_TextDisabled]);
+		ImGui::TextWrapped("%s", LANGMANAGER.GetText("STR_OPTION_GAME_TWEAKS_NO_HOOK").data());
+		ImGui::PopStyleColor();
+	}
+
+	const float boxWidth = ImGui::CalcTextSize("0000000000000").x;
+
+	if (ImGui::Checkbox(LANGMANAGER.GetText("STR_OPTION_UNLOCK_FPS").data(), (bool*)&_unlockFps))
+		ApplyGameTweaks();
+
+	if (_unlockFps) {
+		ImGui::SameLine(0.0f, style.ItemInnerSpacing.x);
+		ImGui::SetNextItemWidth(boxWidth);
+		bool changed = ImGui::InputInt("##FpsCap", &_fpsCap, 10, 60);
+		if (changed)
+			_fpsCap = ImClamp(_fpsCap, 0, 1000);
+
+		// The lower bound waits for the box to be left: raising a half-typed
+		// number to 30 under the caret makes anything below it untypeable.
+		// 0 stays 0 - that is the no-cap-at-all setting.
+		if (ImGui::IsItemDeactivatedAfterEdit()) {
+			if (_fpsCap > 0 && _fpsCap < 30)
+				_fpsCap = 30;
+			changed = true;
+		}
+
+		if (changed)
+			ApplyGameTweaks();
+	}
+
+	if (ImGui::Checkbox(LANGMANAGER.GetText("STR_OPTION_UNLOCK_FOV").data(), (bool*)&_unlockFov))
+		ApplyGameTweaks();
+}
+
 bool UiOption::ShowHotkeySetting() {
 
 	ImGuiStyle& style = ImGui::GetStyle();
@@ -271,6 +326,8 @@ bool UiOption::ShowHotkeySetting() {
 
 	if (HOTKEY.ConsumeChanged())
 		SaveOption(TRUE);
+
+	ShowGameTweaks();
 
 	ImGui::Separator();
 	ImGui::Text(LANGMANAGER.GetText("STR_OPTION_HOTKEY_DESC_5").data());
@@ -531,6 +588,10 @@ void UiOption::Init() {
 		SetBasicOption();
 	}
 	_inited = true;
+
+	// Queued rather than delivered: the hook connects later, and reconnecting
+	// replays whatever was last pushed.
+	ApplyGameTweaks();
 }
 
 bool UiOption::GetOption() {
@@ -681,6 +742,18 @@ bool UiOption::GetOption() {
 	attr = ele->FindAttribute("IsDontSaveUnfinishedMaze");
 	if (attr != nullptr)
 		attr->QueryIntValue(&_isDontSaveUnfinishedMaze);
+
+	attr = ele->FindAttribute("UnlockFps");
+	if (attr != nullptr)
+		attr->QueryIntValue(&_unlockFps);
+
+	attr = ele->FindAttribute("FpsCap");
+	if (attr != nullptr)
+		attr->QueryIntValue(&_fpsCap);
+
+	attr = ele->FindAttribute("UnlockFov");
+	if (attr != nullptr)
+		attr->QueryIntValue(&_unlockFov);
 
 #if DEBUG_READ_XML == 1
 	LogInstance.WriteLog("Read 1M = %d", _is1M);
@@ -1075,6 +1148,10 @@ bool UiOption::SaveOption(bool skipWarning) {
 	option->SetAttribute("UseFontFile", _selectedFontFile);
 
 	option->SetAttribute("IsDontSaveUnfinishedMaze", _isDontSaveUnfinishedMaze);
+
+	option->SetAttribute("UnlockFps", _unlockFps);
+	option->SetAttribute("FpsCap", _fpsCap);
+	option->SetAttribute("UnlockFov", _unlockFov);
 
 	RECT rect;
 	GetWindowRect(UIWINDOW.GetHWND(), &rect);

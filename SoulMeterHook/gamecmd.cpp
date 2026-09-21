@@ -9,6 +9,10 @@
 // The senders run on the message-pump thread only. The exit path clears state on
 // CMyPlayer and pokes the scene manager with no lock, so the window is
 // subclassed and commands arrive as a posted message.
+//
+// The same channel carries the frame-cap and FOV tweaks (gametweak.cpp). Those
+// do not need the senders, so a build where the senders do not resolve still
+// arms the window and keeps the tweaks working.
 
 #include "gamecmd.h"
 
@@ -16,6 +20,7 @@
 #include <cstdarg>
 #include <cstdio>
 
+#include "gametweak.h"
 #include "peutil.h"
 
 namespace {
@@ -49,56 +54,7 @@ HWND g_hwnd = nullptr;
 WNDPROC g_oWndProc = nullptr;
 bool g_wndUnicode = true;
 
-uint32_t g_lastFireMs[3] = { 0, 0, 0 };
-
-struct RtFn {
-    uint32_t begin;
-    uint32_t end;
-    uint32_t unwind;
-};
-
-constexpr uint8_t kUnwFlagChainInfo = 0x4;
-
-// Function bounds containing `rva`, chained fragments followed back to the entry.
-const RtFn* LookupPdata(uint8_t* base, uint32_t rva) {
-    IMAGE_NT_HEADERS64* nt = pe::NtHeaders(base);
-    if (!nt)
-        return nullptr;
-
-    const IMAGE_DATA_DIRECTORY& dir =
-        nt->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXCEPTION];
-    if (!dir.VirtualAddress || dir.Size < sizeof(RtFn))
-        return nullptr;
-
-    const RtFn* table = (const RtFn*)(base + dir.VirtualAddress);
-    size_t count = dir.Size / sizeof(RtFn);
-
-    const RtFn* hit = nullptr;
-    size_t lo = 0;
-    size_t hi = count - 1;
-    while (lo <= hi) {
-        size_t mid = lo + (hi - lo) / 2;
-        if (rva < table[mid].begin) {
-            if (mid == 0)
-                break;
-            hi = mid - 1;
-        } else if (rva >= table[mid].end) {
-            lo = mid + 1;
-        } else {
-            hit = &table[mid];
-            break;
-        }
-    }
-
-    for (int i = 0; hit && i < 8; i++) {
-        const uint8_t* unwind = base + hit->unwind;
-        if (((unwind[0] >> 3) & kUnwFlagChainInfo) == 0)
-            return hit;
-        uint8_t codes = unwind[2];
-        hit = (const RtFn*)(unwind + 4 + (size_t)((codes + 1) & ~1) * 2);
-    }
-    return nullptr;
-}
+uint32_t g_lastFireMs[SMH_CMD_MAX + 1] = { 0 };
 
 // The linker does not always fold duplicate literals, so collect them all and
 // let the code-side scan resolve the ambiguity.
@@ -169,7 +125,7 @@ void* ResolveSender(uint8_t* base, const pe::Section& text, const char* literal,
         return nullptr;
     }
 
-    const RtFn* fn = LookupPdata(base, (uint32_t)(ref - base));
+    const pe::RuntimeFunction* fn = pe::FindFunction(base, (uint32_t)(ref - base));
     if (!fn) {
         Log("resolve '%s': reference at +%08X has no unwind entry", literal,
             (uint32_t)(ref - base));
@@ -247,6 +203,15 @@ BOOL CALLBACK PickWindow(HWND hwnd, LPARAM param) {
 }
 
 void RunCommand(uint8_t op, uint32_t arg) {
+    if (op == SMH_CMD_SET_FPS_CAP) {
+        GameTweakSetFpsCap(arg);
+        return;
+    }
+    if (op == SMH_CMD_UNLOCK_FOV) {
+        GameTweakSetFovUnlock(arg != 0);
+        return;
+    }
+
     void* netMgr = g_netMgr;
     if (!netMgr) {
         Log("command %u ignored: no netMgr seen yet", op);
@@ -313,18 +278,15 @@ bool GameCmdInit() {
     if (g_hwnd)
         return true;
 
-    if (!g_fnRestart) {
-        if (g_resolveFailed)
-            return false;
-        if (!ResolveSenders()) {
-            // Scanning the image is only worth repeating while the module has
-            // yet to load; a failure after that will not fix itself.
-            if (GetModuleHandleW(kModuleName)) {
-                g_resolveFailed = true;
-                Log("maze commands disabled: senders did not resolve in this build");
-            }
-            return false;
-        }
+    if (!GetModuleHandleW(kModuleName))
+        return false;
+
+    if (!g_fnRestart && !g_resolveFailed && !ResolveSenders()) {
+        // Scanning the image is only worth repeating while the module has yet
+        // to load; a failure after that will not fix itself. Only the two maze
+        // hotkeys depend on it, so the channel still arms.
+        g_resolveFailed = true;
+        Log("maze commands disabled: senders did not resolve in this build");
     }
     return SubclassGameWindow();
 }
@@ -353,17 +315,21 @@ void GameCmdSetNetMgr(void* netMgr) {
 }
 
 void GameCmdPost(uint8_t op, uint32_t arg) {
-    if (op != SMH_CMD_RESTART_MAZE && op != SMH_CMD_EXIT_MAZE)
+    if (op < SMH_CMD_RESTART_MAZE || op > SMH_CMD_MAX)
         return;
     if (!g_hwnd) {
         Log("command %u ignored: not armed", op);
         return;
     }
 
-    uint32_t now = (uint32_t)GetTickCount64();
-    if (now - g_lastFireMs[op] < kDebounceMs)
-        return;
-    g_lastFireMs[op] = now;
+    // Only the maze hotkeys are debounced; a dragged slider must not have its
+    // last value dropped.
+    if (op == SMH_CMD_RESTART_MAZE || op == SMH_CMD_EXIT_MAZE) {
+        uint32_t now = (uint32_t)GetTickCount64();
+        if (now - g_lastFireMs[op] < kDebounceMs)
+            return;
+        g_lastFireMs[op] = now;
+    }
 
     PostMessageW(g_hwnd, WM_SMH_CMD, op, arg);
 }

@@ -24,6 +24,11 @@ struct Command {
 
 volatile LONG g_running = 1;
 
+// Last state pushed by the UI, re-sent on every reconnect: the hook dies with
+// the game, and the new one starts out with both tweaks off.
+volatile LONG g_fpsCap = 0;
+volatile LONG g_fovUnlock = 0;
+
 CRITICAL_SECTION g_cs;
 bool g_csReady = false;
 HANDLE g_wake = nullptr;
@@ -103,7 +108,13 @@ DWORD WINAPI CommandServerThread(LPVOID) {
         LogInstance.WriteLog("Hook command channel connected");
 
         ULONGLONG lastKeepAlive = GetTickCount64();
-        bool broken = false;
+
+        // A fresh hook knows nothing about the tweaks the user already set.
+        bool broken =
+            !WriteCommand(hPipe, HOOK_CMD_SET_FPS_CAP,
+                          (uint32_t)InterlockedCompareExchange(&g_fpsCap, 0, 0)) ||
+            !WriteCommand(hPipe, HOOK_CMD_UNLOCK_FOV,
+                          (uint32_t)InterlockedCompareExchange(&g_fovUnlock, 0, 0));
 
         while (g_running && !broken) {
             WaitForSingleObject(g_wake, 250);
@@ -185,4 +196,15 @@ void HookCommandExitMaze() {
 
     if (!HookCommandSend(HOOK_CMD_EXIT_MAZE, 0))
         LogInstance.WriteLog("Exit maze hotkey: hook not connected");
+}
+
+// Stored even while disconnected: the reconnect replays whatever is here.
+void HookCommandSetFpsCap(uint32_t fps) {
+    InterlockedExchange(&g_fpsCap, (LONG)fps);
+    HookCommandSend(HOOK_CMD_SET_FPS_CAP, fps);
+}
+
+void HookCommandSetFovUnlock(bool unlock) {
+    InterlockedExchange(&g_fovUnlock, unlock ? 1 : 0);
+    HookCommandSend(HOOK_CMD_UNLOCK_FOV, unlock ? 1u : 0u);
 }

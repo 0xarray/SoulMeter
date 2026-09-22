@@ -92,19 +92,19 @@ public:
 	const ImVec4& GetActiveColor();
 	const ImVec4& GetInActiveColor();
 	const ImVec4& GetWindowBGColor();
-	const bool& is1K();
-	const bool& is1M();
-	const bool& is10K();
-	const bool& isSoloMode();
-	const bool& doHideName();
-	const bool& isTopMost();
-	const bool& isUseImage();
-	const bool& isTeamTALF();
+	bool is1K();
+	bool is1M();
+	bool is10K();
+	bool isSoloMode();
+	bool doHideName();
+	bool isTopMost();
+	bool isUseImage();
+	bool isTeamTALF();
 	const int32_t& TeamTALFMode();
-	const bool& isSoloRankMode();
-	const bool& isUseSaveData();
+	bool isSoloRankMode();
+	bool isUseSaveData();
 	const char* GetFontFile();
-	const bool& isDontSaveUnfinishedMaze();
+	bool isDontSaveUnfinishedMaze();
 
 	bool ToggleTopMost();
 

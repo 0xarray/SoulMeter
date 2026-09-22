@@ -103,18 +103,16 @@ void PlayerTable::Update() {
 			windowFlag = windowFlag | ImGuiWindowFlags_NoResize;
 
 		char title[1024] = { 0 };
+		// Timer accuracy picks 1-3 fraction digits; they must keep their leading
+		// zeros or 1.045s reads as "01.4".
+		int msDigits = ImClamp(DAMAGEMETER.mswideness, 1, 3);
 		unsigned int miliseconds = ((unsigned int)DAMAGEMETER.GetTime() % 1000);
-		if (DAMAGEMETER.mswideness == 1)
-		{
-			miliseconds = miliseconds / 100;
-		}
-		else if (DAMAGEMETER.mswideness == 2)
-		{
-			miliseconds = miliseconds / 10;
-		}
-		//and if 3 then do nothing basically so we display all to 999
-		std::string milisecondsstring = std::to_string(miliseconds);
-		//turning it into a string before so we dont display leading 0's so timer is more readable
+		if (msDigits == 1)
+			miliseconds /= 100;
+		else if (msDigits == 2)
+			miliseconds /= 10;
+		char milisecondsstring[4] = { 0 };
+		sprintf_s(milisecondsstring, "%0*u", msDigits, miliseconds);
 
 		if (!PipeReceiverIsConnected()) {
 			// game not hooked yet - the player launches it themselves
@@ -127,7 +125,7 @@ void PlayerTable::Update() {
 		else {
 			sprintf_s(title, 1024, "%s - %02d:%02d.%s [v%s_@Rainy] %s: %ums ###DamageMeter",
 				DAMAGEMETER.GetWorldName(),
-				(unsigned int)DAMAGEMETER.GetTime() / (60 * 1000), (unsigned int)(DAMAGEMETER.GetTime() / 1000) % 60, milisecondsstring.c_str(),
+				(unsigned int)DAMAGEMETER.GetTime() / (60 * 1000), (unsigned int)(DAMAGEMETER.GetTime() / 1000) % 60, milisecondsstring,
 				APP_VERSION,
 				LANGMANAGER.GetText("STR_MENU_PING").data(),
 				DAMAGEMETER.GetPing()

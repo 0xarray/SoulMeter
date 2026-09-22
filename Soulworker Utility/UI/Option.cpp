@@ -36,6 +36,13 @@ void UpdateFontList()
 		LogInstance.WriteLog("Update font failed: %s", e.what());
 	}
 }
+// What option.xml stores: the file name with its real extension (.ttf or .ttc).
+static std::string FontFileName(const ImFontObj& font)
+{
+	size_t slash = font.path.find_last_of('/');
+	return slash == std::string::npos ? font.path : font.path.substr(slash + 1);
+}
+
 void SetFont()
 {
 	if (DAMAGEMETER.selectedFont.path.empty())
@@ -46,7 +53,7 @@ void SetFont()
 
 UiOption::UiOption()  : 
 	_open(0), _framerate(1), _windowBorderSize(1), _fontScale(1), _columnFontScale(1), _tableFontScale(1), 
-	_is1K(0), _is1M(0), _is10K(0), _isSoloMode(0), _hideName(0), _isTopMost(true), _teamTA_LF(false), _isSoloRankMode(FALSE), _isUseSaveData(FALSE),
+	_is1K(0), _is1M(0), _is10K(0), _isSoloMode(0), _hideName(0), _isTopMost(true), _isUseImage(FALSE), _teamTA_LF(false), _isSoloRankMode(FALSE), _isUseSaveData(FALSE),
 	_isDontSaveUnfinishedMaze(false),
 	_unlockFps(FALSE), _fpsCap(144), _unlockFov(FALSE),
 	_cellPadding(0, 0), _windowWidth(800), _refreshTime((float)0.3), _oriIsUseSaveData(FALSE), _selectedFontFile("NotoSansAll-Bold.ttf")
@@ -103,8 +110,7 @@ bool UiOption::ShowFontSelector() {
 	ImGui::SameLine();
 	if (ImGui::Button(LANGMANAGER.GetText("STR_OPTION_SET_FONT").data()))
 	{
-		std::string fontToSave = DAMAGEMETER.selectedFont.filename + ".ttf";
-		strcpy_s(_selectedFontFile, fontToSave.c_str());
+		strcpy_s(_selectedFontFile, FontFileName(DAMAGEMETER.selectedFont).c_str());
 		SetFont();
 	}
 
@@ -686,8 +692,9 @@ bool UiOption::GetOption() {
 
 	attr = ele->FindAttribute("IsUseImage");
 	if (attr != nullptr)
-		attr = ele->FindAttribute("TeamTA_LF");
+		attr->QueryIntValue(&_isUseImage);
 
+	attr = ele->FindAttribute("TeamTA_LF");
 	if (attr != nullptr)
 		attr->QueryIntValue(&_teamTA_LF);
 
@@ -711,9 +718,10 @@ bool UiOption::GetOption() {
 	if (attr != nullptr)
 		attr->QueryIntValue(&DAMAGEMETER.mswideness);
 
-	auto attr2 = ele->FirstChildElement("UseLangFile");
-	if (attr2 != nullptr) {
-		strcpy_s(_selectedLang, attr2->GetText());
+	// Saved as attributes; older builds looked for child elements and never found them.
+	const char* savedLang = ele->Attribute("UseLangFile");
+	if (savedLang != nullptr && savedLang[0] != '\0' && strcmp(savedLang, _selectedLang) != 0) {
+		strcpy_s(_selectedLang, savedLang);
 		ChangeLang();
 	}
 
@@ -730,13 +738,18 @@ bool UiOption::GetOption() {
 
 	
 
-	attr2 = ele->FirstChildElement("UseFontFile");
-	if (attr2 != nullptr) {
-		strcpy_s(_selectedFontFile, attr2->GetText());
-		DAMAGEMETER.selectedFont.path = "Font/" + (std::string)GetFontFile();
-		DAMAGEMETER.selectedFont.filename = GetFontFile();
-		DAMAGEMETER.selectedFont.selectable = true;
-		SetFont();
+	// A font that has since been removed would leave the atlas empty.
+	const char* savedFont = ele->Attribute("UseFontFile");
+	if (savedFont != nullptr) {
+		for (const ImFontObj& font : fonts) {
+			if (FontFileName(font) != savedFont)
+				continue;
+			strcpy_s(_selectedFontFile, savedFont);
+			DAMAGEMETER.selectedFont = font;
+			DAMAGEMETER.selectedFont.selectable = true;
+			SetFont();
+			break;
+		}
 	}
 
 	attr = ele->FindAttribute("IsDontSaveUnfinishedMaze");
@@ -1140,7 +1153,6 @@ bool UiOption::SaveOption(bool skipWarning) {
 	
 	option->SetAttribute("LogMonsterStats", DAMAGEMETER.shouldLogMonsterStats);
 	option->SetAttribute("TimerAcc", DAMAGEMETER.mswideness);
-	option->SetAttribute("UseImage", UIOPTION._isUseImage);
 
 	option->SetAttribute("UseLangFile",_selectedLang);
 
@@ -1286,36 +1298,36 @@ const ImVec4& UiOption::GetInActiveColor() {
 	return _activeColor[0];
 }
 
-const bool& UiOption::is1K() {
+bool UiOption::is1K() {
 	return _is1K;
 }
 
-const bool& UiOption::is1M() {
+bool UiOption::is1M() {
 	return _is1M;
 }
 
-const bool& UiOption::is10K() {
+bool UiOption::is10K() {
 	return _is10K;
 }
 
-const bool& UiOption::isSoloMode(){
+bool UiOption::isSoloMode(){
 	return _isSoloMode;
 }
 
-const bool& UiOption::doHideName()
+bool UiOption::doHideName()
 {
 	return _hideName;
 }
 
-const bool& UiOption::isTopMost()
+bool UiOption::isTopMost()
 {
 	return _isTopMost;
 }
-const bool& UiOption::isUseImage()
+bool UiOption::isUseImage()
 {
 	return _isUseImage;
 }
-const bool& UiOption::isTeamTALF()
+bool UiOption::isTeamTALF()
 {
 	return _teamTA_LF;
 }
@@ -1325,11 +1337,11 @@ const int32_t& UiOption::TeamTALFMode()
 	return _teamTA_LF_Mode;
 }
 
-const bool& UiOption::isSoloRankMode() {
+bool UiOption::isSoloRankMode() {
 	return _isSoloRankMode;
 }
 
-const bool& UiOption::isUseSaveData()
+bool UiOption::isUseSaveData()
 {
 	if (_oriIsUseSaveData != _isUseSaveData)
 		return _oriIsUseSaveData;
@@ -1338,7 +1350,7 @@ const bool& UiOption::isUseSaveData()
 
 
 
-const bool& UiOption::isDontSaveUnfinishedMaze()
+bool UiOption::isDontSaveUnfinishedMaze()
 {
 	return _isDontSaveUnfinishedMaze;
 }

@@ -101,6 +101,8 @@
   "STR_OPTION_TABLE_REFRESH_TIME": "テーブルのリフレッシュ頻度",
   "STR_OPTION_HIGH_DPI": "高DPIディスプレイで文字をくっきり表示(再起動で反映)",
   "STR_OPTION_HIGH_DPI_DESC": "Windowsによる拡大表示をやめ、ディスプレイ本来の解像度で描画します。表示スケールが100%より大きい場合のみ効果があります。",
+  "STR_OPTION_TITLE_FORMAT": "タイトルバーの書式",
+  "STR_OPTION_TITLE_FORMAT_DESC": "空欄で既定の表示。変数: $map, $time, $version, $ping (ms)。直後に文字を続けるには ${ping}ms、$ そのものは $$ と書きます。",
   "STR_OPTION_TEXT_OUTLINE_COLOR": "テキスト外郭の色",
   "STR_OPTION_ACTIVE_COLOR": "DPS活動中の色",
   "STR_OPTION_INACTIVE_COLOR": "DPS停滞時の色",

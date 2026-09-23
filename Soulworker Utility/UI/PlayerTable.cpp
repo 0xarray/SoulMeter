@@ -73,6 +73,51 @@ static const char* T(const char* key)
 	return LANGMANAGER.GetText(key).data();
 }
 
+// Expands $name / ${name} from vars; $$ is a literal $ and unknown names are
+// left as typed. Runs of '#' collapse to one: "##" would hide the rest of the
+// title and "###" would change the window's ID, losing its position.
+static std::string ExpandTitle(const char* fmt, const std::vector<std::pair<const char*, std::string>>& vars)
+{
+	std::string out;
+	for (const char* p = fmt; *p;) {
+		if (*p == '#') {
+			if (out.empty() || out.back() != '#')
+				out += '#';
+			p++;
+			continue;
+		}
+		if (*p != '$') {
+			out += *p++;
+			continue;
+		}
+		if (p[1] == '$') {
+			out += '$';
+			p += 2;
+			continue;
+		}
+
+		bool braced = p[1] == '{';
+		const char* start = p + (braced ? 2 : 1);
+		const char* end = start;
+		while (isalpha((unsigned char)*end))
+			end++;
+		if (end == start || (braced && *end != '}')) {
+			out += *p++;
+			continue;
+		}
+
+		std::string name(start, end);
+		auto var = std::find_if(vars.begin(), vars.end(), [&](const auto& v) { return _stricmp(v.first, name.c_str()) == 0; });
+		const char* next = end + (braced ? 1 : 0);
+		if (var == vars.end())
+			out.append(p, next);
+		else
+			out += var->second;
+		p = next;
+	}
+	return out;
+}
+
 PlayerTable::PlayerTable() : _tableResize(0), _globalFontScale(0), _columnFontScale(0), _tableFontScale(0), _curWindowSize(0), _tableTime(0), _accumulatedTime(0), _nextWindowIndex(0)
 {
 
@@ -188,6 +233,19 @@ void PlayerTable::Update() {
 				APP_VERSION,
 				SOULMETER_DISCORD_INVITE
 			);
+		}
+		else if (*UIOPTION.GetTitleFormat()) {
+			char time[32] = { 0 };
+			sprintf_s(time, "%02u:%02u.%s",
+				(unsigned int)DAMAGEMETER.GetTime() / (60 * 1000), (unsigned int)(DAMAGEMETER.GetTime() / 1000) % 60, milisecondsstring);
+
+			std::string text = ExpandTitle(UIOPTION.GetTitleFormat(), {
+				{ "map", DAMAGEMETER.GetWorldName() },
+				{ "time", time },
+				{ "version", APP_VERSION "@Rainy" },
+				{ "ping", std::to_string(DAMAGEMETER.GetPing()) },
+			});
+			sprintf_s(title, 1024, "%.990s ###DamageMeter", text.c_str());
 		}
 		else {
 			sprintf_s(title, 1024, "%s - %02d:%02d.%s [v%s_@Rainy] %s: %ums ###DamageMeter",

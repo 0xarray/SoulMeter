@@ -100,6 +100,8 @@
     "STR_OPTION_TABLE_REFRESH_TIME": "수치 새로고침 주기",
     "STR_OPTION_HIGH_DPI": "고DPI 화면에서 선명한 글자(재시작 후 적용)",
     "STR_OPTION_HIGH_DPI_DESC": "Windows가 미터를 늘려 표시하는 대신 화면의 실제 해상도로 그립니다. 디스플레이 배율이 100%보다 클 때만 차이가 있습니다.",
+    "STR_OPTION_TITLE_FORMAT": "제목 표시줄 형식",
+    "STR_OPTION_TITLE_FORMAT_DESC": "비워 두면 기본값을 사용합니다. 변수: $map, $time, $version, $ping (ms). 변수 바로 뒤에 글자를 붙이려면 ${ping}ms, $ 문자 자체는 $$ 로 씁니다.",
     "STR_OPTION_TEXT_OUTLINE_COLOR": "글씨 외곽선 색",
     "STR_OPTION_ACTIVE_COLOR": "DPS 측정 중 색",
     "STR_OPTION_INACTIVE_COLOR": "DPS 미측정 중 색",

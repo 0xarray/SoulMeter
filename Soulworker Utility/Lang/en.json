@@ -101,6 +101,8 @@
     "STR_OPTION_TABLE_REFRESH_TIME": "Table Refresh Time",
     "STR_OPTION_HIGH_DPI": "Sharp text on high-DPI displays (restart to apply)",
     "STR_OPTION_HIGH_DPI_DESC": "Renders at your display's real resolution instead of letting Windows stretch the meter. Only matters with display scaling above 100%.",
+    "STR_OPTION_TITLE_FORMAT": "Title bar format",
+    "STR_OPTION_TITLE_FORMAT_DESC": "Leave empty for the default. Variables: $map, $time, $version, $ping (ms). Use ${ping}ms to put text right after one, $$ for a literal $.",
     "STR_OPTION_TEXT_OUTLINE_COLOR": "Text Outline Color",
     "STR_OPTION_ACTIVE_COLOR": "DPS Active Color",
     "STR_OPTION_INACTIVE_COLOR": "DPS InActive Color",

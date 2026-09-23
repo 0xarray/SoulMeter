@@ -100,6 +100,8 @@
     "STR_OPTION_TABLE_REFRESH_TIME": "表格內容刷新時間(毫秒)",
     "STR_OPTION_HIGH_DPI": "高DPI螢幕上的清晰文字(重新啟動後生效)",
     "STR_OPTION_HIGH_DPI_DESC": "以螢幕的實際解析度繪製,而不是由Windows拉伸計量器。僅在顯示縮放大於100%時有差異。",
+    "STR_OPTION_TITLE_FORMAT": "標題列格式",
+    "STR_OPTION_TITLE_FORMAT_DESC": "留空則使用預設。變數: $map, $time, $version, $ping (毫秒)。要在變數後直接接文字請用 ${ping}ms,$ 本身請寫 $$。",
     "STR_OPTION_TEXT_OUTLINE_COLOR": "文字輪廓顏色",
     "STR_OPTION_ACTIVE_COLOR": "計算時的標題欄顏色",
     "STR_OPTION_INACTIVE_COLOR": "待機時的標題欄顏色",

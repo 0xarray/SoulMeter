@@ -116,6 +116,11 @@ public:
 
 	const float& GetRefreshTime();
 
+	// Meter title template with $map, $time, $version, $ping; empty
+	// means the built-in title.
+	const char* GetTitleFormat() { return _titleFormat; }
+	char _titleFormat[256] = { 0 };
+
 	bool SaveOption(bool skipWarning = FALSE);
 	BOOL _isUseImage;
 	BOOL _isVertical = FALSE;

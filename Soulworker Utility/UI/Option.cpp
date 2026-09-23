@@ -44,6 +44,11 @@ bool UiOption::ShowTableOption() {
 	ImGui::Checkbox(LANGMANAGER.GetText("STR_OPTION_HIGH_DPI").data(), (bool*)&_highDpi);
 	ImGui::SetItemTooltip("%s", LANGMANAGER.GetText("STR_OPTION_HIGH_DPI_DESC").data());
 
+	ImGui::InputText(LANGMANAGER.GetText("STR_OPTION_TITLE_FORMAT").data(), _titleFormat, sizeof(_titleFormat));
+	ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled));
+	ImGui::TextWrapped("%s", LANGMANAGER.GetText("STR_OPTION_TITLE_FORMAT_DESC").data());
+	ImGui::PopStyleColor();
+
 	return TRUE;
 }
 
@@ -583,6 +588,9 @@ bool UiOption::GetOption() {
 	if (const char* rows = ele->Attribute("VerticalRows"))
 		_verticalRows = rows;
 
+	if (const char* titleFormat = ele->Attribute("TitleFormat"))
+		strcpy_s(_titleFormat, titleFormat);
+
 	attr = ele->FindAttribute("TeamTA_LF");
 	if (attr != nullptr)
 		attr->QueryIntValue(&_teamTA_LF);
@@ -817,6 +825,7 @@ bool UiOption::SaveOption(bool skipWarning) {
 	option->SetAttribute("IsUseImage", _isUseImage);
 	option->SetAttribute("IsVertical", _isVertical);
 	option->SetAttribute("VerticalRows", _verticalRows.c_str());
+	option->SetAttribute("TitleFormat", _titleFormat);
 	option->SetAttribute("GlobalScale", theme.fontScale);
 	option->SetAttribute("TableScale", theme.tableFontScale);
 	option->SetAttribute("ColumnScale", theme.columnFontScale);

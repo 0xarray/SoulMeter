@@ -714,7 +714,8 @@ bool UiOption::GetOption() {
 			winX *= THEME.GetDpiScale();
 			winY *= THEME.GetDpiScale();
 			//SetWindowPos(UIWINDOW.GetHWND(), HWND_NOTOPMOST, winX, winY, 0, 0, SWP_NOSIZE);
-			SetWindowPos(UIWINDOW.GetHWND(), HWND_TOPMOST, static_cast<int>(winX), static_cast<int>(winY), 0, 0, SWP_NOSIZE);
+			// Rounded: truncating after the DPI round trip loses a pixel per launch.
+			SetWindowPos(UIWINDOW.GetHWND(), HWND_TOPMOST, (int)lroundf(winX), (int)lroundf(winY), 0, 0, SWP_NOSIZE);
 		}
 
 #if DEBUG_READ_XML == 1

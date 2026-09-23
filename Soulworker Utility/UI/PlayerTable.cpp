@@ -211,8 +211,8 @@ void PlayerTable::Update() {
 		ImGuiWindowFlags windowFlag = ImGuiWindowFlags_None;
 		windowFlag |= (ImGuiWindowFlags_NoNavInputs | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse);
 
-		if (!UIOPTION.isOption())
-			windowFlag = windowFlag | ImGuiWindowFlags_NoResize;
+		// Resized by the meter's own grip (see HandleResizeGrip), never imgui's.
+		windowFlag |= ImGuiWindowFlags_NoResize;
 
 		char title[1024] = { 0 };
 		// Timer accuracy picks 1-3 fraction digits; they must keep their leading
@@ -258,11 +258,6 @@ void PlayerTable::Update() {
 		}
 
 		// The title is drawn inside Begin, so the effect only has to span it.
-		// The meter sizes the main window to itself; left alone, imgui also gives
-		// it a platform window of its own, a stale sliver of which sits over the
-		// real one and swallows clicks at the resize grip.
-		ImGui::SetNextWindowViewport(ImGui::GetMainViewport()->ID);
-
 		bool titleEffect = THEME.Current().titleEffect && THEME.PushTextEffect();
 		ImGui::Begin(title, 0, windowFlag);
 		THEME.PopTextEffect(titleEffect);
@@ -280,6 +275,12 @@ void PlayerTable::Update() {
 
 			BeginPopupMenu();
 
+			// After the menu, which reads the title bar as the last item; before
+			// the table, so the rows cannot take the hover from it.
+			bool gripHovered = false, gripHeld = false;
+			if (UIOPTION.isOption())
+				HandleResizeGrip(gripHovered, gripHeld);
+
 			bool textEffect = THEME.PushTextEffect();
 			ImGui::TextAlignCenter::SetTextAlignCenter();
 			{
@@ -289,7 +290,7 @@ void PlayerTable::Update() {
 			THEME.PopTextEffect(textEffect);
 
 			if (UIOPTION.isOption())
-				DrawResizeGrip();
+				DrawResizeGrip(gripHovered, gripHeld);
 		}
 		ImGui::End();
 
@@ -305,31 +306,64 @@ void PlayerTable::SetWindowSize() {
 
 	// Keeps going until the content fits, so a resize requested while the
 	// options are open (and this is not called every frame) still finishes.
+	// Shrinks too: rows go away on a restart or leaving the maze.
+	// Read only: GetCurrentWindow() marks the window written to, after which
+	// imgui stops reporting the title bar as hovered and the menu never opens.
+	ImGuiWindow* window = ImGui::GetCurrentWindowRead();
+	float slack = ImFloor(window->InnerRect.GetHeight() - window->ContentSize.y - window->WindowPadding.y * 2.0f);
+
 	if (ImGui::GetScrollMaxY() > 0)
 		_curWindowSize += ImGui::GetScrollMaxY();
+	else if (_curWindowSize > 0 && slack >= 1.0f)
+		_curWindowSize -= slack;
 	else if (_curWindowSize > 0)
 		_tableResize = FALSE;
 
 	ImGui::SetWindowSize(ImVec2(UIOPTION.GetWindowWidth() * THEME.GetDpiScale(), FLOOR(_curWindowSize)));
 }
 
-// ImGui draws the grip inside Begin, under the table, and the row backgrounds
-// and bars reach the corner, so it is drawn again on top. Same shape as
-// ImGui's bottom-right grip.
-void PlayerTable::DrawResizeGrip() {
+static float ResizeGripSize(ImGuiWindow* window) {
 
-	ImGuiContext& g = *GImGui;
+	const float fontSize = ImGui::GetFontSize();
+	return ImTrunc(ImMax(fontSize * 1.10f, window->WindowRounding + 1.0f + fontSize * 0.2f));
+}
+
+// imgui's own grip cannot be relied on here: its hit area is clipped to the
+// window's platform viewport, which for the meter is not the window you see.
+// The height follows the rows, so the grip only changes the width.
+void PlayerTable::HandleResizeGrip(bool& hovered, bool& held) {
+
+	ImGuiWindow* window = ImGui::GetCurrentWindow();
+	const float size = ResizeGripSize(window);
+	const ImVec2 corner(window->Pos.x + window->Size.x, window->Pos.y + window->Size.y);
+	const ImRect bb(corner.x - size, corner.y - size, corner.x, corner.y);
+	const ImGuiID id = window->GetID("##MeterResizeGrip");
+
+	ImGui::ItemAdd(bb, id, nullptr, ImGuiItemFlags_NoNav);
+	if (ImGui::ButtonBehavior(bb, id, &hovered, &held, ImGuiButtonFlags_PressedOnClick))
+		_gripGrabOffset = corner.x - ImGui::GetIO().MousePos.x;
+
+	if (hovered || held)
+		ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
+
+	if (held) {
+		const float width = ImGui::GetIO().MousePos.x + _gripGrabOffset - window->Pos.x;
+		ImGui::SetWindowSize(ImVec2(ImFloor(ImMax(width, ImGui::GetFontSize() * 4.0f)), window->Size.y));
+	}
+}
+
+// Drawn after the table, since the row backgrounds and bars reach the corner.
+void PlayerTable::DrawResizeGrip(bool hovered, bool held) {
+
 	ImGuiWindow* window = ImGui::GetCurrentWindow();
 
-	const ImGuiID id = ImGui::GetWindowResizeCornerID(window, 0);
-	ImGuiCol colIdx = g.ActiveId == id ? ImGuiCol_ResizeGripActive : g.HoveredId == id ? ImGuiCol_ResizeGripHovered : ImGuiCol_ResizeGrip;
-	ImVec4 col = ImGui::GetStyleColorVec4(colIdx);
+	ImVec4 col = ImGui::GetStyleColorVec4(held ? ImGuiCol_ResizeGripActive : hovered ? ImGuiCol_ResizeGripHovered : ImGuiCol_ResizeGrip);
 	// The idle color is meant for an empty corner; over a bar it vanishes.
 	col.w = ImMax(col.w, 0.5f);
 
 	const float border = window->WindowBorderSize;
 	const float rounding = window->WindowRounding;
-	const float size = ImTrunc(ImMax(g.FontSize * 1.10f, rounding + 1.0f + g.FontSize * 0.2f));
+	const float size = ResizeGripSize(window);
 	const float x = window->Pos.x + window->Size.x;
 	const float y = window->Pos.y + window->Size.y;
 
@@ -347,19 +381,8 @@ void PlayerTable::SetMainWindowSize() {
 	auto pos = ImGui::GetWindowPos();
 	auto size = ImGui::GetWindowSize();
 
-	const int x = static_cast<int>(pos.x);
-	const int y = static_cast<int>(pos.y);
-	const int w = static_cast<int>(size.x + 1);
-	const int h = static_cast<int>(size.y + 1);
-
-	SetWindowPos(UIWINDOW.GetHWND(), UIOPTION.isTopMost() ? HWND_TOPMOST : HWND_NOTOPMOST, x, y, w, h, SWP_NOACTIVATE);
-
-	// imgui shifts every window in the main viewport by however far its OS
-	// window moved since last frame. The meter already moved, so without this
-	// it would be moved again, and chase itself off screen.
-	ImGuiViewport* viewport = ImGui::GetMainViewport();
-	viewport->Pos = ImVec2((float)x, (float)y);
-	viewport->Size = ImVec2((float)w, (float)h);
+	SetWindowPos(UIWINDOW.GetHWND(), UIOPTION.isTopMost() ? HWND_TOPMOST : HWND_NOTOPMOST,
+		static_cast<int>(pos.x), static_cast<int>(pos.y), static_cast<int>(size.x + 1), static_cast<int>(size.y + 1), SWP_NOACTIVATE);
 }
 
 void PlayerTable::StoreWindowWidth() {

@@ -139,6 +139,9 @@ bool UiWindow::InitImGUI() {
 	ImGuiIO& io = ImGui::GetIO();
 	io.ConfigFlags |= ImGuiConfigFlags_NavNoCaptureKeyboard;
 	io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+	// imgui 1.92 flipped this default. Owned by the meter, the sub windows stay
+	// in front of it, and so above the game with it when it is topmost.
+	io.ConfigViewportsNoDefaultParent = false;
 
 	ImGuiStyle& style = ImGui::GetStyle();
 
@@ -237,27 +240,6 @@ void UiWindow::Update() {
 	DrawScene();
 }
 
-// The sub windows (details, history, graphs, options) are platform windows of
-// their own and do not inherit the meter's topmost state, so they follow the
-// option here. Checked every frame: the backend rewrites the window style
-// whenever a viewport's flags change. Tooltips and popups keep imgui's own.
-void UiWindow::ApplyTopMost() {
-
-	const bool topMost = UIOPTION.isTopMost();
-	ImGuiPlatformIO& platformIO = ImGui::GetPlatformIO();
-
-	for (int i = 1; i < platformIO.Viewports.Size; i++) {
-		ImGuiViewport* viewport = platformIO.Viewports[i];
-		HWND hwnd = (HWND)viewport->PlatformHandle;
-		if (hwnd == nullptr || (viewport->Flags & ImGuiViewportFlags_TopMost))
-			continue;
-
-		const bool isTopMost = (GetWindowLongPtr(hwnd, GWL_EXSTYLE) & WS_EX_TOPMOST) != 0;
-		if (isTopMost != topMost)
-			SetWindowPos(hwnd, topMost ? HWND_TOPMOST : HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
-	}
-}
-
 void UiWindow::DrawScene() {
 
 	// Transparent: the meter window paints its own (themed, possibly
@@ -278,7 +260,6 @@ void UiWindow::DrawScene() {
 	}
 
 	THEME.ApplyWindowOpacity();
-	ApplyTopMost();
 
 	_swapChain->Present(static_cast<unsigned int>(UIOPTION.GetFramerate()), 0);
 }

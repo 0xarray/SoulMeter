@@ -29,7 +29,9 @@ private:
 
 	void SetWindowSize();
 	void SetMainWindowSize();
-	void DrawResizeGrip();
+	void HandleResizeGrip(bool& hovered, bool& held);
+	void DrawResizeGrip(bool hovered, bool held);
+	float _gripGrabOffset = 0.0f;
 	void PushRowSelectable();
 	void StoreWindowWidth();
 	void SetupFontScale();

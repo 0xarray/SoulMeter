@@ -103,7 +103,6 @@ public:
 
 	// Players as columns and stats as rows instead of the other way round.
 	bool isVertical() { return _isVertical != FALSE; }
-	void ToggleVertical() { _isVertical = !_isVertical; SaveOption(); }
 	// One '0'/'1' per meter column saying whether vertical mode shows it as a
 	// row; shorter than the column list for columns it has never been told about.
 	std::string& VerticalRows() { return _verticalRows; }

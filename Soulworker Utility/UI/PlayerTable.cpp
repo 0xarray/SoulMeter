@@ -345,9 +345,6 @@ void PlayerTable::BeginPopupMenu() {
 			UIOPTION.ToggleTopMost();
 		}
 
-		if (ImGui::MenuItem(T("STR_MENU_VERTICAL"), nullptr, UIOPTION.isVertical()))
-			UIOPTION.ToggleVertical();
-
 		if (UIOPTION.isVertical() && ImGui::BeginMenu(T("STR_MENU_VERTICAL_ROWS"))) {
 			// Stays open so several rows can be toggled in one go.
 			ImGui::PushItemFlag(ImGuiItemFlags_AutoClosePopups, false);
@@ -528,7 +525,7 @@ void PlayerTable::UpdateTable(float windowWidth) {
 		}
 
 		if (_collecting) {
-			_vertical.push_back({ playerId, playerName, nameColor, jobColor });
+			_vertical.push_back({ playerId, playerName, nameColor, jobColor, DAMAGEMETER.GetPlayerJob(playerId) });
 		}
 		else {
 			ImGui::TableNextRow();
@@ -1207,7 +1204,9 @@ void PlayerTable::Cell(const char* text) {
 
 void PlayerTable::NextCell() {
 
-	if (!_collecting)
+	// Past the last column TableNextColumn opens a new row, which would leave
+	// an empty padding-high row under every player.
+	if (!_collecting && ImGui::TableGetColumnIndex() < ImGui::TableGetColumnCount() - 1)
 		ImGui::TableNextColumn();
 }
 
@@ -1259,7 +1258,19 @@ void PlayerTable::SetupVerticalTable() {
 
 		ImGui::PushID((int)i);
 		ImGui::PushStyleColor(ImGuiCol_Text, player.nameColor);
-		if (ImGui::Selectable(player.name))
+		Texture playerTexture = DIRECTX11.getcharacterTexture(player.job);
+		if (UIOPTION.isUseImage() && playerTexture.ptr) {
+			// Same hand centering as the horizontal name cell.
+			float nameWidth = ImGui::CalcTextSize(player.name).x + playerTexture.xSize + ImGui::GetStyle().ItemSpacing.x;
+			ImGui::SetCursorPosX(ImGui::GetCursorPosX() + ImMax(0.0f, (ImGui::GetColumnWidth() - nameWidth) * 0.5f));
+			ImGui::Image((void*)playerTexture.ptr, ImVec2((float)playerTexture.xSize, (float)playerTexture.ySize));
+			ImGui::SameLine();
+			ImGui::TextAlignCenter::UnSetTextAlignCenter();
+			if (ImGui::Selectable(player.name))
+				ToggleSelectInfo(player.id);
+			ImGui::TextAlignCenter::SetTextAlignCenter();
+		}
+		else if (ImGui::Selectable(player.name))
 			ToggleSelectInfo(player.id);
 		ImGui::PopStyleColor();
 		ImGui::PopID();

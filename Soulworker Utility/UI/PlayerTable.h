@@ -43,6 +43,7 @@ private:
 		const char* name;
 		ImVec4 nameColor;
 		ImU32 jobColor;
+		int job;
 		std::vector<std::string> cells;	// cells[i] is meter column i + 1
 	};
 	std::vector<VerticalPlayer> _vertical;

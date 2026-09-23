@@ -1,6 +1,7 @@
 #pragma once
 #include "pch.h"
 #include <unordered_map>
+#include ".\UI\Theme.h"
 
 #define UIOPTION UiOption::getInstance()
 
@@ -14,28 +15,15 @@
 
 class UiOption : public Singleton<UiOption> {
 private:
-	ImVec4 _jobColor[11];
-	ImVec4 _jobBasicColor[11];
-	ImVec4 _activeColor[2];
-	ImVec4 _outlineColor;
-	ImVec4 _textColor;
-	ImVec4 _windowBg;
-
-	float _fontScale;
-	bool ShowFontSelector();
 	void ShowFeatures();
 	void ShowDiscord();
 
-	float _columnFontScale;
-	float _tableFontScale;
 	BOOL _is1K;
 	BOOL _is1M;
 	BOOL _is10K;
 	BOOL _isSoloMode;
 	BOOL _hideName;
-	ImVec2 _cellPadding;
 	float _framerate;
-	float _windowBorderSize;
 	float _windowWidth;
 	float _refreshTime;
 	BOOL _isTopMost;
@@ -46,12 +34,12 @@ private:
 	BOOL _isUseSaveData;
 	
 	BOOL _oriIsUseSaveData;
-	char _selectedFontFile[MAX_PATH] = { 0 };
 	BOOL _isDontSaveUnfinishedMaze;
 
 	BOOL _unlockFps;
 	int32_t _fpsCap;
 	BOOL _unlockFov;
+	BOOL _highDpi;
 
 	void ShowGameTweaks();
 
@@ -61,6 +49,7 @@ private:
 	void ChangeLang();
 
 	void ShowTeamTALFSelector();
+	void ReadLegacyColors(tinyxml2::XMLNode* node);
 
 
 	void Helper();
@@ -106,7 +95,18 @@ public:
 	const char* GetFontFile();
 	bool isDontSaveUnfinishedMaze();
 
+	// Read straight from option.xml: DPI awareness has to be set before the
+	// first window is created, long before the rest of the options load.
+	static bool WantsHighDpi();
+
 	bool ToggleTopMost();
+
+	// Players as columns and stats as rows instead of the other way round.
+	bool isVertical() { return _isVertical != FALSE; }
+	void ToggleVertical() { _isVertical = !_isVertical; SaveOption(); }
+	// One '0'/'1' per meter column saying whether vertical mode shows it as a
+	// row; shorter than the column list for columns it has never been told about.
+	std::string& VerticalRows() { return _verticalRows; }
 
 	const float& GetFramerate();
 	void SetFramerate(float i);
@@ -116,8 +116,15 @@ public:
 
 	const float& GetRefreshTime();
 
+	// Meter title template with $map, $time, $version, $ping; empty
+	// means the built-in title.
+	const char* GetTitleFormat() { return _titleFormat; }
+	char _titleFormat[256] = { 0 };
+
 	bool SaveOption(bool skipWarning = FALSE);
 	BOOL _isUseImage;
+	BOOL _isVertical = FALSE;
+	std::string _verticalRows;
 
 	// Pushes both tweaks to the hook. Safe to call when no game is up.
 	void ApplyGameTweaks();

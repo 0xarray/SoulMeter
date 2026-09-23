@@ -142,6 +142,9 @@ void SpecificInformation::Update(bool* open, int64_t index) {
 	char title[128] = { 0 };
 
 	sprintf_s(title, 128, "%s %s ###SpecificInformation%lld", DAMAGEMETER.GetPlayerName(_playerID), LANGMANAGER.GetText("STR_SPECIFICINFO_DETAIL").data(), index);
+	// Fitting to the first frame's content leaves the skill table squeezed.
+	const float em = ImGui::GetFontSize();
+	ImGui::SetNextWindowSize(ImVec2(em * 24.0f, em * 14.0f), ImGuiCond_FirstUseEver);
 	ImGui::Begin(title, (bool*)open, ImGuiWindowFlags_None);
 	{
 		sprintf_s(title, 128, "##tab");
@@ -168,14 +171,14 @@ void SpecificInformation::UpdateSkillInfo() {
 	if(ImGui::BeginTabItem(label))
 	{
 		UpdateMonsterCombo();
-		
-		ImGui::OutlineText::PushOutlineText(ImGui::IMGUIOUTLINETEXT(UIOPTION.GetOutlineColor(), 1));
+
+		bool textEffect = THEME.PushTextEffect();
 		ImGui::TextAlignCenter::SetTextAlignCenter();
 		{
 			UpdateSkillTable();
 		}
 		ImGui::TextAlignCenter::UnSetTextAlignCenter();
-		ImGui::OutlineText::PopOutlineText();
+		THEME.PopTextEffect(textEffect);
 
 		ImGui::EndTabItem();
 	}
@@ -187,13 +190,13 @@ void SpecificInformation::UpdateSkillTotalInfo() {
 	sprintf_s(label, "%s###SpecificinfoTotal", LANGMANAGER.GetText("STR_SPECIFICINFO_TOTAL").data());
 	if (ImGui::BeginTabItem(label))
 	{
-		ImGui::OutlineText::PushOutlineText(ImGui::IMGUIOUTLINETEXT(UIOPTION.GetOutlineColor(), 1));
+		bool textEffect = THEME.PushTextEffect();
 		ImGui::TextAlignCenter::SetTextAlignCenter();
 		{
 			UpdateSkillTotalTable();
 		}
 		ImGui::TextAlignCenter::UnSetTextAlignCenter();
-		ImGui::OutlineText::PopOutlineText();
+		THEME.PopTextEffect(textEffect);
 
 		ImGui::EndTabItem();
 	}
@@ -214,11 +217,11 @@ void SpecificInformation::UpdateSkillTotalTable()
 
 	char table[128] = { 0 };
 	sprintf_s(table, 128, "##skilltotaltable");
-	if (ImGui::BeginTable(table, 3, ImGuiTableFlags_Resizable | ImGuiTableFlags_Hideable | ImGuiTableFlags_Reorderable)) {
+	if (ImGui::BeginTable(table, 3, ImGuiTableFlags_Resizable | ImGuiTableFlags_Hideable | ImGuiTableFlags_Reorderable | THEME.TableFlags())) {
 
 		ImGui::SetWindowFontScale(_columnFontScale);
 
-		ImGui::TableSetupColumn(LANGMANAGER.GetText("STR_TABLE_NAME").data(), ImGuiTableColumnFlags_NoReorder | ImGuiTableColumnFlags_NoHide | ImGuiTableColumnFlags_NoClip | ImGuiTableColumnFlags_WidthFixed, -1);
+		ImGui::TableSetupColumn(LANGMANAGER.GetText("STR_TABLE_NAME").data(), ImGuiTableColumnFlags_NoReorder | ImGuiTableColumnFlags_NoHide | ImGuiTableColumnFlags_WidthStretch, -1);
 		ImGui::TableSetupColumn(LANGMANAGER.GetText("STR_SPECIFICINFO_USE_SKILL_COUNTS").data(), ImGuiTableColumnFlags_WidthFixed, -1);
 		ImGui::TableSetupColumn(LANGMANAGER.GetText("STR_SPECIFICINFO_USE_SKILL_COUNTS_IN_FULL_AB").data(), ImGuiTableColumnFlags_WidthFixed, -1);
 		ImGui::TableHeadersRow();
@@ -393,11 +396,11 @@ void SpecificInformation::UpdateSkillTable() {
 
 	char table[128] = { 0 };
 	sprintf_s(table, 128, "##skillbreakdowntable");
-	if(ImGui::BeginTable(table, 8, ImGuiTableFlags_Resizable | ImGuiTableFlags_Hideable | ImGuiTableFlags_Reorderable)) {
+	if(ImGui::BeginTable(table, 8, ImGuiTableFlags_Resizable | ImGuiTableFlags_Hideable | ImGuiTableFlags_Reorderable | THEME.TableFlags())) {
 
 		ImGui::SetWindowFontScale(_columnFontScale);
 
-		ImGui::TableSetupColumn(LANGMANAGER.GetText("STR_TABLE_NAME").data(), ImGuiTableColumnFlags_NoReorder | ImGuiTableColumnFlags_NoHide | ImGuiTableColumnFlags_NoClip | ImGuiTableColumnFlags_WidthFixed, -1);
+		ImGui::TableSetupColumn(LANGMANAGER.GetText("STR_TABLE_NAME").data(), ImGuiTableColumnFlags_NoReorder | ImGuiTableColumnFlags_NoHide | ImGuiTableColumnFlags_WidthStretch, -1);
 		ImGui::TableSetupColumn(LANGMANAGER.GetText("STR_TABLE_DPS").data(), ImGuiTableColumnFlags_WidthFixed, -1);
 		ImGui::TableSetupColumn(LANGMANAGER.GetText("STR_TABLE_DAMAGE_PERCENT").data(), ImGuiTableColumnFlags_WidthFixed, -1);
 		ImGui::TableSetupColumn(LANGMANAGER.GetText("STR_TABLE_TOTAL_DAMAGE").data(), ImGuiTableColumnFlags_WidthFixed, -1);
@@ -527,13 +530,13 @@ void SpecificInformation::UpdateBuffMeter() {
 		sprintf_s(label, "%s###DetailBuffDeBuff", LANGMANAGER.GetText("STR_SPECIFICINFO_BUFF_AND_DEBUFF").data());
 		if (ImGui::BeginTabItem(label))
 		{
-			ImGui::OutlineText::PushOutlineText(ImGui::IMGUIOUTLINETEXT(UIOPTION.GetOutlineColor(), 1));
+			bool textEffect = THEME.PushTextEffect();
 			ImGui::TextAlignCenter::SetTextAlignCenter();
 			{
 				UpdateBuffTable();
 			}
 			ImGui::TextAlignCenter::UnSetTextAlignCenter();
-			ImGui::OutlineText::PopOutlineText();
+			THEME.PopTextEffect(textEffect);
 
 			ImGui::EndTabItem();
 		}
@@ -556,11 +559,11 @@ void SpecificInformation::UpdateBuffTable() {
 
 	char table[128] = { 0 };
 	sprintf_s(table, 128, "##bufftable");
-	if (ImGui::BeginTable(table, 2, ImGuiTableFlags_Resizable | ImGuiTableFlags_Hideable | ImGuiTableFlags_Reorderable)) {
+	if (ImGui::BeginTable(table, 2, ImGuiTableFlags_Resizable | ImGuiTableFlags_Hideable | ImGuiTableFlags_Reorderable | THEME.TableFlags())) {
 
 		ImGui::SetWindowFontScale(_columnFontScale);
 
-		ImGui::TableSetupColumn(LANGMANAGER.GetText("STR_SPECIFICINFO_BUFF_NAME").data(), ImGuiTableColumnFlags_NoReorder | ImGuiTableColumnFlags_NoHide | ImGuiTableColumnFlags_NoClip | ImGuiTableColumnFlags_WidthFixed, -1);
+		ImGui::TableSetupColumn(LANGMANAGER.GetText("STR_SPECIFICINFO_BUFF_NAME").data(), ImGuiTableColumnFlags_NoReorder | ImGuiTableColumnFlags_NoHide | ImGuiTableColumnFlags_WidthStretch, -1);
 		ImGui::TableSetupColumn(LANGMANAGER.GetText("STR_TABLE_DURATION").data(), ImGuiTableColumnFlags_WidthFixed, -1);
 		ImGui::TableHeadersRow();
 
@@ -609,14 +612,6 @@ void SpecificInformation::UpdateBuffTable() {
 
 void SpecificInformation::DrawBar(float window_Width, float percent, ImU32 color) {
 
-	auto draw_list = ImGui::GetWindowDrawList();
+	THEME.DrawBar(window_Width, percent, color);
 
-	float result_width = window_Width * percent;
-	float height = ImGui::GetFontSize();
-	ImVec2 line = ImGui::GetCursorScreenPos();
-
-	line.x = FLOOR(line.x);	line.y = line.y;
-	height = height;
-
-	draw_list->AddRectFilled(ImVec2(line.x, line.y), ImVec2(line.x + result_width, line.y + height), color, 0, 0);
 }

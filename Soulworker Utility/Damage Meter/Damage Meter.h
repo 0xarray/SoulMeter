@@ -43,13 +43,6 @@ typedef struct _SW_DB2_STRUCT {
 	int32_t _type;
 }SW_DB2_STRUCT;
 
-struct ImFontObj
-{
-	std::string path;
-	std::string filename;
-	bool selectable = false;
-};
-
 static std::vector<uint32_t> _dwSkills({
 
 	// Haru

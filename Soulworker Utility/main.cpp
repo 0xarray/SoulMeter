@@ -50,6 +50,10 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 				break;
 			}
 
+			// Otherwise Windows bitmap-stretches the whole UI on scaled displays.
+			if (UiOption::WantsHighDpi())
+				ImGui_ImplWin32_EnableDpiAwareness();
+
 			if (UIWINDOW.Init(1, 1, 1, 1)) {
 				if ((errorCode = SWPACKETMAKER.Init())) {
 					sprintf_s(errorMsg, "Init PacketCapture failed, err: %lu", errorCode);

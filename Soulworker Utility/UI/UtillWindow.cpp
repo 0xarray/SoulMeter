@@ -808,6 +808,9 @@ void UtillWindow::Update()
 	char label[1024] = { 0 };
 	sprintf_s(label, "%s###UtillWindow", LANGMANAGER.GetText("STR_MENU_UTILL").data());
 
+	// Auto-fit on first open leaves the history list a sliver.
+	const float em = ImGui::GetFontSize();
+	ImGui::SetNextWindowSize(ImVec2(em * 28.0f, em * 18.0f), ImGuiCond_FirstUseEver);
 	ImGui::Begin(label, &_isOpen, ImGuiWindowFlags_None);
 	{
 		if (ImGui::BeginTabBar(u8"UtillWindowTab"))

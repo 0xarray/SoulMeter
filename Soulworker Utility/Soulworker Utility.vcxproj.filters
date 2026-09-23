@@ -258,6 +258,9 @@
     <ClInclude Include="Soulworker Packet\SWPacketOtherUseSkill.h">
       <Filter>SWPacket\Packet\0x06 Combat</Filter>
     </ClInclude>
+    <ClInclude Include="UI\Theme.h">
+      <Filter>UI\Window</Filter>
+    </ClInclude>
     <ClInclude Include="UI\PlotWindow.h">
       <Filter>UI\Window</Filter>
     </ClInclude>
@@ -523,6 +526,9 @@
     </ClCompile>
     <ClCompile Include="Soulworker Packet\SWPacketOtherUseSkill.cpp">
       <Filter>SWPacket\Packet\0x06 Combat</Filter>
+    </ClCompile>
+    <ClCompile Include="UI\Theme.cpp">
+      <Filter>UI\Window</Filter>
     </ClCompile>
     <ClCompile Include="UI\PlotWindow.cpp">
       <Filter>UI\Window</Filter>

@@ -159,6 +159,16 @@ bool UiWindow::InitImGUI() {
 	if (!ImGui_ImplDX11_Init(DIRECTX11.GetDevice(), DIRECTX11.GetDeviceContext()))
 		return FALSE;
 
+	// Only when the process was made DPI-aware (see main.cpp); otherwise Windows
+	// already stretches us, and the monitor DPI is reported unvirtualized.
+	// Text is then rasterized at the scaled size, so it stays sharp.
+	const float dpiScale = IsProcessDPIAware() ? ImGui_ImplWin32_GetDpiScaleForHwnd(_hWnd) : 1.0f;
+	if (dpiScale > 1.0f) {
+		style.ScaleAllSizes(dpiScale);
+		style.FontScaleDpi = dpiScale;
+	}
+	THEME.SetDpiScale(dpiScale);
+
 	SetFontList();
 	UIOPTION.Init();
 
@@ -169,10 +179,9 @@ bool UiWindow::SetFontList() {
 	if (DAMAGEMETER.selectedFont.path.empty())
 		return FALSE;
 	ImGuiIO& io = ImGui::GetIO();
-	ImFontConfig config;
-	config.OversampleH = 1;
-	config.OversampleV = 1;
-	ImFont* font = io.Fonts->AddFontFromFileTTF(DAMAGEMETER.selectedFont.path.c_str(), 32, &config, io.Fonts->GetGlyphRangesChineseAndKoreaFull());
+	// Glyphs are rasterized on demand at the size actually drawn (ImGui 1.92+),
+	// so no glyph ranges and no fixed oversampling: CJK names just work.
+	ImFont* font = io.Fonts->AddFontFromFileTTF(DAMAGEMETER.selectedFont.path.c_str(), 32);
 	return TRUE;
 }
 
@@ -198,17 +207,13 @@ void UiWindow::Update() {
 	{
 		DAMAGEMETER.shouldRebuildAtlas = false;
 		ImGuiIO& io = ImGui::GetIO();
-		ImFontConfig config;
-		config.OversampleH = 1;
-		config.OversampleV = 1;
 		io.Fonts->Clear();
-		ImFont* font = io.Fonts->AddFontFromFileTTF(DAMAGEMETER.selectedFont.path.c_str(), 32, &config, io.Fonts->GetGlyphRangesChineseAndKoreaFull());
+		ImFont* font = io.Fonts->AddFontFromFileTTF(DAMAGEMETER.selectedFont.path.c_str(), 32);
 		if (font == nullptr)
 		{
 			LogInstance.WriteLog("Failed setting font %s", DAMAGEMETER.selectedFont.path.c_str());
 			return;
 		}
-		ImGui_ImplDX11_InvalidateDeviceObjects();
 		LogInstance.WriteLog("Set font to %s", DAMAGEMETER.selectedFont.filename.c_str());
 	}
 
@@ -233,8 +238,10 @@ void UiWindow::Update() {
 }
 
 void UiWindow::DrawScene() {
-	
-	ImVec4 clear_color = UIOPTION.GetWindowBGColor();
+
+	// Transparent: the meter window paints its own (themed, possibly
+	// translucent) background, and DWM composites whatever alpha is left.
+	ImVec4 clear_color = ImVec4(0.0f, 0.0f, 0.0f, 0.0f);
 
 	ImGui::Render();
 	DIRECTX11.GetDeviceContext()->OMSetRenderTargets(1, &_renderTargetView, NULL);
@@ -248,6 +255,8 @@ void UiWindow::DrawScene() {
 		ImGui::UpdatePlatformWindows();
 		ImGui::RenderPlatformWindowsDefault();
 	}
+
+	THEME.ApplyWindowOpacity();
 
 	_swapChain->Present(static_cast<unsigned int>(UIOPTION.GetFramerate()), 0);
 }

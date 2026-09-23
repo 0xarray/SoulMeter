@@ -36,6 +36,25 @@ private:
 	void SetupTable();
 	void UpdateTable(float windowWidth);
 
+	// Vertical mode runs UpdateTable with _collecting set: each row's cells
+	// land in _vertical instead of being drawn, then get drawn transposed.
+	struct VerticalPlayer {
+		uint32_t id;
+		const char* name;
+		ImVec4 nameColor;
+		ImU32 jobColor;
+		std::vector<std::string> cells;	// cells[i] is meter column i + 1
+	};
+	std::vector<VerticalPlayer> _vertical;
+	bool _collecting = false;
+	bool _wasVertical = false;
+
+	void Cell(const char* text);
+	void NextCell();
+	void SetupVerticalTable();
+	bool VerticalRowShown(int column);
+	void ToggleVerticalRow(int column);
+
 	float _globalFontScale;
 	float _columnFontScale;
 	float _tableFontScale;
@@ -43,6 +62,7 @@ private:
 	float _curWindowSize;
 
 	bool _tableResize;
+	bool _fitColumns = false;
 
 	float _tableTime;
 	float _accumulatedTime;
@@ -56,6 +76,8 @@ public:
 	void Update();
 	void ClearTable();
 	void ResizeTalbe();
+	// Sizes every column to its content once there is data to measure.
+	void FitColumns() { _fitColumns = true; }
 
 	LONG64 _lastSendTimestamp = 0;
 	LONG64 _ping = 0;

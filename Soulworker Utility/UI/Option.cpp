@@ -13,74 +13,22 @@
 #include <shellapi.h>
 #pragma comment(lib, "shell32.lib")
 
-std::vector<ImFontObj> fonts;
-void UpdateFontList()
-{
-	fonts.clear();
-	std::wstring path(L"Font/");
-	try {
-		for (auto& p : std::filesystem::recursive_directory_iterator(path))
-		{
-			if (p.path().extension() == ".ttf" || p.path().extension() == ".ttc")
-			{
-				ImFontObj font;
-				font.path = p.path().generic_u8string();
-				font.filename = p.path().filename().stem().generic_u8string();
-				LogInstance.WriteLog("font path: %s", font.path.c_str());
-				fonts.emplace_back(font);
-			}
-		}
-	}
-	catch (std::exception e)
-	{
-		LogInstance.WriteLog("Update font failed: %s", e.what());
-	}
-}
-// What option.xml stores: the file name with its real extension (.ttf or .ttc).
-static std::string FontFileName(const ImFontObj& font)
-{
-	size_t slash = font.path.find_last_of('/');
-	return slash == std::string::npos ? font.path : font.path.substr(slash + 1);
-}
-
-void SetFont()
-{
-	if (DAMAGEMETER.selectedFont.path.empty())
-		return;
-	DAMAGEMETER.shouldRebuildAtlas = true;
-	// LogInstance.WriteLog("Trying to set font to: %s", DAMAGEMETER.selectedFont.path.c_str());
-}
-
-UiOption::UiOption()  : 
-	_open(0), _framerate(1), _windowBorderSize(1), _fontScale(1), _columnFontScale(1), _tableFontScale(1), 
+UiOption::UiOption()  :
+	_open(0), _framerate(1),
 	_is1K(0), _is1M(0), _is10K(0), _isSoloMode(0), _hideName(0), _isTopMost(true), _isUseImage(FALSE), _teamTA_LF(false), _isSoloRankMode(FALSE), _isUseSaveData(FALSE),
 	_isDontSaveUnfinishedMaze(false),
-	_unlockFps(FALSE), _fpsCap(144), _unlockFov(FALSE),
-	_cellPadding(0, 0), _windowWidth(800), _refreshTime((float)0.3), _oriIsUseSaveData(FALSE), _selectedFontFile("NotoSansAll-Bold.ttf")
+	_unlockFps(FALSE), _fpsCap(144), _unlockFov(FALSE), _highDpi(FALSE),
+	_windowWidth(800), _refreshTime((float)0.3), _oriIsUseSaveData(FALSE)
 {
-	
-	_jobBasicColor[0] = ImVec4(ImGui::ColorConvertU32ToFloat4(ImColor(153, 153, 153, 255)));	// Unknown
-	_jobBasicColor[1] = ImVec4(ImGui::ColorConvertU32ToFloat4(ImColor(247, 142, 59, 255)));	// haru
-	_jobBasicColor[2] = ImVec4(ImGui::ColorConvertU32ToFloat4(ImColor(59, 147, 247, 255)));	// owin
-	_jobBasicColor[3] = ImVec4(ImGui::ColorConvertU32ToFloat4(ImColor(247, 59, 156, 255)));	// lily
-	_jobBasicColor[4] = ImVec4(ImGui::ColorConvertU32ToFloat4(ImColor(247, 190, 59, 255)));	// kin
-	_jobBasicColor[5] = ImVec4(ImGui::ColorConvertU32ToFloat4(ImColor(161, 59, 247, 255)));	// stella
-	_jobBasicColor[6] = ImVec4(ImGui::ColorConvertU32ToFloat4(ImColor(223, 1, 1, 255)));	// iris
-	_jobBasicColor[7] = ImVec4(ImGui::ColorConvertU32ToFloat4(ImColor(138, 2, 4, 255)));		// chii
-	_jobBasicColor[8] = ImVec4(ImGui::ColorConvertU32ToFloat4(ImColor(118, 206, 158, 255)));	// eph
-	_jobBasicColor[9] = ImVec4(ImGui::ColorConvertU32ToFloat4(ImColor(128, 128, 64, 255)));	// nabi
-	_jobBasicColor[10] = ImVec4(ImGui::ColorConvertU32ToFloat4(ImColor(65, 40, 154, 255)));	// dhana
-
-	for (int i = 0; i < 11; i++)
-		_jobColor[i] = _jobBasicColor[i];
-
 	strcpy_s(_selectedLang, LANGMANAGER.GetCurrentLang());
-	UpdateFontList();
-	if (fonts.size() > 0)
-		DAMAGEMETER.selectedFont = fonts[0];
+
+	THEME.RefreshFonts();
+	if (THEME.GetFonts().size() > 0) {
+		DAMAGEMETER.selectedFont = THEME.GetFonts()[0];
+		DAMAGEMETER.shouldRebuildAtlas = true;
+	}
 	else
 		LogInstance.WriteLog("No font found in Font/ folder");
-	SetFont();
 }
 
 UiOption::~UiOption() 
@@ -88,98 +36,13 @@ UiOption::~UiOption()
 	
 }
 
-bool UiOption::ShowFontSelector() {
-
-	float width = ImGui::CalcItemWidth();
-	ImGui::PushItemWidth(width + 100.0f);
-	if (ImGui::ListBoxHeader(LANGMANAGER.GetText("STR_OPTION_FONT").data(), 3))
-	{
-		for (ImFontObj font : fonts)
-		{
-			if (ImGui::Selectable(font.filename.c_str(), font.selectable))
-			{
-				DAMAGEMETER.selectedFont = font;
-			}
-		}
-		ImGui::ListBoxFooter();
-	}
-	if (ImGui::Button(LANGMANAGER.GetText("STR_OPTION_REFRESH_FONTS").data()))
-	{
-		UpdateFontList();
-	}
-	ImGui::SameLine();
-	if (ImGui::Button(LANGMANAGER.GetText("STR_OPTION_SET_FONT").data()))
-	{
-		strcpy_s(_selectedFontFile, FontFileName(DAMAGEMETER.selectedFont).c_str());
-		SetFont();
-	}
-
-	ImFont* font_current = ImGui::GetFont();
-
-	ImGui::Text(LANGMANAGER.GetText("STR_OPTION_FONTSCALE_DESC").data());
-	ImGui::DragFloat(LANGMANAGER.GetText("STR_OPTION_FONTSCALE").data(), &_fontScale, 0.005f, 0.3f, 2.0f, "%.1f", ImGuiSliderFlags_AlwaysClamp);
-
-	font_current->Scale = _fontScale;
-
-	return TRUE;
-}
-
+// Looks (colors, fonts, bars, opacity) live in the Theme tab.
 bool UiOption::ShowTableOption() {
 
-	ImGuiStyle& style = ImGui::GetStyle();
-	float width = ImGui::CalcItemWidth();
-	ImGui::PushItemWidth(width - 200.0f);
 	ImGui::SliderInt(LANGMANAGER.GetText("STR_OPTION_TIMER_ACCURACY").data(), &DAMAGEMETER.mswideness, 1, 3);
-	ImGui::SliderFloat(LANGMANAGER.GetText("STR_OPTION_WINDOW_BORDER_SIZE").data(), &_windowBorderSize, 0.0f, 1.0f, "%.0f");
-	style.WindowBorderSize = _windowBorderSize;
-	ImGui::SliderFloat2(LANGMANAGER.GetText("STR_OPTION_CELL_PADDING").data(), (float*)&_cellPadding, 0.0f, 20.0f, "%.0f");
-	style.CellPadding = _cellPadding;
-	ImGui::DragFloat(LANGMANAGER.GetText("STR_OPTION_COLUMN_FONT_SCALE").data(), &_columnFontScale, 0.005f, 0.3f, 2.0f, "%.1f", ImGuiSliderFlags_AlwaysClamp);
-	ImGui::DragFloat(LANGMANAGER.GetText("STR_OPTION_TABLE_FONT_SCALE").data(), &_tableFontScale, 0.005f, 0.3f, 2.0f, "%.1f", ImGuiSliderFlags_AlwaysClamp);
-	ImGui::Separator();
 	ImGui::DragFloat(LANGMANAGER.GetText("STR_OPTION_TABLE_REFRESH_TIME").data(), &_refreshTime, 0.005f, 0.1f, 1.0f, "%.1f", ImGuiSliderFlags_AlwaysClamp);
-	ImGui::Separator();
-	ImGui::ColorEdit4("##ColorText", (float*)&_textColor, ImGuiColorEditFlags_None); 
-	ImGui::SameLine(); 	ImGui::Text(ImGui::GetStyleColorName(0));
-	style.Colors[0] = _textColor;
-	ImGui::ColorEdit4("##ColorBgr", (float*)&_windowBg, ImGuiColorEditFlags_None);
-	ImGui::SameLine();	ImGui::Text(ImGui::GetStyleColorName(2));
-	style.Colors[2] = _windowBg;
-	ImGui::ColorEdit4("##ColorOutline", (float*)&_outlineColor, ImGuiColorEditFlags_None);
-	ImGui::SameLine();	ImGui::Text(LANGMANAGER.GetText("STR_OPTION_TEXT_OUTLINE_COLOR").data());
-	ImGui::ColorEdit4("##ColorActiveColor", (float*)&_activeColor[1], ImGuiColorEditFlags_None);
-	ImGui::SameLine();	ImGui::Text(LANGMANAGER.GetText("STR_OPTION_ACTIVE_COLOR").data());
-	ImGui::ColorEdit4("##ColorInActiveColor", (float*)&_activeColor[0], ImGuiColorEditFlags_None);
-	ImGui::SameLine();	ImGui::Text(LANGMANAGER.GetText("STR_OPTION_INACTIVE_COLOR").data());
-
-	auto job = std::array{
-		LANGMANAGER.GetText("STR_CHAR_UNKNOWN"),
-		LANGMANAGER.GetText("STR_CHAR_HARU"),
-		LANGMANAGER.GetText("STR_CHAR_ERWIN"),
-		LANGMANAGER.GetText("STR_CHAR_LILY"),
-		LANGMANAGER.GetText("STR_CHAR_JIN"),
-		LANGMANAGER.GetText("STR_CHAR_STELLA"),
-		LANGMANAGER.GetText("STR_CHAR_IRIS"),
-		LANGMANAGER.GetText("STR_CHAR_CHII"),
-		LANGMANAGER.GetText("STR_CHAR_EPHNEL"),
-		LANGMANAGER.GetText("STR_CHAR_NABI"),
-		LANGMANAGER.GetText("STR_CHAR_DHANA")
-	};
-
-	for (int i = 0; i < job.size(); i++) {
-		ImGui::PushID(i);
-		ImGui::ColorEdit4("##Color", (float*)&_jobColor[i], ImGuiColorEditFlags_None);
-		ImGui::SameLine();	ImGui::Text(job[i].data());
-
-		if (memcmp(&_jobColor[i], &_jobBasicColor[i], sizeof(ImVec4)) != 0) {
-			ImGui::SameLine(0.0f, style.ItemInnerSpacing.x); 
-			if (ImGui::Button(LANGMANAGER.GetText("STR_OPTION_RESTORE_DEFAULT_COLOR").data())) {
-				_jobColor[i] = _jobBasicColor[i];
-			}
-		}
-
-		ImGui::PopID();
-	}
+	ImGui::Checkbox(LANGMANAGER.GetText("STR_OPTION_HIGH_DPI").data(), (bool*)&_highDpi);
+	ImGui::SetItemTooltip("%s", LANGMANAGER.GetText("STR_OPTION_HIGH_DPI_DESC").data());
 
 	return TRUE;
 }
@@ -216,8 +79,7 @@ void UiOption::ShowGameTweaks() {
 
 	ImGuiStyle& style = ImGui::GetStyle();
 
-	ImGui::Separator();
-	ImGui::Text("%s", LANGMANAGER.GetText("STR_OPTION_GAME_TWEAKS").data());
+	ImGui::SeparatorText(LANGMANAGER.GetText("STR_OPTION_GAME_TWEAKS").data());
 
 	if (!HookCommandIsConnected()) {
 		ImGui::PushStyleColor(ImGuiCol_Text, style.Colors[ImGuiCol_TextDisabled]);
@@ -398,10 +260,21 @@ void UiOption::Helper() {
 	DAMAGEMETER.SetTestMode();
 }
 
+// Sits at the right end of the current line, or of the next one when it does not fit.
 void UiOption::ShowLangSelector() {
+	const ImGuiStyle& style = ImGui::GetStyle();
+	const char* langLabel = LANGMANAGER.GetText("STR_OPTION_COMBO_LANG").data();
 	const char* comboPreview = LANGMANAGER.GetText("STR_LANG_NAME").data();
 
-	ImGui::Text(LANGMANAGER.GetText("STR_OPTION_COMBO_LANG").data());
+	const float comboWidth = ImGui::CalcTextSize(comboPreview).x + ImGui::GetFrameHeight() + style.FramePadding.x * 3.0f;
+	const float width = ImGui::CalcTextSize(langLabel).x + style.ItemInnerSpacing.x + comboWidth;
+
+	SameLineIfFits(width);
+	ImGui::SetCursorPosX(ImMax(ImGui::GetCursorPosX(), ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x - width));
+	ImGui::AlignTextToFramePadding();
+	ImGui::TextDisabled("%s", langLabel);
+	ImGui::SameLine(0.0f, style.ItemInnerSpacing.x);
+	ImGui::SetNextItemWidth(comboWidth);
 	if (ImGui::BeginCombo(u8"###OptionLangSelector", comboPreview, ImGuiComboFlags_HeightLarge)) {
 
 		int32_t i = 0;
@@ -439,6 +312,7 @@ void UiOption::ChangeLang()
 void UiOption::ShowTeamTALFSelector()
 {
 	ImGui::Checkbox(LANGMANAGER.GetText("STR_OPTION_TEAMTA_LUNARFALL").data(), (bool*)&_teamTA_LF);
+	ImGui::BeginDisabled(!_teamTA_LF);
 	const char* comboPreview = nullptr;
 	if (_teamTA_LF_Mode == 1)
 		comboPreview = LANGMANAGER.GetText("STR_OPTION_TEAMTA_OPTION_1").data();
@@ -462,33 +336,39 @@ void UiOption::ShowTeamTALFSelector()
 
 		ImGui::EndCombo();
 	}
+	ImGui::EndDisabled();
 }
-
-
 
 void UiOption::ShowFeatures()
 {
-	if (ImGui::Checkbox(LANGMANAGER.GetText("STR_OPTION_UNIT_1K").data(), (bool*)&_is1K)) {
-		_is1M = FALSE;
-		_is10K = FALSE;
-	}
+	ImGui::SeparatorText(LANGMANAGER.GetText("STR_OPTION_SECTION_UNITS").data());
 
-	if (ImGui::Checkbox(LANGMANAGER.GetText("STR_OPTION_UNIT_1M").data(), (bool*)&_is1M)) {
-		_is1K = FALSE;
-		_is10K = FALSE;
+	// At most one of these is set; none shows full numbers.
+	int unit = _is1K ? 1 : _is10K ? 2 : _is1M ? 3 : 0;
+	const char* units[] = {
+		LANGMANAGER.GetText("STR_OPTION_UNIT_NONE").data(), LANGMANAGER.GetText("STR_OPTION_UNIT_1K").data(),
+		LANGMANAGER.GetText("STR_OPTION_UNIT_10K").data(), LANGMANAGER.GetText("STR_OPTION_UNIT_1M").data()
+	};
+	for (int i = 0; i < IM_ARRAYSIZE(units); i++) {
+		if (i > 0)
+			SameLineIfFits(ImGui::GetFrameHeight() + ImGui::GetStyle().ItemInnerSpacing.x + ImGui::CalcTextSize(units[i]).x);
+		ImGui::RadioButton(units[i], &unit, i);
 	}
+	_is1K = unit == 1;
+	_is10K = unit == 2;
+	_is1M = unit == 3;
 
-	if (ImGui::Checkbox(LANGMANAGER.GetText("STR_OPTION_UNIT_10K").data(), (bool*)&_is10K)) {
-		_is1K = FALSE;
-		_is1M = FALSE;
-	}
+	ImGui::SeparatorText(LANGMANAGER.GetText("STR_OPTION_SECTION_DISPLAY").data());
 	ImGui::Checkbox(LANGMANAGER.GetText("STR_OPTION_SOLO_MODE").data(), (bool*)&_isSoloMode);
 	ImGui::Checkbox(LANGMANAGER.GetText("STR_OPTION_HIDE_NAME").data(), (bool*)&_hideName);
-	ImGui::Checkbox(LANGMANAGER.GetText("STR_OPTION_SOLO_RANK_MODE").data(), (bool*)&_isSoloRankMode); ImGui::SameLine(); ImGui::Checkbox(LANGMANAGER.GetText("STR_OPTION_DONT_SAVE_UNFINISHED_MAZE").data(), (bool*)&_isDontSaveUnfinishedMaze);
-	ImGui::Checkbox(LANGMANAGER.GetText("STR_OPTION_USE_SAVEDATA").data(), (bool*)&_isUseSaveData);
 	ImGui::Checkbox(LANGMANAGER.GetText("STR_OPTION_USE_IMAGE").data(), (bool*)&_isUseImage);
-	
-	
+	ImGui::Checkbox(LANGMANAGER.GetText("STR_MENU_VERTICAL").data(), (bool*)&_isVertical);
+
+	ImGui::SeparatorText(LANGMANAGER.GetText("STR_OPTION_SECTION_RECORDS").data());
+	ImGui::Checkbox(LANGMANAGER.GetText("STR_OPTION_USE_SAVEDATA").data(), (bool*)&_isUseSaveData);
+	ImGui::Checkbox(LANGMANAGER.GetText("STR_OPTION_SOLO_RANK_MODE").data(), (bool*)&_isSoloRankMode);
+	ImGui::Checkbox(LANGMANAGER.GetText("STR_OPTION_DONT_SAVE_UNFINISHED_MAZE").data(), (bool*)&_isDontSaveUnfinishedMaze);
+	ShowTeamTALFSelector();
 }
 
 void UiOption::ShowDiscord()
@@ -516,21 +396,35 @@ void UiOption::OpenOption() {
 	char label[128] = { 0 };
 	sprintf_s(label, "%s###Option", LANGMANAGER.GetText("STR_OPTION_WINDOWS_NAME").data());
 
+	const float em = ImGui::GetFontSize();
+	ImGui::SetNextWindowSize(ImVec2(em * 24.0f, em * 22.0f), ImGuiCond_FirstUseEver);
+	// The background is drawn inside Begin, so the override can end right after.
+	THEME.PushReadableWindow();
 	ImGui::Begin(label, 0, ImGuiWindowFlags_None);
+	THEME.PopReadableWindow();
 
-		if (ImGui::Button(LANGMANAGER.GetText("STR_OPTION_ADD_TEST_VALUE").data())) {
-			Helper();
-		}
+		// The one button that matters, in the accent color.
+		const ImGuiStyle& style = ImGui::GetStyle();
+		ImGui::PushStyleColor(ImGuiCol_Button, style.Colors[ImGuiCol_ButtonHovered]);
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, style.Colors[ImGuiCol_ButtonActive]);
+		bool saveAndExit = ImGui::Button(LANGMANAGER.GetText("STR_OPTION_SAVE_AND_EXIT").data());
+		ImGui::PopStyleColor(2);
 
-		ImGui::SameLine(); 		
-		
-		if (ImGui::Button(LANGMANAGER.GetText("STR_OPTION_SAVE_AND_EXIT").data())) {
+		if (saveAndExit) {
 			SaveOption();
 			if (DAMAGEMETER.GetWorldID() == 20011) {
 				DAMAGEMETER.SetWorldID(0);
 			}
 			_open = FALSE;
 		}
+
+		ImGui::SameLine();
+
+		if (ImGui::Button(LANGMANAGER.GetText("STR_OPTION_ADD_TEST_VALUE").data())) {
+			Helper();
+		}
+
+		ShowLangSelector();
 
 #ifdef _DEBUG
 		if (ImGui::Button("START TIMER")) {
@@ -541,10 +435,7 @@ void UiOption::OpenOption() {
 			DAMAGEMETER.Suspend();
 		}
 #endif
-		float width = ImGui::CalcItemWidth();
-		ImGui::PushItemWidth(width - 200.0f);
-
-		ShowLangSelector();
+		ImGui::Spacing();
 
 		if (ImGui::BeginTabBar("##tabs")) {
 			char label[128] = {0};
@@ -552,7 +443,14 @@ void UiOption::OpenOption() {
 			if (ImGui::BeginTabItem(label)) {
 				ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.5f);
 				ShowFeatures();
-				ShowTeamTALFSelector();
+				ImGui::PopItemWidth();
+				ImGui::EndTabItem();
+			}
+
+			sprintf_s(label, "%s###TabTheme", LANGMANAGER.GetText("STR_OPTION_TAB_THEME").data());
+			if (ImGui::BeginTabItem(label)) {
+				ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.5f);
+				THEME.ShowEditor();
 				ImGui::PopItemWidth();
 				ImGui::EndTabItem();
 			}
@@ -560,11 +458,11 @@ void UiOption::OpenOption() {
 			sprintf_s(label, "%s###TabTable", LANGMANAGER.GetText("STR_OPTION_TAB_TABLE_SETTING").data());
 			if (ImGui::BeginTabItem(label)) {
 				ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.5f);
-				ShowFontSelector();
 				ShowTableOption();
 				ImGui::PopItemWidth();
 				ImGui::EndTabItem();
 			}
+
 
 			sprintf_s(label, "%s###TabHotKey", LANGMANAGER.GetText("STR_OPTION_TAB_HOTKEY_SETTING").data());
 			if (ImGui::BeginTabItem(label)) {
@@ -603,7 +501,6 @@ void UiOption::Init() {
 bool UiOption::GetOption() {
 
 	tinyxml2::XMLDocument doc;
-	ImGuiStyle& style = ImGui::GetStyle();
 
 	if (doc.LoadFile(OPTION_FILE_NAME))
 		return FALSE;
@@ -623,38 +520,23 @@ bool UiOption::GetOption() {
 		LogInstance.WriteLog("[UiOption::GetOption] Failed to get Option element");
 		return FALSE;
 	}
+	MeterTheme& theme = THEME.Current();
+
+	// Pre-theme builds kept these on <Option>; a <Theme> element read below wins.
 	auto attr = ele->FindAttribute("GlobalScale");
 
 	if (attr != nullptr)
-		attr->QueryfloatValue(&_fontScale);
-
-	
-
-#if DEBUG_READ_XML == 1
-	LogInstance.WriteLog("Read FontScale = %.1f", _fontScale);
-#endif
+		attr->QueryfloatValue(&theme.fontScale);
 
 	attr = ele->FindAttribute("TableScale");
 
 	if (attr != nullptr)
-		attr->QueryfloatValue(&_tableFontScale);
-
-	
-
-#if DEBUG_READ_XML == 1
-	LogInstance.WriteLog("Read TableFontScale = %.1f", _tableFontScale);
-#endif
+		attr->QueryfloatValue(&theme.tableFontScale);
 
 	attr = ele->FindAttribute("ColumnScale");
 
 	if (attr != nullptr)
-		attr->QueryfloatValue(&_columnFontScale);
-
-	
-
-#if DEBUG_READ_XML == 1
-	LogInstance.WriteLog("Read ColumnFontScale = %.1f", _columnFontScale);
-#endif
+		attr->QueryfloatValue(&theme.columnFontScale);
 
 	attr = ele->FindAttribute("K");
 
@@ -693,6 +575,13 @@ bool UiOption::GetOption() {
 	attr = ele->FindAttribute("IsUseImage");
 	if (attr != nullptr)
 		attr->QueryIntValue(&_isUseImage);
+
+	attr = ele->FindAttribute("IsVertical");
+	if (attr != nullptr)
+		attr->QueryIntValue(&_isVertical);
+
+	if (const char* rows = ele->Attribute("VerticalRows"))
+		_verticalRows = rows;
 
 	attr = ele->FindAttribute("TeamTA_LF");
 	if (attr != nullptr)
@@ -738,19 +627,11 @@ bool UiOption::GetOption() {
 
 	
 
-	// A font that has since been removed would leave the atlas empty.
+	// A font that has since been removed would leave the atlas empty, so
+	// SelectFont only takes names it finds in the Font folder.
 	const char* savedFont = ele->Attribute("UseFontFile");
-	if (savedFont != nullptr) {
-		for (const ImFontObj& font : fonts) {
-			if (FontFileName(font) != savedFont)
-				continue;
-			strcpy_s(_selectedFontFile, savedFont);
-			DAMAGEMETER.selectedFont = font;
-			DAMAGEMETER.selectedFont.selectable = true;
-			SetFont();
-			break;
-		}
-	}
+	if (savedFont != nullptr)
+		THEME.SelectFont(savedFont);
 
 	attr = ele->FindAttribute("IsDontSaveUnfinishedMaze");
 	if (attr != nullptr)
@@ -768,6 +649,10 @@ bool UiOption::GetOption() {
 	if (attr != nullptr)
 		attr->QueryIntValue(&_unlockFov);
 
+	attr = ele->FindAttribute("HighDpi");
+	if (attr != nullptr)
+		attr->QueryIntValue(&_highDpi);
+
 #if DEBUG_READ_XML == 1
 	LogInstance.WriteLog("Read 1M = %d", _is1M);
 #endif
@@ -775,43 +660,18 @@ bool UiOption::GetOption() {
 	attr = ele->FindAttribute("CellPaddingX");
 
 	if (attr != nullptr)
-	{
-		attr->QueryfloatValue(&_cellPadding.x);
-		style.CellPadding.x = _cellPadding.x;
-	}
-
-
-#if DEBUG_READ_XML == 1
-	LogInstance.WriteLog("Read CellPadding X = %f", _cellPadding.x);
-#endif
+		attr->QueryfloatValue(&theme.cellPadding.x);
 
 	attr = ele->FindAttribute("CellPaddingY");
 
 	if (attr != nullptr)
-	{
-		attr->QueryfloatValue(&_cellPadding.y);
-		style.CellPadding.y = _cellPadding.y;
-	}
-
-
-
-#if DEBUG_READ_XML == 1
-	LogInstance.WriteLog("Read CellPadding Y = %f", _cellPadding.y);
-#endif
+		attr->QueryfloatValue(&theme.cellPadding.y);
 
 	attr = ele->FindAttribute("BorderSize");
 
 	if (attr != nullptr)
-	{
-		attr->QueryfloatValue(&_windowBorderSize);
-		style.WindowBorderSize = _windowBorderSize;
-	}
+		attr->QueryfloatValue(&theme.windowBorderSize);
 
-	
-
-#if DEBUG_READ_XML == 1
-	LogInstance.WriteLog("Read WindowBorderSize = %f", _windowBorderSize);
-#endif
 
 	attr = ele->FindAttribute("WindowWidth");
 
@@ -841,6 +701,10 @@ bool UiOption::GetOption() {
 
 			attr = ele->FindAttribute("WinPosY");
 			attr->QueryfloatValue(&winY);
+
+			// Saved in 96-DPI pixels so switching DPI awareness keeps the spot.
+			winX *= THEME.GetDpiScale();
+			winY *= THEME.GetDpiScale();
 			//SetWindowPos(UIWINDOW.GetHWND(), HWND_NOTOPMOST, winX, winY, 0, 0, SWP_NOSIZE);
 			SetWindowPos(UIWINDOW.GetHWND(), HWND_TOPMOST, static_cast<int>(winX), static_cast<int>(winY), 0, 0, SWP_NOSIZE);
 		}
@@ -849,238 +713,28 @@ bool UiOption::GetOption() {
 		LogInstance.WriteLog("Read WinPos(X,Y) = (%f, %f)", winX, winY);
 #endif
 
-	// Text Color
-	ele = ele->NextSiblingElement("TextColor");
+	ReadLegacyColors(node);
 
-	if (!ele)
-	{
-		LogInstance.WriteLog("[UiOption::GetOption] Failed to get sibling TextColor");
-		return FALSE;
+	// Everything else about the look; absent in files from before themes.
+	tinyxml2::XMLElement* themeElement = node->FirstChildElement("Theme");
+	if (themeElement != nullptr)
+		THEME.ReadXml(themeElement);
+	else {
+		// Old builds cleared the window to the background's own color, so its
+		// alpha never showed. Keep that look now that alpha is real.
+		theme.colors[ImGuiCol_WindowBg].w = 1.0f;
 	}
-		
+	if (THEME.Current().fontFile[0] != 0)
+		THEME.SelectFont(THEME.Current().fontFile);
+	THEME.ApplyStyle();
 
-	const char name[4][8] = { {"r"}, {"g"}, {"b"}, {"a"} };
-
-	for (int i = 0; i < 4; i++) {
-		attr = ele->FindAttribute(name[i]);
-
-		if (attr != nullptr)
-		{
-			switch (i) {
-			case 0:
-				attr->QueryfloatValue(&_textColor.x);
-				break;
-			case 1:
-				attr->QueryfloatValue(&_textColor.y);
-				break;
-			case 2:
-				attr->QueryfloatValue(&_textColor.z);
-				break;
-			case 3:
-				attr->QueryfloatValue(&_textColor.w);
-				break;
-			}
-		}
-	}
-
-	style.Colors[0] = _textColor;
-
-#if DEBUG_READ_XML == 1
-	LogInstance.WriteLog("Read TextColor = %.1f, %.1f, %.1f, %.1f", _textColor.x, _textColor.y, _textColor.z, _textColor.w);
-#endif
-
-	// WindowBg Color
-	ele = ele->NextSiblingElement("WindowBgColor");
-
-	if (!ele)
-	{
-		LogInstance.WriteLog("[UiOption::GetOption] Failed to get sibling WindowBgColor");
-		return FALSE;
-	}
-
-	for (int i = 0; i < 4; i++) {
-		attr = ele->FindAttribute(name[i]);
-
-		if (attr != nullptr)
-		{
-
-			switch (i) {
-			case 0:
-				attr->QueryfloatValue(&_windowBg.x);
-				break;
-			case 1:
-				attr->QueryfloatValue(&_windowBg.y);
-				break;
-			case 2:
-				attr->QueryfloatValue(&_windowBg.z);
-				break;
-			case 3:
-				attr->QueryfloatValue(&_windowBg.w);
-				break;
-			}
-		}
-	}
-
-	style.Colors[2] = _windowBg;
-
-#if DEBUG_READ_XML == 1
-	LogInstance.WriteLog("Read WindowBgColor = %.1f, %.1f, %.1f, %.1f", _windowBg.x, _windowBg.y, _windowBg.z, _windowBg.w);
-#endif
-
-	// Outline Color
-	ele = ele->NextSiblingElement("OutlineColor");
-		
-	if (!ele)
-	{
-		LogInstance.WriteLog("UiOption::GetOption] Failed to get sibling OutlineColor");
-		return FALSE;
-	}
-
-	for (int i = 0; i < 4; i++) {
-		attr = ele->FindAttribute(name[i]);
-
-		if (attr != nullptr)
-		{
-
-			switch (i) {
-			case 0:
-				attr->QueryfloatValue(&_outlineColor.x);
-				break;
-			case 1:
-				attr->QueryfloatValue(&_outlineColor.y);
-				break;
-			case 2:
-				attr->QueryfloatValue(&_outlineColor.z);
-				break;
-			case 3:
-				attr->QueryfloatValue(&_outlineColor.w);
-				break;
-			}
-		}
-	}
-
-#if DEBUG_READ_XML == 1
-	LogInstance.WriteLog("Read OutlineColor = %.1f, %.1f, %.1f, %.1f", _outlineColor.x, _outlineColor.y, _outlineColor.z, _outlineColor.w);
-#endif
-
-	// ActiveColor
-	ele = ele->NextSiblingElement("ActiveColor");
-
-	if (!ele)
-	{
-		LogInstance.WriteLog("UiOption::GetOption] Failed to get sibling ActiveColor");
-		return FALSE;
-	}
-	for (int i = 0; i < 4; i++) {
-		attr = ele->FindAttribute(name[i]);
-
-		if (attr != nullptr)
-		{
-
-			switch (i) {
-			case 0:
-				attr->QueryfloatValue(&_activeColor[1].x);
-				break;
-			case 1:
-				attr->QueryfloatValue(&_activeColor[1].y);
-				break;
-			case 2:
-				attr->QueryfloatValue(&_activeColor[1].z);
-				break;
-			case 3:
-				attr->QueryfloatValue(&_activeColor[1].w);
-				break;
-			}
-		}
-	}
-
-#if DEBUG_READ_XML == 1
-	LogInstance.WriteLog("Read ActiveColor = %.1f, %.1f, %.1f, %.1f", _activeColor[1].x, _activeColor[1].y, _activeColor[1].z, _activeColor[1].w);
-#endif
-
-	ele = ele->NextSiblingElement("InActiveColor");
-
-	if (!ele)
-	{
-		LogInstance.WriteLog("UiOption::GetOption] Failed to get sibling InActiveColor");
-		return FALSE;
-	}
-
-	for (int i = 0; i < 4; i++) {
-		attr = ele->FindAttribute(name[i]);
-
-		if (attr != nullptr)
-
-		{
-			switch (i) {
-			case 0:
-				attr->QueryfloatValue(&_activeColor[0].x);
-				break;
-			case 1:
-				attr->QueryfloatValue(&_activeColor[0].y);
-				break;
-			case 2:
-				attr->QueryfloatValue(&_activeColor[0].z);
-				break;
-			case 3:
-				attr->QueryfloatValue(&_activeColor[0].w);
-				break;
-			}
-		}
-	}
-
-#if DEBUG_READ_XML == 1
-	LogInstance.WriteLog("Read InActiveColor = %.1f, %.1f, %.1f, %.1f", _activeColor[0].x, _activeColor[0].y, _activeColor[0].z, _activeColor[0].w);
-#endif
-
-	for (int i = 0; i < 11; i++) {
-		char temp[32] = { 0 };
-		sprintf_s(temp, 32, "JobColor%d", i);
-		ele = ele->NextSiblingElement(temp);
-
-		if (!ele)
-		{
-			LogInstance.WriteLog("UiOption::GetOption] Failed to get sibling %s",temp);
-			return FALSE;
-		}
-
-		for (int j = 0; j < 4; j++) {
-			attr = ele->FindAttribute(name[j]);
-
-			if (attr != nullptr)
-			{
-
-				switch (j) {
-				case 0:
-					attr->QueryfloatValue(&_jobColor[i].x);
-					break;
-				case 1:
-					attr->QueryfloatValue(&_jobColor[i].y);
-					break;
-				case 2:
-					attr->QueryfloatValue(&_jobColor[i].z);
-					break;
-				case 3:
-					attr->QueryfloatValue(&_jobColor[i].w);
-					break;
-				}
-			}
-		}
-
-#if DEBUG_READ_XML == 1
-		LogInstance.WriteLog("Read JobColor%d = %.1f, %.1f, %.1f, %.1f", i, _jobColor[i].x, _jobColor[i].y, _jobColor[i].z, _jobColor[i].w);
-#endif
-	}
-	
-	int hotkeyID = 0;
-
-	do {
+	for (int hotkeyID = 0; ; hotkeyID++) {
 
 		int key[3] = { -1 };
 		char name2[AUTO_HOTKEY_NAME_LEN] = { 0 };
-		sprintf_s(name2, AUTO_HOTKEY_NAME_LEN, "HOTKEY%d", hotkeyID++);
+		sprintf_s(name2, AUTO_HOTKEY_NAME_LEN, "HOTKEY%d", hotkeyID);
 
-		ele = ele->NextSiblingElement(name2);
+		ele = node->FirstChildElement(name2);
 
 		if (ele == nullptr)
 			break;
@@ -1105,12 +759,40 @@ bool UiOption::GetOption() {
 #if DEBUG_READ_XML == 1
 		LogInstance.WriteLog("Read Hotkey %s, key1 = %d, key2 = %d, key3 = %d", name2, key[0], key[1], key[2]);
 #endif
-		
-		HOTKEY.SetKeyByName(name2, key[0], key[1], key[2]);
 
-	} while (TRUE);
+		HOTKEY.SetKeyByName(name2, key[0], key[1], key[2]);
+	}
 
 	return TRUE;
+}
+
+// Colors the way pre-theme builds saved them, one element each. All optional:
+// newer files only keep writing them so an older build can still read the file.
+void UiOption::ReadLegacyColors(tinyxml2::XMLNode* node) {
+
+	MeterTheme& theme = THEME.Current();
+
+	auto read = [node](const char* name, ImVec4& color) {
+		tinyxml2::XMLElement* ele = node->FirstChildElement(name);
+		if (ele == nullptr)
+			return;
+		ele->QueryfloatAttribute("r", &color.x);
+		ele->QueryfloatAttribute("g", &color.y);
+		ele->QueryfloatAttribute("b", &color.z);
+		ele->QueryfloatAttribute("a", &color.w);
+	};
+
+	read("TextColor", theme.colors[ImGuiCol_Text]);
+	read("WindowBgColor", theme.colors[ImGuiCol_WindowBg]);
+	read("OutlineColor", theme.outlineColor);
+	read("ActiveColor", theme.activeColor);
+	read("InActiveColor", theme.inactiveColor);
+
+	for (int i = 0; i < THEME_JOB_COUNT; i++) {
+		char name[32] = { 0 };
+		sprintf_s(name, "JobColor%d", i);
+		read(name, theme.jobColors[i]);
+	}
 }
 
 bool UiOption::SaveOption(bool skipWarning) {
@@ -1129,11 +811,15 @@ bool UiOption::SaveOption(bool skipWarning) {
 	tinyxml2::XMLElement* option = doc.NewElement("Option");
 	root->LinkEndChild(option);
 
+	const MeterTheme& theme = THEME.Current();
+
 	option->SetAttribute("IsTopMost", _isTopMost);
 	option->SetAttribute("IsUseImage", _isUseImage);
-	option->SetAttribute("GlobalScale", _fontScale);
-	option->SetAttribute("TableScale", _tableFontScale);
-	option->SetAttribute("ColumnScale", _columnFontScale);
+	option->SetAttribute("IsVertical", _isVertical);
+	option->SetAttribute("VerticalRows", _verticalRows.c_str());
+	option->SetAttribute("GlobalScale", theme.fontScale);
+	option->SetAttribute("TableScale", theme.tableFontScale);
+	option->SetAttribute("ColumnScale", theme.columnFontScale);
 	option->SetAttribute("K", _is1K);
 	option->SetAttribute("M", _is1M);
 	option->SetAttribute("Man", _is10K);
@@ -1144,9 +830,9 @@ bool UiOption::SaveOption(bool skipWarning) {
 	option->SetAttribute("IsSoloRankMode", _isSoloRankMode);
 	option->SetAttribute("IsUseSaveData", _isUseSaveData);
 
-	option->SetAttribute("CellPaddingX", _cellPadding.x);
-	option->SetAttribute("CellPaddingY", _cellPadding.y);
-	option->SetAttribute("BorderSize", _windowBorderSize);
+	option->SetAttribute("CellPaddingX", theme.cellPadding.x);
+	option->SetAttribute("CellPaddingY", theme.cellPadding.y);
+	option->SetAttribute("BorderSize", theme.windowBorderSize);
 	option->SetAttribute("WindowWidth", _windowWidth);
 	option->SetAttribute("RefreshTime", _refreshTime);
 	option->SetAttribute("LogFile", LogInstance.shouldLog);
@@ -1157,7 +843,7 @@ bool UiOption::SaveOption(bool skipWarning) {
 	option->SetAttribute("UseLangFile",_selectedLang);
 
 
-	option->SetAttribute("UseFontFile", _selectedFontFile);
+	option->SetAttribute("UseFontFile", theme.fontFile);
 
 	option->SetAttribute("IsDontSaveUnfinishedMaze", _isDontSaveUnfinishedMaze);
 
@@ -1167,55 +853,31 @@ bool UiOption::SaveOption(bool skipWarning) {
 
 	RECT rect;
 	GetWindowRect(UIWINDOW.GetHWND(), &rect);
-	option->SetAttribute("WinPosX", (float)rect.left);
-	option->SetAttribute("WinPosY", (float)rect.top);
+	option->SetAttribute("WinPosX", (float)rect.left / THEME.GetDpiScale());
+	option->SetAttribute("WinPosY", (float)rect.top / THEME.GetDpiScale());
+	option->SetAttribute("HighDpi", _highDpi);
 
-	tinyxml2::XMLElement* text_color = doc.NewElement("TextColor");
-	root->LinkEndChild(text_color);
-	text_color->SetAttribute("r", _textColor.x);
-	text_color->SetAttribute("g", _textColor.y);
-	text_color->SetAttribute("b", _textColor.z);
-	text_color->SetAttribute("a", _textColor.w);
+	// Older builds need every one of these, in this order, or they reset
+	// all options; the <Theme> element below is what this build reads.
+	auto writeColor = [&](const char* name, const ImVec4& color) {
+		tinyxml2::XMLElement* ele = doc.NewElement(name);
+		root->LinkEndChild(ele);
+		ele->SetAttribute("r", color.x);
+		ele->SetAttribute("g", color.y);
+		ele->SetAttribute("b", color.z);
+		ele->SetAttribute("a", color.w);
+	};
 
-	tinyxml2::XMLElement* windowbg_color = doc.NewElement("WindowBgColor");
-	root->LinkEndChild(windowbg_color);
-	windowbg_color->SetAttribute("r", _windowBg.x);
-	windowbg_color->SetAttribute("g", _windowBg.y);
-	windowbg_color->SetAttribute("b", _windowBg.z);
-	windowbg_color->SetAttribute("a", _windowBg.w);
-	
-	tinyxml2::XMLElement* outline_color = doc.NewElement("OutlineColor");
-	root->LinkEndChild(outline_color);
-	outline_color->SetAttribute("r", _outlineColor.x);
-	outline_color->SetAttribute("g", _outlineColor.y);
-	outline_color->SetAttribute("b", _outlineColor.z);
-	outline_color->SetAttribute("a", _outlineColor.w);
+	writeColor("TextColor", theme.colors[ImGuiCol_Text]);
+	writeColor("WindowBgColor", theme.colors[ImGuiCol_WindowBg]);
+	writeColor("OutlineColor", theme.outlineColor);
+	writeColor("ActiveColor", theme.activeColor);
+	writeColor("InActiveColor", theme.inactiveColor);
 
-	tinyxml2::XMLElement* active_color = doc.NewElement("ActiveColor");
-	root->LinkEndChild(active_color);
-	active_color->SetAttribute("r", _activeColor[1].x);
-	active_color->SetAttribute("g", _activeColor[1].y);
-	active_color->SetAttribute("b", _activeColor[1].z);
-	active_color->SetAttribute("a", _activeColor[1].w);
-
-	tinyxml2::XMLElement* inactive_color = doc.NewElement("InActiveColor");
-	root->LinkEndChild(inactive_color);
-	inactive_color->SetAttribute("r", _activeColor[0].x);
-	inactive_color->SetAttribute("g", _activeColor[0].y);
-	inactive_color->SetAttribute("b", _activeColor[0].z);
-	inactive_color->SetAttribute("a", _activeColor[0].w);
-
-	for (int i = 0; i < 11; i++) {
-
+	for (int i = 0; i < THEME_JOB_COUNT; i++) {
 		char buffer[32] = { 0 };
 		sprintf_s(buffer, 32, "JobColor%d", i);
-		tinyxml2::XMLElement* job_color = doc.NewElement(buffer);
-		root->LinkEndChild(job_color);
-
-		job_color->SetAttribute("r", _jobColor[i].x);
-		job_color->SetAttribute("g", _jobColor[i].y);
-		job_color->SetAttribute("b", _jobColor[i].z);
-		job_color->SetAttribute("a", _jobColor[i].w);
+		writeColor(buffer, theme.jobColors[i]);
 	}
 	
 	int hotkeyid = 0;
@@ -1233,25 +895,21 @@ bool UiOption::SaveOption(bool skipWarning) {
 		hotkey->SetText((*itr)->GetName());
 	}
 
+	tinyxml2::XMLElement* themeElement = doc.NewElement("Theme");
+	root->LinkEndChild(themeElement);
+	THEME.WriteXml(doc, themeElement);
+
 	doc.SaveFile(OPTION_FILE_NAME);
 	return TRUE;
 }
 
 bool UiOption::SetBasicOption() {
 
-	ImGui::StyleColorsDark();
-
-	ImGuiStyle& style = ImGui::GetStyle();
-	ImGuiIO& io = ImGui::GetIO();
-
-	_outlineColor = ImVec4(ImGui::ColorConvertU32ToFloat4(ImColor(0, 0, 0, 255)));
-	_activeColor[0] = style.Colors[10];
-	_activeColor[1] = style.Colors[11];
-	_textColor = style.Colors[0];
-	_windowBg = style.Colors[2];
+	THEME.Reset();
 
 	Helper();
 	PLAYERTABLE.ResizeTalbe();
+	PLAYERTABLE.FitColumns();
 	_open = TRUE;
 
 	return TRUE;
@@ -1267,35 +925,31 @@ bool UiOption::ToggleTopMost() {
 }
 
 const ImU32 UiOption::GetJobColor(unsigned int index) {
-
-	if (index < 0 || index > 10)
-		return ImGui::ColorConvertFloat4ToU32(_jobColor[0]);
-
-	return ImGui::ColorConvertFloat4ToU32(_jobColor[index]);
+	return THEME.GetJobColor(index);
 }
 
 const ImU32 UiOption::GetOutlineColor() {
-	return ImGui::ColorConvertFloat4ToU32(_outlineColor);
+	return ImGui::ColorConvertFloat4ToU32(THEME.Current().outlineColor);
 }
 
 const float& UiOption::GetFontScale() {
-	return _fontScale;
+	return THEME.Current().fontScale;
 }
 
 const float& UiOption::GetColumnFontScale() {
-	return _columnFontScale;
+	return THEME.Current().columnFontScale;
 }
 
 const float& UiOption::GetTableFontScale() {
-	return _tableFontScale;
+	return THEME.Current().tableFontScale;
 }
 
 const ImVec4& UiOption::GetActiveColor() {
-	return _activeColor[1];
+	return THEME.Current().activeColor;
 }
 
 const ImVec4& UiOption::GetInActiveColor() {
-	return _activeColor[0];
+	return THEME.Current().inactiveColor;
 }
 
 bool UiOption::is1K() {
@@ -1357,8 +1011,12 @@ bool UiOption::isDontSaveUnfinishedMaze()
 
 void UiOption::Update() {
 
+	// Every frame: PlayerTable borrows a few style colors and puts them back,
+	// and anything else that pokes the style gets undone here.
+	THEME.ApplyStyle();
+
 	ImFont* font = ImGui::GetFont();
-	font->Scale = _fontScale;
+	font->Scale = THEME.Current().fontScale;
 
 	if (_open)
 		OpenOption();
@@ -1390,7 +1048,7 @@ void UiOption::SetFramerate(float i) {
 }
 
 const ImVec4& UiOption::GetWindowBGColor() {
-	return _windowBg;
+	return THEME.Current().colors[ImGuiCol_WindowBg];
 }
 
 const float& UiOption::GetWindowWidth() {
@@ -1407,6 +1065,17 @@ const float& UiOption::GetRefreshTime() {
 
 
 
+bool UiOption::WantsHighDpi() {
+
+	tinyxml2::XMLDocument doc;
+	if (doc.LoadFile(OPTION_FILE_NAME) != tinyxml2::XML_SUCCESS)
+		return false;
+
+	tinyxml2::XMLElement* root = doc.FirstChildElement("SDM");
+	tinyxml2::XMLElement* option = root ? root->FirstChildElement("Option") : nullptr;
+	return option != nullptr && option->IntAttribute("HighDpi", 0) != 0;
+}
+
 const char* UiOption::GetFontFile() {
-	return _selectedFontFile;
+	return THEME.Current().fontFile;
 }

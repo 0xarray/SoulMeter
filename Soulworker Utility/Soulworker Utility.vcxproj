@@ -258,6 +258,7 @@
     <ClInclude Include="UI\MinimapTab.h" />
     <ClInclude Include="UI\Option.h" />
     <ClInclude Include="UI\PlayerTable.h" />
+    <ClInclude Include="UI\Theme.h" />
     <ClInclude Include="UI\PlotWindow.h" />
     <ClInclude Include="UI\SpecificInfomation.h" />
     <ClInclude Include="UI\UiWindow.h" />
@@ -328,16 +329,32 @@
     <ClCompile Include="Soulworker Packet\HookCommand.cpp" />
     <ClCompile Include="Soulworker Packet\Injector.cpp" />
     <ClCompile Include="Soulworker Packet\PipeReceiver.cpp" />
-    <ClCompile Include="Third Party\imgui\backends\imgui_impl_dx11.cpp" />
-    <ClCompile Include="Third Party\imgui\backends\imgui_impl_win32.cpp" />
+    <ClCompile Include="Third Party\imgui\backends\imgui_impl_dx11.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Third Party\imgui\backends\imgui_impl_win32.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="Third Party\imgui\Custom.cpp" />
-    <ClCompile Include="Third Party\imgui\imgui.cpp" />
-    <ClCompile Include="Third Party\imgui\imgui_draw.cpp" />
+    <ClCompile Include="Third Party\imgui\imgui.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Third Party\imgui\imgui_draw.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="Third Party\imgui\imgui_filedialog.cpp" />
-    <ClCompile Include="Third Party\imgui\imgui_tables.cpp" />
-    <ClCompile Include="Third Party\imgui\imgui_widgets.cpp" />
-    <ClCompile Include="Third Party\imgui\implot.cpp" />
-    <ClCompile Include="Third Party\imgui\implot_items.cpp" />
+    <ClCompile Include="Third Party\imgui\imgui_tables.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Third Party\imgui\imgui_widgets.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Third Party\imgui\implot.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Third Party\imgui\implot_items.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="Third Party\tinyxml2\tinyxml2.cpp" />
     <ClCompile Include="UI\DX Input.cpp" />
     <ClCompile Include="UI\DX11.cpp" />
@@ -345,6 +362,7 @@
     <ClCompile Include="UI\MinimapTab.cpp" />
     <ClCompile Include="UI\Option.cpp" />
     <ClCompile Include="UI\PlayerTable.cpp" />
+    <ClCompile Include="UI\Theme.cpp" />
     <ClCompile Include="UI\PlotWindow.cpp" />
     <ClCompile Include="UI\SpecificInfomation.cpp" />
     <ClCompile Include="UI\UiWindow.cpp" />

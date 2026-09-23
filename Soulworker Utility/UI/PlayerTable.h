@@ -29,6 +29,8 @@ private:
 
 	void SetWindowSize();
 	void SetMainWindowSize();
+	void DrawResizeGrip();
+	void PushRowSelectable();
 	void StoreWindowWidth();
 	void SetupFontScale();
 

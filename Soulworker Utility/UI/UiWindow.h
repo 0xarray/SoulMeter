@@ -24,6 +24,7 @@ private:
 	float _deltaTime;
 
 	void DrawScene();
+	void ApplyTopMost();
 	void Update();
 	void OnResize();
 	void CalcDeltaTime();

@@ -258,6 +258,11 @@ void PlayerTable::Update() {
 		}
 
 		// The title is drawn inside Begin, so the effect only has to span it.
+		// The meter sizes the main window to itself; left alone, imgui also gives
+		// it a platform window of its own, a stale sliver of which sits over the
+		// real one and swallows clicks at the resize grip.
+		ImGui::SetNextWindowViewport(ImGui::GetMainViewport()->ID);
+
 		bool titleEffect = THEME.Current().titleEffect && THEME.PushTextEffect();
 		ImGui::Begin(title, 0, windowFlag);
 		THEME.PopTextEffect(titleEffect);
@@ -282,6 +287,9 @@ void PlayerTable::Update() {
 			}
 			ImGui::TextAlignCenter::UnSetTextAlignCenter();
 			THEME.PopTextEffect(textEffect);
+
+			if (UIOPTION.isOption())
+				DrawResizeGrip();
 		}
 		ImGui::End();
 
@@ -305,21 +313,53 @@ void PlayerTable::SetWindowSize() {
 	ImGui::SetWindowSize(ImVec2(UIOPTION.GetWindowWidth() * THEME.GetDpiScale(), FLOOR(_curWindowSize)));
 }
 
+// ImGui draws the grip inside Begin, under the table, and the row backgrounds
+// and bars reach the corner, so it is drawn again on top. Same shape as
+// ImGui's bottom-right grip.
+void PlayerTable::DrawResizeGrip() {
+
+	ImGuiContext& g = *GImGui;
+	ImGuiWindow* window = ImGui::GetCurrentWindow();
+
+	const ImGuiID id = ImGui::GetWindowResizeCornerID(window, 0);
+	ImGuiCol colIdx = g.ActiveId == id ? ImGuiCol_ResizeGripActive : g.HoveredId == id ? ImGuiCol_ResizeGripHovered : ImGuiCol_ResizeGrip;
+	ImVec4 col = ImGui::GetStyleColorVec4(colIdx);
+	// The idle color is meant for an empty corner; over a bar it vanishes.
+	col.w = ImMax(col.w, 0.5f);
+
+	const float border = window->WindowBorderSize;
+	const float rounding = window->WindowRounding;
+	const float size = ImTrunc(ImMax(g.FontSize * 1.10f, rounding + 1.0f + g.FontSize * 0.2f));
+	const float x = window->Pos.x + window->Size.x;
+	const float y = window->Pos.y + window->Size.y;
+
+	ImDrawList* drawList = window->DrawList;
+	drawList->PushClipRect(window->Pos, ImVec2(x, y), false);
+	drawList->PathLineTo(ImVec2(x - size, y - border));
+	drawList->PathLineTo(ImVec2(x - border, y - size));
+	drawList->PathArcToFast(ImVec2(x - rounding - border, y - rounding - border), rounding, 0, 3);
+	drawList->PathFillConvex(ImGui::ColorConvertFloat4ToU32(col));
+	drawList->PopClipRect();
+}
+
 void PlayerTable::SetMainWindowSize() {
 
 	auto pos = ImGui::GetWindowPos();
 	auto size = ImGui::GetWindowSize();
 
+	const int x = static_cast<int>(pos.x);
+	const int y = static_cast<int>(pos.y);
+	const int w = static_cast<int>(size.x + 1);
+	const int h = static_cast<int>(size.y + 1);
 
-	if (UIOPTION.isTopMost()) {
-		SetWindowPos(UIWINDOW.GetHWND(), HWND_TOPMOST, static_cast<int>(pos.x), static_cast<int>(pos.y), static_cast<int>(size.x + 1), static_cast<int>(size.y + 1), SWP_NOACTIVATE);
-	}
-	else {
-		SetWindowPos(UIWINDOW.GetHWND(), HWND_NOTOPMOST, static_cast<int>(pos.x), static_cast<int>(pos.y), static_cast<int>(size.x + 1), static_cast<int>(size.y + 1), SWP_NOACTIVATE);
-	}
+	SetWindowPos(UIWINDOW.GetHWND(), UIOPTION.isTopMost() ? HWND_TOPMOST : HWND_NOTOPMOST, x, y, w, h, SWP_NOACTIVATE);
 
-	//SetWindowPos(UIWINDOW.GetHWND(), HWND_NOTOPMOST, pos.x, pos.y, size.x + 1, size.y + 1, SWP_NOACTIVATE);
-	
+	// imgui shifts every window in the main viewport by however far its OS
+	// window moved since last frame. The meter already moved, so without this
+	// it would be moved again, and chase itself off screen.
+	ImGuiViewport* viewport = ImGui::GetMainViewport();
+	viewport->Pos = ImVec2((float)x, (float)y);
+	viewport->Size = ImVec2((float)w, (float)h);
 }
 
 void PlayerTable::StoreWindowWidth() {
@@ -548,8 +588,10 @@ void PlayerTable::UpdateTable(float windowWidth) {
 				ImGui::SameLine();
 			}
 			ImGui::TextAlignCenter::UnSetTextAlignCenter(); //some gay custom function, breaks text align with image
+			PushRowSelectable();
 			if (ImGui::Selectable(playerName, false, ImGuiSelectableFlags_SpanAllColumns))
 				ToggleSelectInfo(playerId);
+			ImGui::PopStyleVar();
 
 			ImGui::TextAlignCenter::SetTextAlignCenter();
 			ImGui::PopStyleColor();
@@ -1258,6 +1300,7 @@ void PlayerTable::SetupVerticalTable() {
 
 		ImGui::PushID((int)i);
 		ImGui::PushStyleColor(ImGuiCol_Text, player.nameColor);
+		PushRowSelectable();
 		Texture playerTexture = DIRECTX11.getcharacterTexture(player.job);
 		if (UIOPTION.isUseImage() && playerTexture.ptr) {
 			// Same hand centering as the horizontal name cell.
@@ -1272,6 +1315,7 @@ void PlayerTable::SetupVerticalTable() {
 		}
 		else if (ImGui::Selectable(player.name))
 			ToggleSelectInfo(player.id);
+		ImGui::PopStyleVar();
 		ImGui::PopStyleColor();
 		ImGui::PopID();
 	}
@@ -1297,6 +1341,15 @@ void PlayerTable::SetupVerticalTable() {
 	ImGui::SetWindowFontScale(_globalFontScale);
 
 	ImGui::EndTable();
+}
+
+// A Selectable pads its highlight by half the item spacing above and below,
+// regardless of the table; spacing of twice the cell padding makes it cover
+// exactly one row. Row height itself does not include the spacing.
+void PlayerTable::PushRowSelectable() {
+
+	const ImGuiStyle& style = ImGui::GetStyle();
+	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(style.ItemSpacing.x, style.CellPadding.y * 2.0f));
 }
 
 void PlayerTable::DrawBar(float window_Width, float percent, ImU32 color) {

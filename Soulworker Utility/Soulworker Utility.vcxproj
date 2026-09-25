@@ -385,11 +385,13 @@
   </ImportGroup>
   <!-- The i18n files were previously copied to the output folder by hand, so a
        newly added STR_ key resolved at runtime to the raw key name. Deploy them
-       with the build instead. -->
+       with the build instead. SWDB.db had the same problem: the exe kept reading
+       a stale copy and showed raw ids for maps and skills the repo already names. -->
   <Target Name="CopyLangFiles" AfterTargets="Build">
     <ItemGroup>
       <LangFiles Include="Lang\*.json" />
     </ItemGroup>
     <Copy SourceFiles="@(LangFiles)" DestinationFolder="$(OutDir)Lang" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="SWDB.db" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
   </Target>
 </Project>

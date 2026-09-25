@@ -108,15 +108,6 @@ unsigned short SWDamageMonster::GetCritHitCount() {
 	return _critHitCount;
 }
 
-uint64_t SWDamageMonster::GetSkillTotalDamage() {
-	uint64_t skillTotalDamage = 0;
-
-	for (auto itr = _skillinfo.begin(); itr != _skillinfo.end(); itr++)
-		skillTotalDamage += (*itr)->GetDamage();
-
-	return skillTotalDamage;
-}
-
 const char* SWDamageMonster::GetName() {
 	return _name;
 }

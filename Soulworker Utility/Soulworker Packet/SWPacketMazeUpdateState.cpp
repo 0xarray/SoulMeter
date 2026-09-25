@@ -5,7 +5,6 @@
 #include ".\Damage Meter\MapList.h"
 
 SWPacketMazeUpdateState::SWPacketMazeUpdateState(SWHEADER* swheader, BYTE* data) : SWPacket(swheader, data) {
-
 }
 
 void SWPacketMazeUpdateState::Do() {
@@ -40,13 +39,4 @@ void SWPacketMazeUpdateState::Do() {
 		DAMAGEMETER.Suspend();
 		break;
 	}
-}
-
-void SWPacketMazeUpdateState::Log() {
-
-}
-
-void SWPacketMazeUpdateState::Debug() {
-	/*SWPacketMazeUpdateStatePacket* packet = (SWPacketMazeUpdateStatePacket*)(_data + sizeof(SWHEADER));
-	LogInstance.WriteLog("[SWPacketMazeUpdateState] stateID = %d, state = %d", packet->_stateID, packet->_state);*/
 }

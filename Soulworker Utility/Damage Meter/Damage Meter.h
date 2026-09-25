@@ -8,7 +8,6 @@
 #include ".\UI\Option.h"
 #include <unordered_map>
 #include ".\Third Party\FlatBuffers\include\SW_HISTORY_.h"
-#include "SimpleIni.h"
 using namespace SoulMeterFBS::History;
 
 #define MAX_NAME_LEN 64
@@ -31,11 +30,6 @@ using namespace SoulMeterFBS::History;
 //  forward declaration
 // https://stackoverflow.com/questions/41502310/c-inclusion-of-typedef-struct-from-inside-a-class
 // https://en.cppreference.com/w/cpp/language/class#Forward_declaration
-
-typedef struct _SW_OWNER_ID_STRUCT {
-	uint32_t _id;
-	uint32_t _owner_id;
-}SW_OWNER_ID_STRUCT;
 
 typedef struct _SW_DB2_STRUCT {
 	uint32_t _id;
@@ -163,7 +157,6 @@ public:
 	double _fullASPrevTime = 0;
 	double _fullASTime = 0;
 
-
 	_SW_PLAYER_METADATA() {
 		_id = 0;
 		_job = 0;
@@ -256,7 +249,6 @@ public:
 			break;
 
 		default:
-			//LogInstance.WriteLog("[DEBUG] [statType = %x], [statValue = %f]\n", statType, statValue);
 			break;
 		}
 	}
@@ -272,7 +264,6 @@ public:
 			}
 			break;
 		default:
-			//LogInstance.WriteLog("[DEBUG] [statType = %x], [statValue = %f]\n", statType, statValue);
 			break;
 		}
 	}
@@ -523,15 +514,15 @@ public:
 }SW_PLAYER_METADATA;
 private:
 	std::vector<SWDamagePlayer*> _playerInfo;
-	std::vector<SW_OWNER_ID_STRUCT*> _ownerInfo;
+	std::unordered_map<uint32_t, uint32_t> _ownerInfo; // summon id -> owner id
 	std::vector<SW_DB2_STRUCT*> _dbInfo;
+	std::unordered_map<uint32_t, SW_DB2_STRUCT*> _dbIndex; // id -> entry in _dbInfo
 	std::unordered_map<uint32_t, SW_PLAYER_METADATA*> _playerMetadata;
 
 	std::vector<SWDamagePlayer*> _historyPlayerInfo;
 	std::vector<SW_DB2_STRUCT*> _historyDbInfo;
 	std::unordered_map<uint32_t, SW_PLAYER_METADATA*> _historyPlayerMetadata;
 
-	std::vector<std::string> _extInfo;
 	std::unordered_map<uint32_t, uint64_t> _playerUseAwaken;
 
 	char _mapName[MAX_MAP_LEN];
@@ -571,7 +562,6 @@ public:
 	uint32_t _ping = 0;
 	uint32_t _historyPing = 0;
 	ImFontObj selectedFont;
-	CSimpleIniA ini;
 	SWDamageMeter() :   _myID(0), _worldID(0), _mazeEnd(0), _historyMode(0), _historyWorldID(0), _historyTime(0) {}
 	~SWDamageMeter();
 
@@ -592,6 +582,7 @@ public:
 	uint32_t GetOwnerID(uint32_t id);
 
 	void InsertDB(uint32_t id, uint32_t db2);
+	void AddDB(SW_DB2_STRUCT* db);
 	SW_DB2_STRUCT* GetMonsterDB(uint32_t id);
 
 	void SetWorldID(unsigned short worldID);
@@ -636,8 +627,6 @@ public:
 	void LogBossSkill(uint32_t id, SW_DB2_STRUCT* db, uint32_t skillId);
 	void Start();
 	void Clear();
-	void Toggle();
-	uint64_t GetStartTime();
 	uint32_t GetPing();
 	void SetPing(uint32_t ping);
 	uint64_t GetTime();
@@ -672,11 +661,6 @@ public:
 	LPVOID GetHistoryHI()
 	{
 		return _historyHI;
-	}
-
-	void AddExtInfo(std::string str)
-	{
-		_extInfo.push_back(str);
 	}
 
 	void SetRealClearTime(uint32_t t)

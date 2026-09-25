@@ -52,7 +52,6 @@ size_t g_entryCount = 0;
 bool g_dirty = false;
 char g_cachePath[MAX_PATH] = { 0 };
 
-
 // MSVC std::string: buffer/pointer at 0, size at 0x10, capacity at 0x18. The
 // game reads it the same way (capacity < 16 means the small-buffer form).
 const char* StdStr(void* s) {

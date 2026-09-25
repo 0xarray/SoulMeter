@@ -14,7 +14,6 @@
 #include <chrono>
 #include <thread>
 
-
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, unsigned int msg, WPARAM wParam, LPARAM lParam);
 
 namespace {
@@ -90,9 +89,6 @@ bool UiWindow::Init(unsigned int x, unsigned int y, unsigned int width, unsigned
 		SendMessage(_hWnd, WM_SETICON, ICON_BIG, (LPARAM)hIconBig);
 	if (hIconSmall)
 		SendMessage(_hWnd, WM_SETICON, ICON_SMALL, (LPARAM)hIconSmall);
-//	SetLayeredWindowAttributes(_hWnd, 0, 180, LWA_ALPHA);
-//	SetLayeredWindowAttributes(_hWnd, 0, RGB(0, 0, 0), LWA_COLORKEY);
-
 
 	_x = x; _y = y; _width = width, _height = height, _prevTimePoint = std::chrono::system_clock::now();
 
@@ -132,7 +128,6 @@ bool UiWindow::InitImGUI() {
 	if (!IMGUI_CHECKVERSION())
 		return FALSE;
 	
-
 	_imGuiContext = ImGui::CreateContext();
 	ImPlot::CreateContext();
 	
@@ -149,13 +144,10 @@ bool UiWindow::InitImGUI() {
 	{
 		style.WindowRounding = 0.0f;
 		style.Colors[ImGuiCol_WindowBg].w = 1.0f;
-	//	style.Alpha = 0.5f;
-	//	ImGui::SetNextWindowBgAlpha(0.5f);
 	}
 
 	style.WindowMinSize = ImVec2(20, 20);
 
-	
 	if (!ImGui_ImplWin32_Init(_hWnd))
 		return FALSE;
 	
@@ -233,7 +225,6 @@ void UiWindow::Update() {
 	UpdateMainTable();
 
 #ifdef _DEBUG
-	//ImGui::ShowMetricsWindow();
 #endif
 
 	ImGui::EndFrame();

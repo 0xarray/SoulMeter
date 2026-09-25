@@ -31,7 +31,6 @@ public:
 	const char* GetName() { return _name; }
 	const int& GetKeyCount() { return _hotkeyCount; }
 	const int* GetKey() { return _key; }
-	const int* GetDefaultKey() { return _defaultKey; }
 
 	void SetKey(const int key1, const int key2, const int key3);
 	void SetDefaultKey(const int key1, const int key2, const int key3);

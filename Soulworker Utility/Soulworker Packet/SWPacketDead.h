@@ -21,6 +21,4 @@ public:
 	~SWPacketDead() {}
 
 	void Do();
-	void Debug();
-	void Log();
 };

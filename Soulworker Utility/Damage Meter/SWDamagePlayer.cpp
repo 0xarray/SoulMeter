@@ -37,7 +37,6 @@ void SWDamagePlayer::InsertMonsterInfo(uint32_t monsterID, uint64_t damage, uint
 	auto itr = _monsterInfo.begin();
 
 	SW_DB2_STRUCT* db = DAMAGEMETER.GetMonsterDB(monsterID);
-	//LogInstance.WriteLog("[Monster] [MonsterID = %d] [DB2 = %d]"), monsterID, db->_db2);
 
 	uint32_t db2 = 0;
 
@@ -61,7 +60,6 @@ void SWDamagePlayer::Sort() {
 
 void SWDamagePlayer::AddDamage(uint64_t totalDMG, uint64_t soulstoneDMG, SWPACKETDAMAGE_DAMAGETYPE damageType, unsigned short maxCombo, uint32_t monsterID, uint32_t skillID)
 {
-	//LogInstance.WriteLog("[PLAYER] [DamageType = %d]", damageType.CRIT);
 
 	if (DAMAGEMETER.isHistoryMode())
 		return;
@@ -150,16 +148,6 @@ unsigned short SWDamagePlayer::GetMaxCombo() {
 	return _maxCombo;
 }
 
-uint64_t SWDamagePlayer::GetMonsterTotalDamage() {
-
-	uint64_t monsterTotalDamage = 0;
-
-	for (auto itr = _monsterInfo.begin(); itr != _monsterInfo.end(); itr++)
-		monsterTotalDamage += (*itr)->GetDamage();
-
-	return monsterTotalDamage;
-}
-
 unsigned short SWDamagePlayer::GetHitCountForCritRate()
 {
 	return _hitCountForCritRate;
@@ -233,19 +221,9 @@ double SWDamagePlayer::GetHistoryABTime()
 	return _historyABTime;
 }
 
-double SWDamagePlayer::GetHistoryABTimeU()
-{
-	return _historyABTimeU;
-}
-
 void SWDamagePlayer::SetHistoryABTime(double historyABTime)
 {
 	_historyABTime = historyABTime;
-}
-
-void SWDamagePlayer::SetHistoryABTimeU(double historyABTime)
-{
-	_historyABTimeU = historyABTime;
 }
 
 void SWDamagePlayer::SetHistoryAvgAB(double historyAvgAB)
@@ -306,11 +284,6 @@ void SWDamagePlayer::SetHistoryAvgAS(double d)
 double SWDamagePlayer::GetHistoryAvgAS()
 {
 	return _historyAvgAS;
-}
-
-float SWDamagePlayer::GetEnlightenSum()
-{
-	return _enlightenSum;
 }
 
 unsigned short SWDamagePlayer::GetGigaEnlighten()
@@ -460,7 +433,6 @@ void SWDamagePlayer::SetJqStack(BYTE stack)
 BYTE SWDamagePlayer::GetJqStack() {
 	return _JqStack;
 }
-
 
 std::vector<SWDamageMonster*>::const_iterator SWDamagePlayer::begin() {
 	return _monsterInfo.begin();

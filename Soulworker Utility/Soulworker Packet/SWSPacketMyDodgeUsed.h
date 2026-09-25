@@ -30,9 +30,6 @@ static std::unordered_set<uint32_t> normalDodgeList({
 
 class SWSPacketMyDodgeUsed : public SWPacket {
 protected:
-	SWHEADER* _swheader;
-	BYTE* _data;
-
 	SWSPacketMyDodgeUsed() {}
 	SWSPacketMyDodgeUsed(SWPacket& other) {}
 
@@ -40,7 +37,5 @@ public:
 	SWSPacketMyDodgeUsed(SWHEADER* swheader, BYTE* data);
 	virtual ~SWSPacketMyDodgeUsed() {}
 
-	virtual VOID Debug();
-	virtual VOID Log();
 	virtual VOID Do();
 };

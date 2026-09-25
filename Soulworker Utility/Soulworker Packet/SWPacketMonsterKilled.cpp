@@ -30,14 +30,3 @@ void SWPacketMonsterKilled::Do() {
 		}
 	}
 }
-
-void SWPacketMonsterKilled::Log() {
-
-}
-
-void SWPacketMonsterKilled::Debug() {
-
-	/*SWPACKETMONSTERKILLED* killed = (SWPACKETMONSTERKILLED*)(_data + sizeof(SWHEADER));
-	LogInstance.WriteLog("[SWPacketMonsterKilled] KillId = %u", killed->_killedId);*/
-
-}

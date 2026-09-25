@@ -17,6 +17,4 @@ public:
 	~SWPacketCooldown() {}
 
 	void Do();
-	void Log();
-	void Debug();
 };

@@ -2,8 +2,7 @@
 
 #include ".\Damage Meter\MySQLite.h"
 
-MySQL::MySQL() : _db(nullptr), _memdb(nullptr) {
-
+MySQL::MySQL() {
 }
 
 MySQL::~MySQL() {
@@ -23,41 +22,15 @@ bool MySQL::InitDB() {
 	return TRUE;
 }
 
-bool MySQL::InitMemDB() {
-
-	if (sqlite3_open(":memory:", &_memdb) != SQLITE_OK) {
-		LogInstance.WriteLog("Error in InitMemDB : %s", sqlite3_errmsg(_memdb));
-		sqlite3_close(_memdb);
-		_memdb = nullptr;
-
-		return FALSE;
-	}
-
-	return TRUE;
-}
-
 void MySQL::FreeDB() {
-
-	if (_db != nullptr) {
-		sqlite3_close(_db);
-		_db = nullptr;
+	// statements must be finalized before the connection, or sqlite3_close fails with SQLITE_BUSY
+	for (sqlite3_stmt** stmt : { &_skill_stmt, &_monster_stmt, &_map_stmt, &_buff_stmt }) {
+		sqlite3_finalize(*stmt);
+		*stmt = nullptr;
 	}
 
-	if (_memdb != nullptr) {
-		sqlite3_close(_memdb);
-		_memdb = nullptr;
-	}
-
-	if (_skill_stmt != nullptr) {
-		sqlite3_finalize(_skill_stmt);
-		_skill_stmt = nullptr;
-	}
-
-	if (_monster_stmt != nullptr) {
-		sqlite3_finalize(_monster_stmt);
-		_monster_stmt = nullptr;
-	}
-
+	sqlite3_close(_db);
+	_db = nullptr;
 }
 
 bool MySQL::InitSkillDB() {
@@ -127,12 +100,7 @@ bool MySQL::InitMapDB() {
 
 		return FALSE;
 	}
-	std::string sql3 = "SELECT Name_EN From Map Where Id = ?";
-	if (sqlite3_prepare_v2(_db, sql3.c_str(), -1, &_map_stmt_eng, 0) != SQLITE_OK) {
-		LogInstance.WriteLog("Error in sqlite3_prepare_v2 MAP2 : %s", sqlite3_errmsg(_db));
 
-		return false;
-	}
 	return TRUE;
 }
 
@@ -159,17 +127,10 @@ bool MySQL::InitBuffDB() {
 	return TRUE;
 }
 
-bool MySQL::InitSkillTimelineDB() {
-
-	return TRUE;
-}
-
-bool MySQL::InitBuffTimelineDB() {
-
-	return TRUE;
-}
-
 bool MySQL::Init() {
+
+	// re-run on language change: drop the previous connection and statements first
+	FreeDB();
 
 	bool success = TRUE;
 
@@ -194,22 +155,7 @@ bool MySQL::Init() {
 			break;
 		}
 
-		if (!InitMemDB()) {
-			success = FALSE;
-			break;
-		}
-
 		if (!InitBuffDB()) {
-			success = FALSE;
-			break;
-		}
-
-		if (!InitSkillTimelineDB()) {
-			success = FALSE;
-			break;
-		}
-
-		if (!InitBuffTimelineDB()) {
 			success = FALSE;
 			break;
 		}
@@ -357,50 +303,4 @@ bool MySQL::GetBuffName(uint32_t buffId, char* out_buffer, size_t out_buffer_len
 	}
 
 	return TRUE;
-}
-bool MySQL::GetMapNameENG(uint32_t mapID, char* out_buffer, size_t out_buffer_length) {
-
-	if (out_buffer == nullptr || _map_stmt_eng == nullptr)
-		return false;
-
-	if (mapID == 0) {
-		strcpy_s(out_buffer, out_buffer_length, "No info");
-		return true;
-	}
-	sprintf_s(out_buffer, out_buffer_length, "%u", mapID);
-
-	sqlite3_reset(_map_stmt_eng);
-
-	sqlite3_bind_int(_map_stmt_eng, 1, mapID);
-
-	int step;
-	do {
-		step = sqlite3_step(_map_stmt_eng);
-	} while (step == SQLITE_BUSY || step == SQLITE_LOCKED);
-	if (step == SQLITE_ROW) {
-		const char* result = (const char*)sqlite3_column_text(_map_stmt_eng, 0);
-
-		if (result == nullptr)
-		{
-			strncpy(out_buffer, "FailToGetName", out_buffer_length - 2);
-			out_buffer[out_buffer_length - 1] = 0x00;
-			return false;
-		}
-		if (strcmp(result, "UNKNOWN") == 0)
-		{
-			return false;
-		}
-		if (strlen(result) > out_buffer_length)
-		{
-			strncpy(out_buffer, result, out_buffer_length - 2);
-			out_buffer[out_buffer_length - 1] = 0x00;
-			return false;
-		}
-		strcpy_s(out_buffer, out_buffer_length, result);
-	}
-	else
-	{
-		return false;
-	}
-	return true;
 }

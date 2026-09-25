@@ -20,6 +20,4 @@ public:
 	~SWPacketAkasic() {}
 
 	void Do();
-	void Log();
-	void Debug();
 };

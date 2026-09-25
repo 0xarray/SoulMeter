@@ -27,6 +27,4 @@ public:
 	~SWPacketcharacterUpdateSpecialOptionList() {}
 
 	void Do();
-	void Log();
-	void Debug();
 };

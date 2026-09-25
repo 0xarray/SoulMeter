@@ -22,10 +22,9 @@ protected:
 	SWPacket(SWPacket& other) {}
 
 public:
-	SWPacket(SWHEADER* swheader, uint8_t* data);
+	SWPacket(SWHEADER* swheader, uint8_t* data) : _swheader(swheader), _data(data) {}
 	virtual ~SWPacket() {}
 
-	virtual void Debug();
-	virtual void Log();
-	virtual void Do();
+	virtual void Debug() {}
+	virtual void Do() {}
 };

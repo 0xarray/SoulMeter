@@ -4,7 +4,6 @@
 #include ".\Damage Meter\Damage Meter.h"
 
 SWPacketBigParty::SWPacketBigParty(SWHEADER* swheader, BYTE* data) : SWPacket(swheader, data) {
-
 }
 
 void SWPacketBigParty::Do() {
@@ -23,7 +22,6 @@ void SWPacketBigParty::Do() {
 
 		char utf8[MAX_NAME_LEN] = { 0 };
 		if (!UTF16toUTF8(utf16, utf8, MAX_NAME_LEN)) {
-			//LogInstance.WriteLog("Error in SWPacketBigParty : UTF16toUTF8 FAILED");
 			return;
 		}
 
@@ -31,12 +29,4 @@ void SWPacketBigParty::Do() {
 
 		p_data += sizeof(SWPACKETBIGPARTY_DATA) + pos_data->_nickSize + SWPACKETBIGPARTY_DUMMY;
 	}
-}
-
-void SWPacketBigParty::Log() {
-
-}
-
-void SWPacketBigParty::Debug() {
-
 }

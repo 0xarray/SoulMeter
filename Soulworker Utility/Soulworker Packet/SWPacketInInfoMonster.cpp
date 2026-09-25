@@ -42,28 +42,3 @@ void SWPacketInInfoMonster::Do() {
 	}
 }
 
-void SWPacketInInfoMonster::Log() {
-
-}
-
-
-void SWPacketInInfoMonster::Debug() {
-
-	/*BYTE counts = *(_data + sizeof(SWHEADER));
-	short offset = sizeof(SWHEADER) + sizeof(counts);
-	for (BYTE i = 0; i < counts; i++) {
-
-		SWPACKET_IN_INFO_MONSTER1* pktHeader = (SWPACKET_IN_INFO_MONSTER1*)(_data + offset);
-		offset += sizeof(SWPACKET_IN_INFO_MONSTER1);
-		if (pktHeader->data1Count > 0)
-			offset += (pktHeader->data1Count * sizeof(SWPACKET_IN_INFO_MONSTER_DATA1));
-
-		SWPACKET_IN_INFO_MONSTER2* pktFooter = (SWPACKET_IN_INFO_MONSTER2*)(_data + offset);
-		offset += sizeof(SWPACKET_IN_INFO_MONSTER2);
-		if (pktFooter->data2Count > 0)
-			offset += (pktFooter->data2Count * sizeof(SWPACKET_IN_INFO_MONSTER_DATA2));
-
-		LogInstance.WriteLog("[SWPacketInInfoMonster] MonsterID: %u, DB2: %u, data1: %d, data2: %d", pktHeader->id, pktHeader->realDB2, pktHeader->data1Count, pktFooter->data2Count);
-	}
-	*/
-}

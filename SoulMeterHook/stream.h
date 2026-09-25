@@ -12,15 +12,13 @@
 
 // Header size the meter parses. Wire headers wider than this (KR 2.4.28.5) are
 // normalised down to it before a frame is pushed.
-#ifndef SMH_HEADER_SIZE
 #define SMH_HEADER_SIZE 6
-#endif
 
 #define SMH_MAX_RECORD (65535 + 4)
 
 class ByteQueue {
 public:
-    explicit ByteQueue(size_t capacity = 8 * 1024 * 1024)
+    explicit ByteQueue(size_t capacity)
         : _cap(capacity), _buf(new uint8_t[capacity]) {
         InitializeCriticalSection(&_cs);
     }
@@ -39,8 +37,6 @@ public:
                                      (uint8_t)((len >> 16) & 0xFF), (uint8_t)((len >> 24) & 0xFF) };
             WriteRaw(hdr, 4);
             WriteRaw(data, len);
-        } else {
-            _dropped++;
         }
         LeaveCriticalSection(&_cs);
         return ok;
@@ -54,8 +50,7 @@ public:
             uint32_t len = ReadU32AtTail();
             if (len > 0 && (size_t)len + 4 <= used && len + 4 <= maxLen) {
                 total = len + 4;
-                for (uint32_t i = 0; i < total; i++)
-                    out[i] = _buf[(_tail + i) % _cap];
+                ReadRaw(out, total);
                 _tail = (_tail + total) % _cap;
             }
         }
@@ -70,32 +65,33 @@ public:
         return n;
     }
 
-    uint64_t Dropped() {
-        EnterCriticalSection(&_cs);
-        uint64_t d = _dropped;
-        LeaveCriticalSection(&_cs);
-        return d;
-    }
-
 private:
     size_t Used() const { return (_head + _cap - _tail) % _cap; }
 
     void WriteRaw(const uint8_t* data, size_t len) {
-        for (size_t i = 0; i < len; i++)
-            _buf[(_head + i) % _cap] = data[i];
+        size_t first = len < _cap - _head ? len : _cap - _head;
+        memcpy(_buf + _head, data, first);
+        memcpy(_buf, data + first, len - first);
         _head = (_head + len) % _cap;
     }
 
+    // From the tail, without consuming.
+    void ReadRaw(uint8_t* out, size_t len) const {
+        size_t first = len < _cap - _tail ? len : _cap - _tail;
+        memcpy(out, _buf + _tail, first);
+        memcpy(out + first, _buf, len - first);
+    }
+
     uint32_t ReadU32AtTail() const {
-        return (uint32_t)_buf[_tail % _cap] | ((uint32_t)_buf[(_tail + 1) % _cap] << 8) |
-               ((uint32_t)_buf[(_tail + 2) % _cap] << 16) |
-               ((uint32_t)_buf[(_tail + 3) % _cap] << 24);
+        uint8_t b[4];
+        ReadRaw(b, 4);
+        return (uint32_t)b[0] | ((uint32_t)b[1] << 8) | ((uint32_t)b[2] << 16) |
+               ((uint32_t)b[3] << 24);
     }
 
     size_t _cap;
     uint8_t* _buf;
     size_t _head = 0;
     size_t _tail = 0;
-    uint64_t _dropped = 0;
     CRITICAL_SECTION _cs;
 };

@@ -21,8 +21,5 @@ extern ByteQueue g_frameQueue;
 
 bool HookInstall();
 void HookUninstall();
-bool HooksAreLive();
 
-extern volatile LONG g_pingMs;
-extern volatile LONG64 g_lastPingAt;
 void BuildPingFrame(uint8_t* out, size_t* outLen);

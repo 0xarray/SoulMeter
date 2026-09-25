@@ -240,20 +240,11 @@
     <ClInclude Include="Soulworker Packet\SWPacketInInfoMonster.h">
       <Filter>SWPacket\Packet\0x04 World</Filter>
     </ClInclude>
-    <ClInclude Include="Soulworker Packet\SWPacketChat.h">
-      <Filter>SWPacket\Packet\0x07</Filter>
-    </ClInclude>
     <ClInclude Include="resource.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="Soulworker Packet\SWPacketCooldown.h">
       <Filter>SWPacket\Packet\0x06 Combat</Filter>
-    </ClInclude>
-    <ClInclude Include="Soulworker Packet\SWPacketUseSkill.h">
-      <Filter>SWPacket\Packet\0x06 Combat</Filter>
-    </ClInclude>
-    <ClInclude Include="Soulworker Packet\SWPacketStartMove.h">
-      <Filter>SWPacket\Packet\0x05</Filter>
     </ClInclude>
     <ClInclude Include="Soulworker Packet\SWPacketOtherUseSkill.h">
       <Filter>SWPacket\Packet\0x06 Combat</Filter>
@@ -269,18 +260,6 @@
     </ClInclude>
     <ClInclude Include="Third Party\imgui\implot_internal.h">
       <Filter>UI\ImGui</Filter>
-    </ClInclude>
-    <ClInclude Include="Soulworker Packet\SWPacketSpawnedCharInfo.h">
-      <Filter>SWPacket\Packet\0x04 World</Filter>
-    </ClInclude>
-    <ClInclude Include="Soulworker Packet\SWPacketHeartbeat.h">
-      <Filter>SWPacket\Packet\0x01</Filter>
-    </ClInclude>
-    <ClInclude Include="Soulworker Packet\SWPacketGestureUsed.h">
-      <Filter>SWPacket\Packet\0x23</Filter>
-    </ClInclude>
-    <ClInclude Include="Soulworker Packet\SWPacketPartyListInfo.h">
-      <Filter>SWPacket\Packet\0x12 Party</Filter>
     </ClInclude>
     <ClInclude Include="UI\MinimapTab.h">
       <Filter>UI\Window</Filter>
@@ -354,15 +333,6 @@
     <ClInclude Include="Soulworker Packet\SWPacketBrooch.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="stb_image.h">
-      <Filter>UI\DirectX11</Filter>
-    </ClInclude>
-    <ClInclude Include="SimpleIni.h">
-      <Filter>Utiliry\헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="Soulworker Packet\SWCPacket.h">
-      <Filter>SWPacket</Filter>
-    </ClInclude>
     <ClInclude Include="Soulworker Packet\SWCPing.h">
       <Filter>SWPacket</Filter>
     </ClInclude>
@@ -427,9 +397,6 @@
     </ClCompile>
     <ClCompile Include="Damage Meter\SWDamageSkill.cpp">
       <Filter>Damge Meter\SWDamageType</Filter>
-    </ClCompile>
-    <ClCompile Include="Soulworker Packet\SWPacket.cpp">
-      <Filter>SWPacket\Packet</Filter>
     </ClCompile>
     <ClCompile Include="UI\DX11.cpp">
       <Filter>UI\DirectX11</Filter>
@@ -512,17 +479,8 @@
     <ClCompile Include="Soulworker Packet\SWPacketInInfoMonster.cpp">
       <Filter>SWPacket\Packet\0x04 World</Filter>
     </ClCompile>
-    <ClCompile Include="Soulworker Packet\SWPacketChat.cpp">
-      <Filter>SWPacket\Packet\0x07</Filter>
-    </ClCompile>
     <ClCompile Include="Soulworker Packet\SWPacketCooldown.cpp">
       <Filter>SWPacket\Packet\0x06 Combat</Filter>
-    </ClCompile>
-    <ClCompile Include="Soulworker Packet\SWPacketUseSkill.cpp">
-      <Filter>SWPacket\Packet\0x06 Combat</Filter>
-    </ClCompile>
-    <ClCompile Include="Soulworker Packet\SWPacketStartMove.cpp">
-      <Filter>SWPacket\Packet\0x05</Filter>
     </ClCompile>
     <ClCompile Include="Soulworker Packet\SWPacketOtherUseSkill.cpp">
       <Filter>SWPacket\Packet\0x06 Combat</Filter>
@@ -538,18 +496,6 @@
     </ClCompile>
     <ClCompile Include="Third Party\imgui\implot_items.cpp">
       <Filter>UI\ImGui</Filter>
-    </ClCompile>
-    <ClCompile Include="Soulworker Packet\SWPacketSpawnedCharInfo.cpp">
-      <Filter>SWPacket\Packet\0x04 World</Filter>
-    </ClCompile>
-    <ClCompile Include="Soulworker Packet\SWPacketHeartbeat.cpp">
-      <Filter>SWPacket\Packet\0x01</Filter>
-    </ClCompile>
-    <ClCompile Include="Soulworker Packet\SWPacketGestureUsed.cpp">
-      <Filter>SWPacket\Packet\0x23</Filter>
-    </ClCompile>
-    <ClCompile Include="Soulworker Packet\SWPacketPartyListInfo.cpp">
-      <Filter>SWPacket\Packet\0x12 Party</Filter>
     </ClCompile>
     <ClCompile Include="UI\MinimapTab.cpp">
       <Filter>UI\Window</Filter>
@@ -610,9 +556,6 @@
     </ClCompile>
     <ClCompile Include="Soulworker Packet\SWPacketBrooch.cpp">
       <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="Soulworker Packet\SWCPacket.cpp">
-      <Filter>SWPacket</Filter>
     </ClCompile>
     <ClCompile Include="Soulworker Packet\SWCPing.cpp">
       <Filter>SWPacket</Filter>

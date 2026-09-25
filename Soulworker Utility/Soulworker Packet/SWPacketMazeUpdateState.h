@@ -20,6 +20,4 @@ public:
 	~SWPacketMazeUpdateState() {}
 
 	void Do();
-	void Log();
-	void Debug();
 };

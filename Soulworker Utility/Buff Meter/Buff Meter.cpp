@@ -62,7 +62,6 @@ std::vector<Buff*>::const_iterator _PLAYERBUFF::end() {
 }
 
 BuffMeter::BuffMeter() {
-
 }
 
 BuffMeter::~BuffMeter() {
@@ -72,8 +71,6 @@ BuffMeter::~BuffMeter() {
 }
 
 void BuffMeter::Clear() {
-	//for (auto itr = _playerBuffInfo.begin(); itr != _playerBuffInfo.end(); itr++)
-	//	delete* itr;
 
 	_historyMode = false;
 	_playerBuffInfo.clear();

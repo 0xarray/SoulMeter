@@ -19,6 +19,4 @@ public:
 	~SWPacketBuffOut() {}
 
 	void Do();
-	void Log();
-	void Debug();
 };

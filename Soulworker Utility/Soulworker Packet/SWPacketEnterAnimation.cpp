@@ -34,10 +34,3 @@ void SWPacketEnterAnimation::Do() {
 		break;
 	}
 }
-
-void SWPacketEnterAnimation::Log() {
-
-}
-
-void SWPacketEnterAnimation::Debug() {
-}

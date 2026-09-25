@@ -18,6 +18,4 @@ public:
 	~SWPacketMonsterKilled() {}
 
 	void Do();
-	void Debug();
-	void Log();
 };

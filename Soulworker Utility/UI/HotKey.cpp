@@ -299,13 +299,6 @@ void HotKey::Init() {
 }
 
 void HotKey::InsertHotkeyToogle(int key1, int key2, int key3) {
-
-//	HOTKEYCALLBACK callback = bind(&SWDamageMeter::Toggle, &DAMAGEMETER);
-
-//	AutoHotKey* hotkey = new AutoHotKey(key1, key2, key3, "Toogle", 1, &callback);
-//	hotkey->SetDefaultKey(DIK_LCONTROL, DIK_END, -1);
-//	_hotkeys.push_back(hotkey);
-
 }
 
 void HotKey::InsertHotkeyStop(int key1, int key2, int key3) {

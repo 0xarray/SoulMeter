@@ -14,9 +14,6 @@ typedef struct _SWPACKET_PRESENCE {
 #pragma pack(pop)
 class SWCPresence : public SWPacket {
 protected:
-	SWHEADER* _swheader;
-	BYTE* _data;
-
 	SWCPresence() {}
 	SWCPresence(SWPacket& other) {}
 
@@ -24,7 +21,5 @@ public:
 	SWCPresence(SWHEADER* swheader, BYTE* data);
 	virtual ~SWCPresence() {}
 
-	virtual VOID Debug();
-	virtual VOID Log();
 	virtual VOID Do();
 };

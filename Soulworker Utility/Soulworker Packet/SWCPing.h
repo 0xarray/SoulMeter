@@ -12,9 +12,6 @@ typedef struct _SWPACKET_PING {
 #pragma pack(pop)
 class SWCPing : public SWPacket {
 protected:
-	SWHEADER* _swheader;
-	BYTE* _data;
-
 	SWCPing() {}
 	SWCPing(SWPacket& other) {}
 
@@ -22,7 +19,5 @@ public:
 	SWCPing(SWHEADER* swheader, BYTE* data);
 	virtual ~SWCPing() {}
 
-	virtual VOID Debug();
-	virtual VOID Log();
 	virtual VOID Do();
 };

@@ -100,7 +100,6 @@ public:
 	unsigned short GetHitCount();
 	unsigned short GetCritHitCount();
 	unsigned short GetMaxCombo();
-	uint64_t GetMonsterTotalDamage();
 	unsigned short GetHitCountForCritRate();
 	unsigned short GetCritHitCountForCritRate();
 	unsigned short GetMissCount();
@@ -112,7 +111,6 @@ public:
 	unsigned short GetGetHitBS();
 	unsigned short GetGetHitMissed();
 	unsigned short GetGetHitMissedReal();
-	float GetEnlightenSum();
 	unsigned short GetGigaEnlighten();
 	unsigned short GetTeraEnlighten();
 	unsigned short GetBroochProc(BroochProc type);
@@ -121,9 +119,7 @@ public:
 	unsigned short GetDeathCount();
 
 	double GetHistoryABTime();
-	double GetHistoryABTimeU();
 	void SetHistoryABTime(double historyABTime);
-	void SetHistoryABTimeU(double historyABTime);
 
 	void SetHistoryAvgAB(double historyAvgAB);
 	void SetHistoryAvgABU(double historyAvgAB);

@@ -16,6 +16,4 @@ public:
 	~SWPacketSquad() {}
 
 	void Do();
-	void Log();
-	void Debug();
 };

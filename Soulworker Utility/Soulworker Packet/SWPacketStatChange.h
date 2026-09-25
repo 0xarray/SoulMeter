@@ -29,5 +29,4 @@ public:
 
 	void Do();
 	void Debug();
-	void Log();
 };

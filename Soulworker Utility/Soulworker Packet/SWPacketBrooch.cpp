@@ -25,11 +25,3 @@ void SWPacketBrooches::Do() {
 		break;
 	}
 }
-
-void SWPacketBrooches::Log() {
-
-}
-
-void SWPacketBrooches::Debug() {
-
-}

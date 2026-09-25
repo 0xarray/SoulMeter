@@ -4,7 +4,6 @@
 #include ".\Soulworker Packet\SWPacketParty.h"
 
 SWPacketParty::SWPacketParty(SWHEADER* swheader, BYTE* data) : SWPacket(swheader, data) {
-
 }
 
 void SWPacketParty::Do() {
@@ -23,7 +22,6 @@ void SWPacketParty::Do() {
 
 		char utf8[MAX_NAME_LEN] = {0};
 		if (!UTF16toUTF8(utf16, utf8, MAX_NAME_LEN)) {
-			//LogInstance.WriteLog("Error in SWPacketParty : UTF16toUTF8 FAILED");
 			return;
 		}
 
@@ -31,10 +29,6 @@ void SWPacketParty::Do() {
 
 		p_data += sizeof(SWPACKETPARTY_DATA) + party_data->_nickSize + SWPACKETPARTY_DUMMY;
 	}
-}
-
-void SWPacketParty::Log() {
-
 }
 
 void SWPacketParty::Debug() {

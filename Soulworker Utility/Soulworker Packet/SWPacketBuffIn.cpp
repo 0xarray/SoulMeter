@@ -6,7 +6,6 @@
 #include ".\Combat Meter\CombatMeter.h"
 
 SWPacketBuffIn::SWPacketBuffIn(SWHEADER* swheader, BYTE* data) : SWPacket(swheader, data) {
-
 }
 
 void SWPacketBuffIn::Do() {
@@ -31,25 +30,7 @@ void SWPacketBuffIn::Do() {
 			}
 		}
 
-		//Log::MyLog("[DEBUG] [BUFF IN] [PLAYER ID = %08x] [BUFF ID = %d] [BUFF STACK = %d] [DURATION = %f] [GIVER ID = %08x] [Unknown = %u]\n", buff->_playerID, buff->_buffID, buff->_stack, buff->_duration, buff->_giverID, buff->_unknown01);
 	}
 	BUFFMETER.FreeLock();
 
-
-}
-
-void SWPacketBuffIn::Log() {
-
-}
-
-void SWPacketBuffIn::Debug() {
-
-	SWPACKETBUFFIN* buff = (SWPACKETBUFFIN*)(_data + sizeof(SWHEADER));
-
-	//Log::MyLog("buff info\n");
-	//for (int i = sizeof(SWHEADER); i < _swheader->_size; i++)
-	//	Log::MyLog("%02x ", _data[i]);
-	//Log::MyLog("\n");
-
-	//Log::MyLog("[DEBUG] [BUFF IN] [PLAYER ID = %08x] [BUFF ID = %d] [BUFF STACK = %d] [DURATION = %f] [GIVER ID = %08x] [Unknown = %u]\n", buff->_playerID, buff->_buffID, buff->_stack, buff->_duration, buff->_giverID, buff->_unknown01);
 }

@@ -152,7 +152,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>false</ConformanceMode>
       <AdditionalIncludeDirectories>..\Soulworker Utility\Third Party\openssl\include;..\Soulworker Utility;..\Soulworker Utility\Third Party;..\Soulworker Utility\Third Party\imgui;..\Soulworker Utility\Third Party\FlatBuffers;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -198,10 +198,8 @@
     <ClInclude Include="Language\Language.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="resource.h" />
-    <ClInclude Include="SimpleIni.h" />
     <ClInclude Include="Soulworker Packet\PacketInfo.h" />
     <ClInclude Include="Soulworker Packet\PacketType.h" />
-    <ClInclude Include="Soulworker Packet\SWCPacket.h" />
     <ClInclude Include="Soulworker Packet\SWCPing.h" />
     <ClInclude Include="Soulworker Packet\SWCPresence.h" />
     <ClInclude Include="Soulworker Packet\SWPacket.h" />
@@ -212,13 +210,10 @@
     <ClInclude Include="Soulworker Packet\SWPacketBuffIn.h" />
     <ClInclude Include="Soulworker Packet\SWPacketBuffOut.h" />
     <ClInclude Include="Soulworker Packet\SWPacketCharacterUpdateSpecialOptionList.h" />
-    <ClInclude Include="Soulworker Packet\SWPacketChat.h" />
     <ClInclude Include="Soulworker Packet\SWPacketCooldown.h" />
     <ClInclude Include="Soulworker Packet\SWPacketDamage.h" />
     <ClInclude Include="Soulworker Packet\SWPacketDead.h" />
     <ClInclude Include="Soulworker Packet\SWPacketEnterAnimation.h" />
-    <ClInclude Include="Soulworker Packet\SWPacketGestureUsed.h" />
-    <ClInclude Include="Soulworker Packet\SWPacketHeartbeat.h" />
     <ClInclude Include="Soulworker Packet\SWPacketMaker.h" />
     <ClInclude Include="Soulworker Packet\SWPacketMazeEnd.h" />
     <ClInclude Include="Soulworker Packet\SWPacketMazeStart.h" />
@@ -229,19 +224,14 @@
     <ClInclude Include="Soulworker Packet\SWPacketOtherInfosMonster.h" />
     <ClInclude Include="Soulworker Packet\SWPacketOtherUseSkill.h" />
     <ClInclude Include="Soulworker Packet\SWPacketParty.h" />
-    <ClInclude Include="Soulworker Packet\SWPacketPartyListInfo.h" />
-    <ClInclude Include="Soulworker Packet\SWPacketSpawnedCharInfo.h" />
     <ClInclude Include="Soulworker Packet\SWPacketSquad.h" />
-    <ClInclude Include="Soulworker Packet\SWPacketStartMove.h" />
     <ClInclude Include="Soulworker Packet\SWPacketStatChange.h" />
-    <ClInclude Include="Soulworker Packet\SWPacketUseSkill.h" />
     <ClInclude Include="Soulworker Packet\SWPacketWorldChange.h" />
     <ClInclude Include="Soulworker Packet\SWSPacketMyDodgeUsed.h" />
     <ClInclude Include="Soulworker Packet\SWSPacketMySkillUsed.h" />
     <ClInclude Include="Soulworker Packet\HookCommand.h" />
     <ClInclude Include="Soulworker Packet\Injector.h" />
     <ClInclude Include="Soulworker Packet\PipeReceiver.h" />
-    <ClInclude Include="stb_image.h" />
     <ClInclude Include="SWConfig.h" />
     <ClInclude Include="Third Party\imgui\backends\imgui_impl_dx11.h" />
     <ClInclude Include="Third Party\imgui\backends\imgui_impl_win32.h" />
@@ -289,10 +279,8 @@
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="Soulworker Packet\SWCPacket.cpp" />
     <ClCompile Include="Soulworker Packet\SWCPing.cpp" />
     <ClCompile Include="Soulworker Packet\SWCPresence.cpp" />
-    <ClCompile Include="Soulworker Packet\SWPacket.cpp" />
     <ClCompile Include="Soulworker Packet\SWPacketAggroChanged.cpp" />
     <ClCompile Include="Soulworker Packet\SWPacketAkasic.cpp" />
     <ClCompile Include="Soulworker Packet\SWPacketBigParty.cpp" />
@@ -300,13 +288,10 @@
     <ClCompile Include="Soulworker Packet\SWPacketBuffIn.cpp" />
     <ClCompile Include="Soulworker Packet\SWPacketBuffOut.cpp" />
     <ClCompile Include="Soulworker Packet\SWPacketCharacterUpdateSpecialOptionList.cpp" />
-    <ClCompile Include="Soulworker Packet\SWPacketChat.cpp" />
     <ClCompile Include="Soulworker Packet\SWPacketCooldown.cpp" />
     <ClCompile Include="Soulworker Packet\SWPacketDamage.cpp" />
     <ClCompile Include="Soulworker Packet\SWPacketDead.cpp" />
     <ClCompile Include="Soulworker Packet\SWPacketEnterAnimation.cpp" />
-    <ClCompile Include="Soulworker Packet\SWPacketGestureUsed.cpp" />
-    <ClCompile Include="Soulworker Packet\SWPacketHeartbeat.cpp" />
     <ClCompile Include="Soulworker Packet\SWPacketSquad.cpp" />
     <ClCompile Include="Soulworker Packet\SWPacketMaker.cpp" />
     <ClCompile Include="Soulworker Packet\SWPacketMazeEnd.cpp" />
@@ -318,11 +303,7 @@
     <ClCompile Include="Soulworker Packet\SWPacketOtherInfosMonster.cpp" />
     <ClCompile Include="Soulworker Packet\SWPacketOtherUseSkill.cpp" />
     <ClCompile Include="Soulworker Packet\SWPacketParty.cpp" />
-    <ClCompile Include="Soulworker Packet\SWPacketPartyListInfo.cpp" />
-    <ClCompile Include="Soulworker Packet\SWPacketSpawnedCharInfo.cpp" />
-    <ClCompile Include="Soulworker Packet\SWPacketStartMove.cpp" />
     <ClCompile Include="Soulworker Packet\SWPacketStatChange.cpp" />
-    <ClCompile Include="Soulworker Packet\SWPacketUseSkill.cpp" />
     <ClCompile Include="Soulworker Packet\SWPacketWorldChange.cpp" />
     <ClCompile Include="Soulworker Packet\SWSPacketMyDodgeUsed.cpp" />
     <ClCompile Include="Soulworker Packet\SWSPacketMySkillUsed.cpp" />

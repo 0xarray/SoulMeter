@@ -2,10 +2,10 @@
 
 #include <cstdint>
 
-// The two game-side tweaks the meter can drive: the frame-rate cap and a camera
-// FOV scale. Each resolves its own target and refuses to act when the target is
-// missing, so a patch-day change turns the tweak off rather than corrupting
-// something else.
+// The two game-side tweaks the meter can drive: the frame-rate cap and the
+// camera zoom-out limit. Each resolves its own target and refuses to act when
+// the target is missing, so a patch-day change turns the tweak off rather than
+// corrupting something else.
 
 // Safe to call repeatedly; resolves and hooks at most once.
 void GameTweakInstall();

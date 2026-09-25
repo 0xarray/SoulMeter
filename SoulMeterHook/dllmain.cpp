@@ -109,8 +109,7 @@ DWORD WINAPI WriterThread(LPVOID) {
             uint8_t pingFrame[13];
             size_t pingLen = 0;
             BuildPingFrame(pingFrame, &pingLen);
-            if (g_frameQueue.PushFrame(pingFrame, (uint32_t)pingLen))
-                InterlockedExchange64(&g_lastPingAt, now);
+            g_frameQueue.PushFrame(pingFrame, (uint32_t)pingLen);
         }
 
         if (g_frameQueue.Available() == 0) {
@@ -181,15 +180,10 @@ void ReleaseCmdMeter(ULONG pid) {
     LeaveCriticalSection(&g_cmdCs);
 }
 
-struct CmdLink {
-    HANDLE h;
-    ULONG pid;
-};
-
 // One reader per meter: the read blocks, so a hotkey pressed in one meter must
 // not sit behind another meter's idle channel.
 DWORD WINAPI CommandReaderThread(LPVOID param) {
-    CmdLink* link = (CmdLink*)param;
+    MeterLink* link = (MeterLink*)param;
 
     for (;;) {
         uint32_t len = 0;
@@ -233,7 +227,7 @@ DWORD WINAPI CommandThread(LPVOID) {
             continue;
         }
 
-        CmdLink* link = new CmdLink{ h, pid };
+        MeterLink* link = new MeterLink{ h, pid };
         HANDLE reader = CreateThread(nullptr, 0, CommandReaderThread, link, 0, nullptr);
         if (reader) {
             CloseHandle(reader);
@@ -266,7 +260,7 @@ DWORD WINAPI SetupThread(LPVOID) {
     // image patches need.
     LoadOptApply();
 
-    // Resolves the frame-cap float and hooks the renderer's SetFOV. Both stay
+    // Resolves the frame-cap float and hooks the camera zoom clamp. Both stay
     // inert until a meter asks for them.
     GameTweakInstall();
 

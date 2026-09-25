@@ -32,9 +32,9 @@ auto Language::GetLangFile(char* langFile, bool outputERROR)
 	return j;
 }
 
-std::unordered_map<std::string, std::string> Language::MapLangData(char* langFile, bool useReplace)
+LangMap Language::MapLangData(char* langFile, bool useReplace)
 {
-	std::unordered_map<std::string, std::string> list;
+	LangMap list;
 
 	// get json data
 	auto langData = GetLangFile(langFile);
@@ -67,7 +67,7 @@ DWORD Language::SetCurrentLang(char* langFile)
 	DWORD error = ERROR_SUCCESS;
 	LogInstance.WriteLog("[Language::SetCurrentLang] %s", langFile);
 	do {
-		std::unordered_map<std::string, std::string> newLang;
+		LangMap newLang;
 
 		// get json data
 		try {
@@ -87,7 +87,7 @@ DWORD Language::SetCurrentLang(char* langFile)
 		// set current lang
 		strcpy_s(_currentLang, langFile);
 
-		_textList = newLang;
+		_textList = std::move(newLang);
 
 		_notFoundText.clear();
 
@@ -96,22 +96,23 @@ DWORD Language::SetCurrentLang(char* langFile)
 	return error;
 }
 
-const std::string_view Language::GetText(const char* text, std::unordered_map<std::string, std::string>* vector) // this code is fucking awful but I dont care enough to refactor
+const std::string_view Language::GetText(const char* text, LangMap* vector)
 {
 	if (vector == nullptr)
 		vector = &_textList;
 
-	if (vector->find(text) == vector->end()) {
-		std::string_view findStr(text);
-		if (std::find(_notFoundText.begin(), _notFoundText.end(), findStr) == _notFoundText.end())
+	std::string_view key(text);
+	auto itr = vector->find(key);
+	if (itr == vector->end()) {
+		if (std::find(_notFoundText.begin(), _notFoundText.end(), key) == _notFoundText.end())
 		{
 			LogInstance.WriteLog("[Language::GetText] Lang text %s not found.", text);
-			_notFoundText.emplace_back(findStr);
+			_notFoundText.emplace_back(key);
 		}
-		return text;
+		return key;
 	}
 
-	return vector->at(text);
+	return itr->second;
 }
 
 std::unordered_map<std::string, std::string> Language::GetAllLangFile()

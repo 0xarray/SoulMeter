@@ -74,8 +74,6 @@ void UtillWindow::RefreshHistoryList()
 					SWDB.GetMapName(hi->_worldID, mapName, MAX_MAP_LEN);
 
 					char extInfo[256] = { 0 };
-					//if (hi->_historyData->_extInfo.length() > 0)
-					//	sprintf_s(extInfo, "(%s)", hi->_historyData->_extInfo.c_str());
 #ifdef _DEBUG
 					sprintf_s(extInfo, "(M:%u)", hi->_worldID);
 #endif

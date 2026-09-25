@@ -6,9 +6,7 @@
 #include ".\UI\UiWindow.h"
 #include ".\Damage Meter\MySQLite.h"
 
-
 SpecificInformation::SpecificInformation(uint32_t playerID) : _playerID(playerID), _monsterID_SKILL(0), _monsterFilter(MonsterFilter::Single), _customWindowOpen(false), _comboPreview(), _skillTotalsDamage(0), _globalFontScale(0), _columnFontScale(0), _tableFontScale(0), _tableTime(0), _accumulatedTime(0) {
-
 }
 
 SpecificInformation::~SpecificInformation() {
@@ -16,7 +14,6 @@ SpecificInformation::~SpecificInformation() {
 }
 
 void SpecificInformation::Clear() {
-
 }
 
 void SpecificInformation::SetPlayerID(uint32_t playerID) {
@@ -408,7 +405,6 @@ void SpecificInformation::UpdateSkillTable() {
 		ImGui::TableSetupColumn(LANGMANAGER.GetText("STR_TABLE_TOTAL_HIT").data(), ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_DefaultHide, -1);
 		ImGui::TableSetupColumn(LANGMANAGER.GetText("STR_TABLE_CRIT_RATE").data(), ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_DefaultHide, -1);
 		ImGui::TableSetupColumn(LANGMANAGER.GetText("STR_TABLE_HIT_PER_SECOND").data(), ImGuiTableColumnFlags_WidthFixed, -1);
-	// ImGui::TableSetupColumn(STR_TABLE_SKILL_PER_SECOND, ImGuiTableColumnFlags_WidthFixed, -1);
 		ImGui::TableHeadersRow();
 
 		uint64_t max_Damage = _skillTotals.front()._damage;

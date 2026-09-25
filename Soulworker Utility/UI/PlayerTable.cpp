@@ -120,7 +120,6 @@ static std::string ExpandTitle(const char* fmt, const std::vector<std::pair<cons
 
 PlayerTable::PlayerTable() : _tableResize(0), _globalFontScale(0), _columnFontScale(0), _tableFontScale(0), _curWindowSize(0), _tableTime(0), _accumulatedTime(0), _nextWindowIndex(0)
 {
-
 }
 
 PlayerTable::~PlayerTable() {
@@ -622,7 +621,6 @@ void PlayerTable::UpdateTable(float windowWidth) {
 			ImGui::TableNextColumn();
 		}
 
-
 		// DPS
 		if (_tableTime < 1) {
 			Cell("-");
@@ -653,7 +651,6 @@ void PlayerTable::UpdateTable(float windowWidth) {
 			PLOTWINDOW.AddData((*itr)->GetID(), DAMAGEMETER.GetPlayerName((*itr)->GetID()), dps, _tableTime, isFirstElement);
 		}
 		
-
 		NextCell();
 
 		// D%
@@ -742,7 +739,6 @@ void PlayerTable::UpdateTable(float windowWidth) {
 
 		NextCell();
 
-
 		// MAXC
 		sprintf_s(label, 128, "%d", (*itr)->GetMaxCombo());
 		TextCommma(label, comma);
@@ -814,7 +810,6 @@ void PlayerTable::UpdateTable(float windowWidth) {
 					strcat_s(comma, 128, LANGMANAGER.GetText("STR_DISPLAY_UNIT_1K").data());
 				else if (!strcmp(LANGMANAGER.GetText("STR_DISPLAY_DEFAULT_UNIT").data(), "10K"))
 					strcat_s(comma, 128, LANGMANAGER.GetText("STR_DISPLAY_UNIT_10K").data());
-				// strcat_s(comma, 128, LANGMANAGER.GetText("STR_DISPLAY_UNIT_1M"));
 			}
 			else if (UIOPTION.is10K())
 				strcat_s(comma, 128, LANGMANAGER.GetText("STR_DISPLAY_UNIT_10K").data());
@@ -857,8 +852,6 @@ void PlayerTable::UpdateTable(float windowWidth) {
 			Cell(label);
 			NextCell();
 		}
-
-
 
 		// Soulstone all percent
 		double soulstoneAllPercent;
@@ -1025,7 +1018,6 @@ void PlayerTable::UpdateTable(float windowWidth) {
 
 		NextCell();
 
-
 		// Evade A
 		if ((*itr)->GetGetHitAll() == 0) {
 			sprintf_s(label, 128, "-");
@@ -1045,7 +1037,6 @@ void PlayerTable::UpdateTable(float windowWidth) {
 		}
 		Cell(label);
 		NextCell();
-
 
 		// Enlighten
 		if (DAMAGEMETER.GetPlayerName((*itr)->GetID()) != LANGMANAGER.GetText("STR_TABLE_YOU").data() || _tableTime == 0) {
@@ -1099,7 +1090,6 @@ void PlayerTable::UpdateTable(float windowWidth) {
 				losedHP /= 1000;
 			else if (!strcmp(LANGMANAGER.GetText("STR_DISPLAY_DEFAULT_UNIT").data(), "10K"))
 				losedHP /= 10000;
-			// losedHP /= 1000000;
 		}
 		else if (UIOPTION.is10K())
 			losedHP /= 10000;
@@ -1114,7 +1104,6 @@ void PlayerTable::UpdateTable(float windowWidth) {
 				strcat_s(comma, 128, LANGMANAGER.GetText("STR_DISPLAY_UNIT_1K").data());
 			else if (!strcmp(LANGMANAGER.GetText("STR_DISPLAY_DEFAULT_UNIT").data(), "10K"))
 				strcat_s(comma, 128, LANGMANAGER.GetText("STR_DISPLAY_UNIT_10K").data());
-			// strcat_s(comma, 128, LANGMANAGER.GetText("STR_DISPLAY_UNIT_1M"));
 		}
 		else if (UIOPTION.is10K())
 			strcat_s(comma, 128, LANGMANAGER.GetText("STR_DISPLAY_UNIT_10K").data());

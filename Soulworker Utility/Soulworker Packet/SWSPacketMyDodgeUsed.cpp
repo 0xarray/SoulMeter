@@ -2,9 +2,7 @@
 #include ".\Soulworker Packet\SWSPacketMyDodgeUsed.h"
 #include ".\Damage Meter\Damage Meter.h"
 
-SWSPacketMyDodgeUsed::SWSPacketMyDodgeUsed(SWHEADER* swheader, BYTE* data) {
-	_swheader = swheader;
-	_data = data;
+SWSPacketMyDodgeUsed::SWSPacketMyDodgeUsed(SWHEADER* swheader, BYTE* data) : SWPacket(swheader, data) {
 }
 
 VOID SWSPacketMyDodgeUsed::Do() {
@@ -17,13 +15,5 @@ VOID SWSPacketMyDodgeUsed::Do() {
 
 	DAMAGEMETER.AddDodgeUsed(dodgeUsed->_playerId);
 
-	return;
-}
-
-VOID SWSPacketMyDodgeUsed::Log() {
-	return;
-}
-
-VOID SWSPacketMyDodgeUsed::Debug() {
 	return;
 }

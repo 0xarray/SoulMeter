@@ -80,7 +80,6 @@ public:
 
 	bool isKeyDown(unsigned int i);
 	bool isKeyRelease(unsigned int i);
-	bool isKeyPressed(unsigned int i);
 	bool isKeyIdle(unsigned int i);
 
 	unsigned int GetStateSize();

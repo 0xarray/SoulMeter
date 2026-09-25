@@ -33,7 +33,6 @@ UiOption::UiOption()  :
 
 UiOption::~UiOption() 
 {
-	
 }
 
 // Looks (colors, fonts, bars, opacity) live in the Theme tab.
@@ -248,7 +247,6 @@ void UiOption::Helper() {
 			DAMAGEMETER.InsertPlayerMetadata(id, name, helper % 11);
 		}
 
-		//DAMAGEMETER.InsertPlayerMetadata(id, name, helper % 10);
 		DAMAGEMETER.AddDamage(id, helper * 10000, helper * 5000, 4, helper * 2, i % 4, skill[i % 4]);
 		DAMAGEMETER.AddDamage(id, helper * 20000, helper * 5000, 4, helper * 3, (i + 1) % 4, skill[(i + 1) % 4]);
 		DAMAGEMETER.AddDamage(id, helper * 30000, helper * 5000, 4, helper * 4, (i + 2) % 4, skill[(i + 2) % 4]);
@@ -311,8 +309,6 @@ void UiOption::ChangeLang()
 	}
 	DAMAGEMETER.FreeLock();
 }
-
-
 
 void UiOption::ShowTeamTALFSelector()
 {
@@ -471,7 +467,6 @@ void UiOption::OpenOption() {
 				ImGui::EndTabItem();
 			}
 
-
 			sprintf_s(label, "%s###TabHotKey", LANGMANAGER.GetText("STR_OPTION_TAB_HOTKEY_SETTING").data());
 			if (ImGui::BeginTabItem(label)) {
 				ShowHotkeySetting();
@@ -551,7 +546,6 @@ bool UiOption::GetOption() {
 	if (attr != nullptr)
 		attr->QueryIntValue(&_is1K);
 
-
 #if DEBUG_READ_XML == 1
 	LogInstance.WriteLog("Read 1K = %d", _is1K);
 #endif
@@ -560,8 +554,6 @@ bool UiOption::GetOption() {
 
 	if (attr != nullptr)
 		attr->QueryIntValue(&_is1M);
-
-	
 
 	attr = ele->FindAttribute("Man");
 
@@ -635,9 +627,6 @@ bool UiOption::GetOption() {
 		attr->QueryIntValue(&_oriIsUseSaveData);
 	}
 	
-
-	
-
 	// A font that has since been removed would leave the atlas empty, so
 	// SelectFont only takes names it finds in the Font folder.
 	const char* savedFont = ele->Attribute("UseFontFile");
@@ -683,12 +672,10 @@ bool UiOption::GetOption() {
 	if (attr != nullptr)
 		attr->QueryfloatValue(&theme.windowBorderSize);
 
-
 	attr = ele->FindAttribute("WindowWidth");
 
 	if (attr != nullptr)
 		attr->QueryfloatValue(&_windowWidth);
-
 
 #if DEBUG_READ_XML == 1
 	LogInstance.WriteLog("Read WindowWidth = %f", _windowWidth);
@@ -855,7 +842,6 @@ bool UiOption::SaveOption(bool skipWarning) {
 
 	option->SetAttribute("UseLangFile",_selectedLang);
 
-
 	option->SetAttribute("UseFontFile", theme.fontFile);
 
 	option->SetAttribute("IsDontSaveUnfinishedMaze", _isDontSaveUnfinishedMaze);
@@ -928,8 +914,6 @@ bool UiOption::SetBasicOption() {
 	return TRUE;
 }
 
-
-
 bool UiOption::ToggleTopMost() {
 
 	_isTopMost = _isTopMost ? false : true;
@@ -939,14 +923,6 @@ bool UiOption::ToggleTopMost() {
 
 const ImU32 UiOption::GetJobColor(unsigned int index) {
 	return THEME.GetJobColor(index);
-}
-
-const ImU32 UiOption::GetOutlineColor() {
-	return ImGui::ColorConvertFloat4ToU32(THEME.Current().outlineColor);
-}
-
-const float& UiOption::GetFontScale() {
-	return THEME.Current().fontScale;
 }
 
 const float& UiOption::GetColumnFontScale() {
@@ -1015,8 +991,6 @@ bool UiOption::isUseSaveData()
 	return _isUseSaveData;
 }
 
-
-
 bool UiOption::isDontSaveUnfinishedMaze()
 {
 	return _isDontSaveUnfinishedMaze;
@@ -1060,10 +1034,6 @@ void UiOption::SetFramerate(float i) {
 	_framerate = i;
 }
 
-const ImVec4& UiOption::GetWindowBGColor() {
-	return THEME.Current().colors[ImGuiCol_WindowBg];
-}
-
 const float& UiOption::GetWindowWidth() {
 	return _windowWidth;
 }
@@ -1076,8 +1046,6 @@ const float& UiOption::GetRefreshTime() {
 	return _refreshTime;
 }
 
-
-
 bool UiOption::WantsHighDpi() {
 
 	tinyxml2::XMLDocument doc;
@@ -1087,8 +1055,4 @@ bool UiOption::WantsHighDpi() {
 	tinyxml2::XMLElement* root = doc.FirstChildElement("SDM");
 	tinyxml2::XMLElement* option = root ? root->FirstChildElement("Option") : nullptr;
 	return option != nullptr && option->IntAttribute("HighDpi", 0) != 0;
-}
-
-const char* UiOption::GetFontFile() {
-	return THEME.Current().fontFile;
 }

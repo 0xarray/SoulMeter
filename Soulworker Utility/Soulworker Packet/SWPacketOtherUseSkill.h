@@ -29,6 +29,4 @@ public:
 	~SWPacketOtherUseSkill() {}
 
 	void Do();
-	void Debug();
-	void Log();
 };

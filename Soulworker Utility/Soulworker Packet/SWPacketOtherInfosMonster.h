@@ -17,6 +17,4 @@ public:
 	~SWPacketOtherInfosMonster() {}
 
 	void Do();
-	void Log();
-	void Debug();
 };

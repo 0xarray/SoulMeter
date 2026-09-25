@@ -5,7 +5,6 @@
 #include ".\Combat Meter\CombatMeter.h"
 
 SWPacketBuffOut::SWPacketBuffOut(SWHEADER* swheader, BYTE* data) : SWPacket(swheader, data) {
-
 }
 
 void SWPacketBuffOut::Do() {
@@ -24,17 +23,6 @@ void SWPacketBuffOut::Do() {
 			COMBATMETER.Insert(buff->_playerID, CombatType::PLAYER, pCombatLog);
 		}
 			
-		//LogInstance.WriteLog("[DEBUG] [BUFF OUT] [PLAYER ID = %08x] [BUFF ID = %d]", buff->_playerID, buff->_buffID);
 	}
 	BUFFMETER.FreeLock();
-}
-
-void SWPacketBuffOut::Log() {
-
-}
-
-void SWPacketBuffOut::Debug() {
-	SWPACKETBUFFOUT* buff = (SWPACKETBUFFOUT*)(_data + sizeof(SWHEADER));
-
-	//LogInstance.WriteLog("[DEBUG] [BUFF OUT] [PLAYER ID = %08x] [BUFF ID = %d]", buff->_playerID, buff->_buffID);
 }

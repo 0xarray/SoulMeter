@@ -16,11 +16,3 @@ void SWPacketDead::Do() {
 		DAMAGEMETER.AddDeath(playerId);
 	}
 }
-
-void SWPacketDead::Log() {
-
-}
-
-void SWPacketDead::Debug() {
-
-}

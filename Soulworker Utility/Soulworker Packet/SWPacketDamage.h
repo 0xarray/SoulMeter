@@ -40,6 +40,4 @@ public:
 	~SWPacketDamage() {}
 
 	void Do();
-	void Debug();
-	void Log() {};
 };

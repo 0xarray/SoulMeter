@@ -30,6 +30,4 @@ public:
 	~SWPacketBigParty() {}
 
 	void Do();
-	void Log();
-	void Debug();
 };

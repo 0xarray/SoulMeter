@@ -24,6 +24,4 @@ public:
 	~SWPacketWorldChange() {}
 
 	void Do();
-	void Log();
-	void Debug();
 };

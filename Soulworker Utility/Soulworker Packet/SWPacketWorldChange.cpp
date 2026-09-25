@@ -4,7 +4,6 @@
 #include ".\Soulworker Packet\SWPacketWorldChange.h"
 
 SWPacketWorldChange::SWPacketWorldChange(SWHEADER* swheader, BYTE* data) : SWPacket(swheader, data) {
-
 }
 
 void SWPacketWorldChange::Do() {
@@ -17,14 +16,4 @@ void SWPacketWorldChange::Do() {
 	DAMAGEMETER.SetWorldID(world_change->_worldID);
 
 	DAMAGEMETER.SetMazeState(FALSE);
-}
-
-void SWPacketWorldChange::Log() {
-
-}
-
-void SWPacketWorldChange::Debug() {
-	SWPACKETWORLDCHANGE* world_change = (SWPACKETWORLDCHANGE*)(_data + sizeof(SWHEADER));
-
-	//LogInstance.WriteLog(const_cast<char*>("[DEBUG] [World Change = %04x] [MyID = %08x]"), world_change->_worldID, world_change->_id);
 }

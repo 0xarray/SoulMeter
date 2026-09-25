@@ -22,6 +22,4 @@ public:
 	~SWPacketMazeEnd() {}
 
 	void Do();
-	void Log();
-	void Debug();
 };

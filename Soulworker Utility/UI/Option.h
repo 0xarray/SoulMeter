@@ -6,7 +6,6 @@
 #define UIOPTION UiOption::getInstance()
 
 #define OPTION_FILE_NAME "option.xml"
-#define NETWORK_NAME_LEN 256
 
 #ifdef _DEBUG
 #define DEBUG_READ_XML 0
@@ -74,13 +73,10 @@ public:
 	void Init();
 
 	const ImU32 GetJobColor(unsigned int index);
-	const ImU32 GetOutlineColor();
-	const float& GetFontScale();
 	const float& GetColumnFontScale();
 	const float& GetTableFontScale();
 	const ImVec4& GetActiveColor();
 	const ImVec4& GetInActiveColor();
-	const ImVec4& GetWindowBGColor();
 	bool is1K();
 	bool is1M();
 	bool is10K();
@@ -92,7 +88,6 @@ public:
 	const int32_t& TeamTALFMode();
 	bool isSoloRankMode();
 	bool isUseSaveData();
-	const char* GetFontFile();
 	bool isDontSaveUnfinishedMaze();
 
 	// Read straight from option.xml: DPI awareness has to be set before the

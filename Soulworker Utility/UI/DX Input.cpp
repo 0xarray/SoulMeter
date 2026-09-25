@@ -89,14 +89,6 @@ bool DXInput::isKeyRelease(unsigned int i) {
 		return FALSE;
 }
 
-bool DXInput::isKeyPressed(unsigned int i) {
-
-	if (i >= 0 && i < GetStateSize())
-		return _inputInfo[i].isPress();
-	else
-		return FALSE;
-}
-
 bool DXInput::isKeyIdle(unsigned int i) {
 	if (i >= 0 && i < GetStateSize())
 		return _inputInfo[i].isIdle();

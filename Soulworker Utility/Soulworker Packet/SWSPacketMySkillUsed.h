@@ -20,9 +20,6 @@ typedef struct _SWPACKET_MYSKILLUSED {
 
 class SWSPacketMySkillUsed : public SWPacket {
 protected:
-	SWHEADER* _swheader;
-	BYTE* _data;
-
 	SWSPacketMySkillUsed() {}
 	SWSPacketMySkillUsed(SWPacket& other) {}
 
@@ -30,7 +27,5 @@ public:
 	SWSPacketMySkillUsed(SWHEADER* swheader, BYTE* data);
 	virtual ~SWSPacketMySkillUsed() {}
 
-	virtual VOID Debug();
-	virtual VOID Log();
 	virtual VOID Do();
 };

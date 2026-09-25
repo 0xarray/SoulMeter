@@ -84,11 +84,6 @@ public:
 	// Sizes every column to its content once there is data to measure.
 	void FitColumns() { _fitColumns = true; }
 
-	LONG64 _lastSendTimestamp = 0;
-	LONG64 _ping = 0;
-	uint32_t _tick = 0;
-	bool _isNewestVersion = TRUE;
-
 	float GetTableTime()
 	{
 		return _tableTime;

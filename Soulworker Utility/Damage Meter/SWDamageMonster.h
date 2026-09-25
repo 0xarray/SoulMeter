@@ -10,7 +10,6 @@ using namespace SoulMeterFBS::History;
 class SWDamageMonster : public MemoryPool<SWDamageMonster, 100> {
 private:
 	uint32_t _id;
-	//unsigned short _db1;
 	uint32_t _db2;
 	uint64_t _damage;
 	uint64_t _critDamage;
@@ -33,13 +32,11 @@ public:
 
 	uint32_t GetID();
 	int32_t GetType();
-	//unsigned short GetDB1();
 	uint32_t GetDB2();
 	uint64_t GetDamage();
 	uint64_t GetCritDamage();
 	unsigned short GetHitCount();
 	unsigned short GetCritHitCount();
-	uint64_t GetSkillTotalDamage();
 	const char* GetName();
 
 	std::vector<SWDamageSkill*>::const_iterator begin();

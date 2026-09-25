@@ -40,27 +40,3 @@ void SWPacketMonsterStatUpdate::Do() {
 	}
 
 }
-
-void SWPacketMonsterStatUpdate::Log() {
-
-}
-
-void SWPacketMonsterStatUpdate::Debug() {
-
-	/*short offset = sizeof(SWHEADER);
-	SWPacketMonsterStatUpdatePkt* pkt = (SWPacketMonsterStatUpdatePkt*)(_data + offset);
-	offset += sizeof(SWPacketMonsterStatUpdatePkt);
-
-	LogInstance.WriteLog("[SWPacketMonsterStatUpdate] MonsterId = %u, StatCount = %d", pkt->_id, pkt->_statCounts);
-
-	for (BYTE i = 0; i < pkt->_statCounts; i++) {
-
-		SWPacketMonsterStatData* pktStatData = (SWPacketMonsterStatData*)(_data + offset);
-		offset += sizeof(SWPacketMonsterStatData);
-
-		LogInstance.WriteLogNoDate(L"%u : %llu : %.3f\n", pktStatData->_statID, pktStatData->_statVal, pktStatData->_unk01);
-
-	}
-
-	LogInstance.WriteLogNoDate(L"\n");*/
-}

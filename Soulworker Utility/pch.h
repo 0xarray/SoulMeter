@@ -3,10 +3,6 @@
 #ifndef PCH_H
 #define PCH_H
 
-#ifdef _DEBUG
-#define _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING
-#endif
-
 #define WIN32_LEAN_AND_MEAN
 #define DIRECTINPUT_VERSION 0x0800
 
@@ -26,7 +22,6 @@
 #include <tchar.h>
 #include <vector>
 #include <algorithm>
-#include <codecvt>
 #include <filesystem>
 #include <fstream> 
 // IMGUI

@@ -19,10 +19,10 @@
 #include "peutil.h"
 
 ByteQueue g_frameQueue(8 * 1024 * 1024);
-volatile LONG g_pingMs = 0;
-volatile LONG64 g_lastPingAt = 0;
 
 namespace {
+
+volatile LONG g_pingMs = 0;
 
 // Serialise mode dispatcher, matched only to the first branch: 2.4.28.5
 // inserted a `cmp edx, 3` arm ahead of the plaintext one, which is what stopped
@@ -120,16 +120,19 @@ size_t NormaliseHeader(uint8_t* out, const uint8_t* wire, size_t bodyLen, uint8_
     return total;
 }
 
+void QueueFrame(const uint8_t* wire, const uint8_t* body, size_t bodyLen, uint8_t dir) {
+    static thread_local uint8_t frame[kMaxFrame];
+    size_t total = NormaliseHeader(frame, wire, bodyLen, dir);
+    memcpy(frame + SMH_HEADER_SIZE, body, bodyLen);
+    DetectHeartbeat(frame, total, dir);
+    g_frameQueue.PushFrame(frame, (uint32_t)total);
+}
+
 // `len` is the on-wire total, header included.
 void EmitFrame(const uint8_t* src, size_t len, uint8_t dir) {
     if (!src || len < g_layout.headerSize + kMinBody || len > kMaxFrame)
         return;
-    size_t bodyLen = len - g_layout.headerSize;
-    static thread_local uint8_t frame[kMaxFrame];
-    size_t total = NormaliseHeader(frame, src, bodyLen, dir);
-    memcpy(frame + SMH_HEADER_SIZE, src + g_layout.headerSize, bodyLen);
-    DetectHeartbeat(frame, total, dir);
-    g_frameQueue.PushFrame(frame, (uint32_t)total);
+    QueueFrame(src, src + g_layout.headerSize, len - g_layout.headerSize, dir);
 }
 
 char __fastcall HookedDeobf(void* self, uint32_t mode, uint32_t seq, uint8_t* src, uint8_t* dst) {
@@ -154,13 +157,8 @@ char __fastcall HookedSerialize(void* self, uint32_t mode, uint8_t* pkt, uint8_t
             uint16_t bodyLen = *(uint16_t*)(pkt + g_layout.bodyLenOff);
             const uint8_t* body = *(const uint8_t**)(pkt + g_layout.bodyPtrOff);
             size_t total = (size_t)bodyLen + SMH_HEADER_SIZE;
-            if (body && bodyLen >= kMinBody && total <= kMaxFrame) {
-                static thread_local uint8_t frame[kMaxFrame];
-                NormaliseHeader(frame, pkt, bodyLen, 2);
-                memcpy(frame + SMH_HEADER_SIZE, body, bodyLen);
-                DetectHeartbeat(frame, total, 2);
-                g_frameQueue.PushFrame(frame, (uint32_t)total);
-            }
+            if (body && bodyLen >= kMinBody && total <= kMaxFrame)
+                QueueFrame(pkt, body, bodyLen, 2);
         }
     } __except (EXCEPTION_EXECUTE_HANDLER) {
     }
@@ -331,10 +329,8 @@ void BuildPingFrame(uint8_t* out, size_t* outLen) {
     *outLen = 13;
 }
 
-bool HooksAreLive() { return InterlockedCompareExchange(&g_live, 0, 0) != 0; }
-
 bool HookInstall() {
-    if (HooksAreLive())
+    if (InterlockedCompareExchange(&g_live, 0, 0))
         return true;
 
     void* fnSer = nullptr;

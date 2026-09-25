@@ -10,6 +10,4 @@ public:
 	~SWPacketMazeStart() {}
 
 	void Do();
-	void Log();
-	void Debug();
 };

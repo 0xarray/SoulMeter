@@ -41,26 +41,3 @@ void SWPacketcharacterUpdateSpecialOptionList::Do() {
 		COMBATMETER.Insert(listPacket->_playerID, CombatType::PLAYER, pCombatLog);
 	}
 }
-
-void SWPacketcharacterUpdateSpecialOptionList::Log() {
-
-}
-
-void SWPacketcharacterUpdateSpecialOptionList::Debug() {
-
-	/*short offset = sizeof(SWHEADER);
-	SWPacketcharacterUpdateSpecialOptionListHeader* listPacket = (SWPacketcharacterUpdateSpecialOptionListHeader*)(_data + offset);
-	offset += sizeof(SWPacketcharacterUpdateSpecialOptionListHeader);
-
-	if (listPacket->_playerID != DAMAGEMETER.GetMyID())
-		return;
-
-	for (BYTE i = 0; i < listPacket->_listCount; i++)
-	{
-		SWPacketcharacterUpdateSpecialOptionVal* valPacket = (SWPacketcharacterUpdateSpecialOptionVal*)(_data + offset);
-		offset += sizeof(SWPacketcharacterUpdateSpecialOptionVal);
-
-		LogInstance.WriteLog("[SWPacketcharacterUpdateSpecialOptionList] listID = %d, listVal = %.f", valPacket->_listID, valPacket->_listVal);
-
-	}*/
-}

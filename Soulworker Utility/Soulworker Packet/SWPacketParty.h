@@ -30,6 +30,5 @@ public:
 	~SWPacketParty() {}
 
 	void Do();
-	void Log();
 	void Debug();
 };

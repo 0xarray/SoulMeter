@@ -6,7 +6,6 @@
 #include ".\Combat Meter\CombatMeter.h"
 
 SWPacketStatChange::SWPacketStatChange(SWHEADER* swheader, BYTE* data) : SWPacket(swheader, data) {
-
 }
 
 void SWPacketStatChange::Do() {
@@ -36,7 +35,6 @@ void SWPacketStatChange::Do() {
 #endif
 		}
 		else {
-			//Log::MyLog("[DEBUG] [ID %08x] [statType = %x], [statValue = %f]\n", stat_header->_playerID, party_data->_statType, party_data->_statValue);
 			DAMAGEMETER.UpdateStat(stat_header->_playerID, party_data->_statType, party_data->_statValue);
 
 			CombatLog* pCombatLog = new CombatLog;
@@ -48,10 +46,6 @@ void SWPacketStatChange::Do() {
 
 		p_data += sizeof(SWPACKETSTATCHANGE_DATA);
 	}
-}
-
-void SWPacketStatChange::Log() {
-
 }
 
 void SWPacketStatChange::Debug() {
@@ -70,7 +64,6 @@ void SWPacketStatChange::Debug() {
 		SWPACKETSTATCHANGE_DATA* party_data = (SWPACKETSTATCHANGE_DATA*)p_data;
 
 		DAMAGEMETER.UpdateStat(stat_header->_playerID, party_data->_statType, party_data->_statValue);
-		//LogInstance.WriteLog("[DEBUG] [ID %08x] [statType = %x], [statValue = %f]\n", stat_header->_playerID, party_data->_statType, party_data->_statValue);
 		p_data += sizeof(SWPACKETSTATCHANGE_DATA);
 
 	}

@@ -203,6 +203,8 @@
     "STR_OPTION_SELECT_INTERFACE": "Use network interface",
     "STR_OPTION_ALL": "All",
     "STR_OPTION_DONT_SAVE_UNFINISHED_MAZE": "Don't save unfinished maze",
+    "STR_OPTION_LOG_BOSS_SKILLS": "Log boss skills",
+    "STR_OPTION_LOG_BOSS_SKILLS_DESC": "Writes every boss skill cast, with the boss's remaining HP, to BossSkills.log",
     "STR_OPTION_CHECK_UPDATE": "Check for updates",
 
     "STR_CHAR_UNKNOWN": "Unknown",

@@ -203,6 +203,8 @@
   "STR_OPTION_SELECT_INTERFACE": "ネットワークインターフェースを使用",
   "STR_OPTION_ALL": "全て",
   "STR_OPTION_DONT_SAVE_UNFINISHED_MAZE": "未クリアメイズをセーブしない",
+  "STR_OPTION_LOG_BOSS_SKILLS": "ボススキルを記録",
+  "STR_OPTION_LOG_BOSS_SKILLS_DESC": "ボスが使用したスキルと残りHPを BossSkills.log に書き出します",
   "STR_OPTION_CHECK_UPDATE": "アップデートを確認",
 
   "STR_CHAR_UNKNOWN": "不明",

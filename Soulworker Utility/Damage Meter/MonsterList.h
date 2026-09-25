@@ -59,11 +59,17 @@ static std::unordered_set<uint32_t> pauseIdList({
 
 	});
 
-// suspend while the boss is invulnerable (hits land for 0), resume on the first real hit
-static std::unordered_set<uint32_t> godModeIdList({
+// monster skill IDs that start an immune phase: suspend on cast, resume on the first hit that deals damage.
+// for bosses that go immune without spawning anything to track (find the ID with the Log boss skills option, BossSkills.log)
+static std::unordered_set<uint32_t> pauseSkillIdList({
 
 	/* RS */
-	41111144, 41111145, 41111476, 41111477, 41111479, // R.U.G.M. Android
+	411112511, 411112515, // R.U.G.M. Android immune phases (80/60/50/40/30x, 20x)
+
+	/* Ruthless Gold */
+	411111113, 411111133, // Rosca immune phases (70x or 75x, 40x)
+	411111121, // Rosca random immune AoE in the middle, any HP
+	411111122, // Rosca 55x stun
 
 	});
 

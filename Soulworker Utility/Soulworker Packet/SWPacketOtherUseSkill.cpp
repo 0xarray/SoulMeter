@@ -40,6 +40,13 @@ void SWPacketOtherUseSkill::Do() {
 		}
 	}
 
+	if (!isPlayer) {
+		DAMAGEMETER.LogBossSkill(otherSkill->_playerId, DAMAGEMETER.GetMonsterDB(otherSkill->_playerId), otherSkill->_skillId);
+
+		if (pauseSkillIdList.contains(otherSkill->_skillId))
+			DAMAGEMETER.SuspendBossImmune();
+	}
+
 	CombatLog* pCombatLog = new CombatLog;
 	pCombatLog->_type = CombatLogType::USED_SKILL;
 	pCombatLog->_val1 = otherSkill->_skillId;

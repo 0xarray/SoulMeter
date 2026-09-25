@@ -8,6 +8,7 @@
 #include ".\Combat Meter\CombatMeter.h"
 #include ".\UI\UtillWindow.h"
 #include ".\Damage Meter\MapList.h"
+#include <share.h>
 
 SWDamageMeter::~SWDamageMeter() {
 
@@ -37,6 +38,9 @@ SWDamageMeter::~SWDamageMeter() {
 	_historyPlayerMetadata.clear();
 
 	_playerUseAwaken.clear();
+
+	if (_bossSkillLog != nullptr)
+		fclose(_bossSkillLog);
 
 	FreeLock();
 }
@@ -117,12 +121,15 @@ void SWDamageMeter::AddDamage(uint32_t id, uint64_t totalDMG, uint64_t soulstone
 		COMBATMETER.Insert(id, CombatType::PLAYER, pCombatLog);
 	}
 	else {
+		// hits on an immune boss must not resume the clock
+		if (_bossImmune)
+			return;
+
 		// ignore if rank map
 		if (rankMap.find(usWorldID) == rankMap.end())
 		{
 			// suspend by boss is god mode
-			if ((bIsListMap && bIsListBoss) || (db != NULL && db->_type == 4)
-				|| godModeIdList.find(monsterId) != godModeIdList.end())
+			if ((bIsListMap && bIsListBoss) || (db != NULL && db->_type == 4))
 			{
 				DAMAGEMETER.Suspend();
 				return;
@@ -491,6 +498,7 @@ SW_DB2_STRUCT* SWDamageMeter::GetMonsterDB(uint32_t id) {
 
 void SWDamageMeter::SetWorldID(unsigned short worldID) {
 	_worldID = worldID;
+	_monsterRemainHP.clear();
 
 #if DEBUG_DAMAGEMETER_WORLD == 1
 	LogInstance.WriteLog("[DEBUG] [Set World] [World ID = %d]"), _worldID);
@@ -649,12 +657,47 @@ void SWDamageMeter::Suspend() {
 	PLOTWINDOW.End();
 }
 
+void SWDamageMeter::SuspendBossImmune() {
+
+	if (!isRun() || _historyMode)
+		return;
+
+	Suspend();
+	_bossImmune = true;
+}
+
+void SWDamageMeter::SetMonsterRemainHP(uint32_t id, uint64_t hp) {
+	_monsterRemainHP[id] = hp;
+}
+
+void SWDamageMeter::LogBossSkill(uint32_t id, SW_DB2_STRUCT* db, uint32_t skillId) {
+
+	if (!shouldLogBossSkills || db->_type < 3)
+		return;
+
+	// shared, so the log can be read while the meter is running
+	if (_bossSkillLog == nullptr && (_bossSkillLog = _fsopen("BossSkills.log", "a", _SH_DENYNO)) == nullptr)
+		return;
+
+	char name[128] = { 0 };
+	SWDB.GetMonsterName(db->_db2, name, sizeof(name));
+
+	auto hp = _monsterRemainHP.find(id);
+	uint64_t time = _timer.GetTime();
+
+	fprintf(_bossSkillLog, "map %u  %02llu:%02llu.%01llu%s  %s (%u)  skill %u  hp %llu\n",
+		_worldID, time / 60000, (time / 1000) % 60, (time / 100) % 10, isRun() ? "" : " paused",
+		name, db->_db2, skillId, hp != _monsterRemainHP.end() ? hp->second : 0ULL);
+	fflush(_bossSkillLog);
+}
+
 void SWDamageMeter::Start() {
 
 	if (_historyMode) {
 		Restore();
 		_historyMode = FALSE;
 	}
+	_bossImmune = false;
 	_timer.Run();
 	PLOTWINDOW.Start();
 }
@@ -732,6 +775,7 @@ void SWDamageMeter::Clear() {
 		_historyMode = FALSE;
 	}
 	_testMode = FALSE;
+	_bossImmune = false;
 	_timer.Stop();
 }
 

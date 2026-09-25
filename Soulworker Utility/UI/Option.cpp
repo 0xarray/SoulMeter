@@ -373,6 +373,9 @@ void UiOption::ShowFeatures()
 	ImGui::Checkbox(LANGMANAGER.GetText("STR_OPTION_USE_SAVEDATA").data(), (bool*)&_isUseSaveData);
 	ImGui::Checkbox(LANGMANAGER.GetText("STR_OPTION_SOLO_RANK_MODE").data(), (bool*)&_isSoloRankMode);
 	ImGui::Checkbox(LANGMANAGER.GetText("STR_OPTION_DONT_SAVE_UNFINISHED_MAZE").data(), (bool*)&_isDontSaveUnfinishedMaze);
+	ImGui::Checkbox(LANGMANAGER.GetText("STR_OPTION_LOG_BOSS_SKILLS").data(), &DAMAGEMETER.shouldLogBossSkills);
+	if (ImGui::IsItemHovered())
+		ImGui::SetTooltip("%s", LANGMANAGER.GetText("STR_OPTION_LOG_BOSS_SKILLS_DESC").data());
 	ShowTeamTALFSelector();
 }
 
@@ -607,9 +610,9 @@ bool UiOption::GetOption() {
 			LogInstance.Enable();
 	}
 
-	attr = ele->FindAttribute("LogMonsterStats");
+	attr = ele->FindAttribute("LogBossSkills");
 	if (attr != nullptr)
-		attr->QueryboolValue(&DAMAGEMETER.shouldLogMonsterStats);
+		attr->QueryboolValue(&DAMAGEMETER.shouldLogBossSkills);
 
 	attr = ele->FindAttribute("TimerAcc");
 	if (attr != nullptr)
@@ -847,7 +850,7 @@ bool UiOption::SaveOption(bool skipWarning) {
 	option->SetAttribute("RefreshTime", _refreshTime);
 	option->SetAttribute("LogFile", LogInstance.shouldLog);
 	
-	option->SetAttribute("LogMonsterStats", DAMAGEMETER.shouldLogMonsterStats);
+	option->SetAttribute("LogBossSkills", DAMAGEMETER.shouldLogBossSkills);
 	option->SetAttribute("TimerAcc", DAMAGEMETER.mswideness);
 
 	option->SetAttribute("UseLangFile",_selectedLang);

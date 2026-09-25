@@ -548,6 +548,9 @@ private:
 
 	bool _mazeEnd;
 	bool _historyMode;
+	bool _bossImmune = false;
+	std::unordered_map<uint32_t, uint64_t> _monsterRemainHP;
+	FILE* _bossSkillLog = nullptr;
 
 	void InsertPlayerInfo(uint32_t id, uint64_t totalDMG, uint64_t soulstoneDMG, SWPACKETDAMAGE_DAMAGETYPE damageType, unsigned short maxCombo, uint32_t monsterID, uint32_t skillID);
 	void Sort();
@@ -564,7 +567,7 @@ private:
 public:
 	int mswideness = 1;
 	bool shouldRebuildAtlas = false;
-	bool shouldLogMonsterStats = false;
+	bool shouldLogBossSkills = false;
 	uint32_t _ping = 0;
 	uint32_t _historyPing = 0;
 	ImFontObj selectedFont;
@@ -628,6 +631,9 @@ public:
 	bool isRun();
 
 	void Suspend();
+	void SuspendBossImmune();
+	void SetMonsterRemainHP(uint32_t id, uint64_t hp);
+	void LogBossSkill(uint32_t id, SW_DB2_STRUCT* db, uint32_t skillId);
 	void Start();
 	void Clear();
 	void Toggle();

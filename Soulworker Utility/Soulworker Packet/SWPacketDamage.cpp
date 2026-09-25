@@ -78,6 +78,7 @@ void SWPacketDamage::Do() {
 		if (db != nullptr) {
 			db2 = db->_db2;
 
+			DAMAGEMETER.SetMonsterRemainHP(monster->_monsterID, monster->_remainHP);
 			DAMAGEMETER.AddDamage(player->_playerID, monster->_totalDMG, monster->_soulstoneDMG, (SWPACKETDAMAGE_DAMAGETYPE)(monster->_damageType),
 				player->_maxCombo, monster->_monsterID, player->_skillID);
 

@@ -202,6 +202,8 @@
     "STR_OPTION_SELECT_INTERFACE": "사용한 네트워크 인터페이스",
     "STR_OPTION_ALL": "전체",
     "STR_OPTION_DONT_SAVE_UNFINISHED_MAZE": "클리어하지 않은 메이즈 저장 X",
+    "STR_OPTION_LOG_BOSS_SKILLS": "보스 스킬 기록",
+    "STR_OPTION_LOG_BOSS_SKILLS_DESC": "보스가 사용한 스킬과 남은 HP를 BossSkills.log에 기록합니다",
     "STR_OPTION_CHECK_UPDATE": "업데이트 자동 체크",
 
     "STR_CHAR_UNKNOWN": "Unknown",

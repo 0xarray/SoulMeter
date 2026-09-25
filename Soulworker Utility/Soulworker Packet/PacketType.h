@@ -59,6 +59,8 @@ enum RecvOPcode {
 	HEARTBEAT = 0x0106,
 
 	/* 0x03 */
+	// Login enters the first world with this instead of WORLDCHANGE; same body.
+	SELECT_CHARACTER = 0x0314,
 	STATCHANGE = 0x0334,
 	DEAD = 0x0341,
 	CHARACTER_UPDATE_SPECIAL_OPTION_LIST = 0x0347,

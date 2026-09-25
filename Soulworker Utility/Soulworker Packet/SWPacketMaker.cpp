@@ -61,6 +61,7 @@ void SWPacketMaker::CreateSWPacket(std::vector<unsigned char>& packet) {
 		case RecvOPcode::DEAD:					swpacket = new SWPacketDead(swheader, data); break;
 		case RecvOPcode::CHARACTER_UPDATE_SPECIAL_OPTION_LIST:
 			swpacket = new SWPacketcharacterUpdateSpecialOptionList(swheader, data); break;
+		case RecvOPcode::SELECT_CHARACTER:
 		case RecvOPcode::WORLDCHANGE:			swpacket = new SWPacketWorldChange(swheader, data); break;
 		case RecvOPcode::MAZESTART:				swpacket = new SWPacketMazeStart(swheader, data); break;
 		case RecvOPcode::IN_INFO_MONSTER:		swpacket = new SWPacketInInfoMonster(swheader, data); break;

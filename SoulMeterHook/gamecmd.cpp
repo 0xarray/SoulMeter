@@ -212,6 +212,15 @@ void RunCommand(uint8_t op, uint32_t arg) {
         return;
     }
 
+    // The meter reads the keyboard globally; a hotkey pressed while alt-tabbed
+    // out must not reach the game. Compared by window, not pid: GameGuard makes
+    // GetWindowThreadProcessId report 0 for the game window.
+    HWND fg = GetForegroundWindow();
+    if (!fg || GetAncestor(fg, GA_ROOTOWNER) != GetAncestor(g_hwnd, GA_ROOTOWNER)) {
+        Log("command %u ignored: game not focused", op);
+        return;
+    }
+
     void* netMgr = g_netMgr;
     if (!netMgr) {
         Log("command %u ignored: no netMgr seen yet", op);

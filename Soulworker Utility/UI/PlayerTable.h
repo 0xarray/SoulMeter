@@ -72,8 +72,6 @@ private:
 	float _tableTime;
 	float _accumulatedTime;
 
-	int64_t _nextWindowIndex;
-
 public:
 	PlayerTable();
 	~PlayerTable();

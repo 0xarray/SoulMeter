@@ -118,7 +118,7 @@ static std::string ExpandTitle(const char* fmt, const std::vector<std::pair<cons
 	return out;
 }
 
-PlayerTable::PlayerTable() : _tableResize(0), _globalFontScale(0), _columnFontScale(0), _tableFontScale(0), _curWindowSize(0), _tableTime(0), _accumulatedTime(0), _nextWindowIndex(0)
+PlayerTable::PlayerTable() : _tableResize(0), _globalFontScale(0), _columnFontScale(0), _tableFontScale(0), _curWindowSize(0), _tableTime(0), _accumulatedTime(0)
 {
 }
 
@@ -1381,7 +1381,13 @@ bool PlayerTable::ToggleSelectInfo(uint32_t id) {
 
 	bool isMe = id != 0 && id == DAMAGEMETER.GetMyID(TRUE);
 
-	SELECTED_PLAYER* selectinfo = new SELECTED_PLAYER(id, TRUE, isMe, _nextWindowIndex++, new SpecificInformation(id));
+	// The index is the ImGui window id, which keys its position, size and table
+	// column layout, so reuse the lowest free one instead of minting a new id.
+	int64_t windowIndex = 0;
+	while (std::any_of(_selectInfo.begin(), _selectInfo.end(), [windowIndex](const SELECTED_PLAYER* info) { return info->_windowIndex == windowIndex; }))
+		windowIndex++;
+
+	SELECTED_PLAYER* selectinfo = new SELECTED_PLAYER(id, TRUE, isMe, windowIndex, new SpecificInformation(id));
 	_selectInfo.push_back(selectinfo);
 
 	return selectinfo->_isSelected;

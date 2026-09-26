@@ -615,10 +615,12 @@ void SWDamageMeter::Suspend() {
 
 void SWDamageMeter::SuspendBossImmune() {
 
-	if (!isRun() || _historyMode)
+	if (_historyMode)
 		return;
 
-	Suspend();
+	// also when already paused (boss enters immune after a transition), so its 0 hits can't resume
+	if (isRun())
+		Suspend();
 	_bossImmune = true;
 }
 

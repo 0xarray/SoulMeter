@@ -57,6 +57,10 @@ static std::unordered_set<uint32_t> pauseIdList({
 	/* 21056 */
 	41111481, // Fisto P1
 
+	/* BSH Maniac */
+	31350305, 31350306, 31350307, 31350308, // Clones
+	31350117, // Tenebris P1
+
 	});
 
 // monster skill IDs that start an immune phase: suspend on cast, resume on the first hit that deals damage.
@@ -70,6 +74,17 @@ static std::unordered_set<uint32_t> pauseSkillIdList({
 	411111113, 411111133, // Rosca immune phases (70x or 75x, 40x)
 	411111121, // Rosca random immune AoE in the middle, any HP
 	411111122, // Rosca 55x stun
+
+	/* BSH Maniac */
+	313501036, // Relfenne immune until stunned by the ball, recast through it
+	313501053, // Relfenne leaves
+	313501046, 313501050, // Jeremy intro, outro (cutscene Jeremy)
+	313501066, 313501067, // Jeremy 70x/30x mech, recast through 70x
+	313501105, // Void Yorhaka during Jeremy 30x
+	313501114, // Jeremy leaves at 10x
+	313501091, 313501083, // Tenebris P1 70x mech, mid-mech cast
+	313501100, 313501098, // Tenebris P2 80x, 40x mech
+	313501073, // Tenebris end cutscene
 
 	});
 
@@ -128,6 +143,9 @@ static std::unordered_set<uint32_t> endIdList({
 
 	/* 21038 */
 	31350368, // Huff
+
+	/* BSH Maniac */
+	31350118, // Tenebris P2
 
 	});
 

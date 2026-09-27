@@ -75,6 +75,11 @@ static std::unordered_set<uint32_t> pauseSkillIdList({
 	411111121, // Rosca random immune AoE in the middle, any HP
 	411111122, // Rosca 55x stun
 
+	/* Last Standing */
+	411200411, // Fisto P1 40x, P2 50x mech
+	411200420, // Fisto clone during P1 40x
+	411200422, // Fisto P1 leaves at 10x
+
 	/* BSH Maniac */
 	313501036, // Relfenne immune until stunned by the ball, recast through it
 	313501053, // Relfenne leaves

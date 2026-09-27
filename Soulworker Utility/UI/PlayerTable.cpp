@@ -217,13 +217,29 @@ void PlayerTable::Update() {
 		// Timer accuracy picks 1-3 fraction digits; they must keep their leading
 		// zeros or 1.045s reads as "01.4".
 		int msDigits = ImClamp(DAMAGEMETER.mswideness, 1, 3);
-		unsigned int miliseconds = ((unsigned int)DAMAGEMETER.GetTime() % 1000);
-		if (msDigits == 1)
-			miliseconds /= 100;
-		else if (msDigits == 2)
-			miliseconds /= 10;
-		char milisecondsstring[4] = { 0 };
-		sprintf_s(milisecondsstring, "%0*u", msDigits, miliseconds);
+		auto formatTime = [msDigits](char* out, size_t size, uint64_t ms) {
+			unsigned int frac = (unsigned int)(ms % 1000);
+			if (msDigits == 1)
+				frac /= 100;
+			else if (msDigits == 2)
+				frac /= 10;
+			sprintf_s(out, size, "%02u:%02u.%0*u",
+				(unsigned int)(ms / (60 * 1000)), (unsigned int)(ms / 1000) % 60, msDigits, frac);
+		};
+
+		// $time/$battletimer is the clock DPS divides by: starts on the first hit and
+		// pauses. $mazetime matches the server's clear time; a saved run shows the
+		// clear time the server sent.
+		char time[32] = { 0 };
+		formatTime(time, sizeof(time), DAMAGEMETER.GetTime());
+
+		uint64_t mazeTime = DAMAGEMETER.GetMazeClockTime();
+		if (DAMAGEMETER.isHistoryMode()) {
+			HISTORY_INFO* hi = (HISTORY_INFO*)DAMAGEMETER.GetHistoryHI();
+			mazeTime = hi != nullptr ? (uint64_t)hi->_realClearTime * 100 : 0;
+		}
+		char mazeTimer[32] = { 0 };
+		formatTime(mazeTimer, sizeof(mazeTimer), mazeTime);
 
 		if (!PipeReceiverIsConnected()) {
 			// game not hooked yet - the player launches it themselves
@@ -234,22 +250,20 @@ void PlayerTable::Update() {
 			);
 		}
 		else if (*UIOPTION.GetTitleFormat()) {
-			char time[32] = { 0 };
-			sprintf_s(time, "%02u:%02u.%s",
-				(unsigned int)DAMAGEMETER.GetTime() / (60 * 1000), (unsigned int)(DAMAGEMETER.GetTime() / 1000) % 60, milisecondsstring);
-
 			std::string text = ExpandTitle(UIOPTION.GetTitleFormat(), {
 				{ "map", DAMAGEMETER.GetWorldName() },
 				{ "time", time },
+				{ "battletimer", time },
+				{ "mazetime", mazeTimer },
 				{ "version", APP_VERSION "@Rainy" },
 				{ "ping", std::to_string(DAMAGEMETER.GetPing()) },
 			});
 			sprintf_s(title, 1024, "%.990s ###DamageMeter", text.c_str());
 		}
 		else {
-			sprintf_s(title, 1024, "%s - %02d:%02d.%s [v%s_@Rainy] %s: %ums ###DamageMeter",
+			sprintf_s(title, 1024, "%s - %s [v%s_@Rainy] %s: %ums ###DamageMeter",
 				DAMAGEMETER.GetWorldName(),
-				(unsigned int)DAMAGEMETER.GetTime() / (60 * 1000), (unsigned int)(DAMAGEMETER.GetTime() / 1000) % 60, milisecondsstring,
+				time,
 				APP_VERSION,
 				LANGMANAGER.GetText("STR_MENU_PING").data(),
 				DAMAGEMETER.GetPing()

@@ -548,6 +548,9 @@ private:
 	void Restore();
 
 	Timer _timer;
+	// Follows the server's clear time: MAZE_UPDATE_STATE 1 (input allowed) to 4,
+	// never paused. The loading screen is not counted.
+	Timer _mazeClock;
 
 	std::mutex _mutex;
 
@@ -661,6 +664,27 @@ public:
 	LPVOID GetHistoryHI()
 	{
 		return _historyHI;
+	}
+
+	void StartMazeClock()
+	{
+		if (_mazeClock.GetTime() == 0)
+			_mazeClock.Run();
+	}
+
+	void StopMazeClock()
+	{
+		_mazeClock.Suspend();
+	}
+
+	void ResetMazeClock()
+	{
+		_mazeClock.Stop();
+	}
+
+	uint64_t GetMazeClockTime()
+	{
+		return _mazeClock.GetTime();
 	}
 
 	void SetRealClearTime(uint32_t t)

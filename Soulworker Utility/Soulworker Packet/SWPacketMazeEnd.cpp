@@ -12,5 +12,6 @@ void SWPacketMazeEnd::Do()
 
 	DAMAGEMETER.SetMazeState(TRUE);
 	DAMAGEMETER.Suspend();
+	DAMAGEMETER.StopMazeClock();
 	DAMAGEMETER.SetRealClearTime(pMazeEnd->_clearTime);
 }

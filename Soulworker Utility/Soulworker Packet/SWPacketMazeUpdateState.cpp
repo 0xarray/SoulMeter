@@ -10,7 +10,14 @@ SWPacketMazeUpdateState::SWPacketMazeUpdateState(SWHEADER* swheader, BYTE* data)
 void SWPacketMazeUpdateState::Do() {
 
 	SWPacketMazeUpdateStatePacket* packet = (SWPacketMazeUpdateStatePacket*)(_data + sizeof(SWHEADER));
-	
+
+	if (packet->_state == 1) {
+		if (packet->_stateID == 0x01)
+			DAMAGEMETER.StartMazeClock();
+		else if (packet->_stateID == 0x04)
+			DAMAGEMETER.StopMazeClock();
+	}
+
 	if (!UIOPTION.isSoloRankMode() || rankMap.find(DAMAGEMETER.GetWorldID()) == rankMap.end() || packet->_state != 1)
 		return;
 

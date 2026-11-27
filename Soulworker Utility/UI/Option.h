@@ -40,7 +40,13 @@ private:
 	BOOL _unlockFov;
 	BOOL _highDpi;
 
+	BOOL _relayRanking;
+	int32_t _relayRegion; // 0=Auto, 1=EN, 2=TC, 3=KR, 4=JP
+	char _relayKey[128] = { 0 };
+
 	void ShowGameTweaks();
+	void ShowRankingRelay();
+	void ApplyRelayConfig();
 
 	bool ShowTableOption();
 	bool ShowHotkeySetting();

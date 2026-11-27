@@ -348,6 +348,9 @@
     <ClInclude Include="Soulworker Packet\PipeReceiver.h">
       <Filter>SWPacket</Filter>
     </ClInclude>
+    <ClInclude Include="Soulworker Packet\RankingRelay.h">
+      <Filter>SWPacket</Filter>
+    </ClInclude>
     <ClInclude Include="Soulworker Packet\SWSPacketMySkillUsed.h">
       <Filter>SWPacket\Packet</Filter>
     </ClInclude>
@@ -570,6 +573,9 @@
       <Filter>SWPacket</Filter>
     </ClCompile>
     <ClCompile Include="Soulworker Packet\PipeReceiver.cpp">
+      <Filter>SWPacket</Filter>
+    </ClCompile>
+    <ClCompile Include="Soulworker Packet\RankingRelay.cpp">
       <Filter>SWPacket</Filter>
     </ClCompile>
     <ClCompile Include="Soulworker Packet\SWSPacketMyDodgeUsed.cpp">

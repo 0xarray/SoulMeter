@@ -12,3 +12,4 @@
   STRINGIZE(MODIFICATIONNUMBER)
 #define SOULMETER_DISCORD_INVITE "discord.gg/7ynGDqcnPJ"
 #define SOULMETER_DISCORD_URL "https://discord.gg/7ynGDqcnPJ"
+#define RANKING_RELAY_URL "https://ranking.rainy.cat/api/relay/monthly"

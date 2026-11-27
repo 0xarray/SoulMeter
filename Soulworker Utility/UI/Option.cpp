@@ -9,6 +9,7 @@
 #include ".\Buff Meter\Buff Meter.h"
 #include ".\Damage Meter\MySQLite.h"
 #include ".\Soulworker Packet\HookCommand.h"
+#include ".\Soulworker Packet\RankingRelay.h"
 #include "SWConfig.h"
 #include <shellapi.h>
 #pragma comment(lib, "shell32.lib")
@@ -18,6 +19,7 @@ UiOption::UiOption()  :
 	_is1K(0), _is1M(0), _is10K(0), _isSoloMode(0), _hideName(0), _isTopMost(true), _isUseImage(FALSE), _teamTA_LF(false), _isSoloRankMode(FALSE), _isUseSaveData(FALSE),
 	_isDontSaveUnfinishedMaze(false),
 	_unlockFps(FALSE), _fpsCap(144), _unlockFov(FALSE), _highDpi(FALSE),
+	_relayRanking(FALSE), _relayRegion(0),
 	_windowWidth(800), _refreshTime((float)0.3), _oriIsUseSaveData(FALSE)
 {
 	strcpy_s(_selectedLang, LANGMANAGER.GetCurrentLang());
@@ -340,6 +342,41 @@ void UiOption::ShowTeamTALFSelector()
 	ImGui::EndDisabled();
 }
 
+void UiOption::ApplyRelayConfig() {
+	RankingRelayConfigure(_relayRanking != FALSE, _relayRegion, _relayKey);
+}
+
+void UiOption::ShowRankingRelay() {
+	ImGui::SeparatorText("Ranking Relay (ranking.rainy.cat)");
+
+	if (ImGui::Checkbox("Share viewed monthly rankings", (bool*)&_relayRanking))
+		ApplyRelayConfig();
+	if (ImGui::IsItemHovered()) {
+		ImGui::SetTooltip(
+			"Passively relays public monthly ranking boards when you open the in-game\n"
+			"ranking window. Your own entry (name/league/record) is stripped locally\n"
+			"before upload, and no extra game packets are ever sent.");
+	}
+
+	ImGui::BeginDisabled(!_relayRanking);
+	static const char* kRegionLabels[] = { "Auto", "EN", "TC", "KR", "JP" };
+	if (ImGui::Combo("Server region##RelayRegion", &_relayRegion, kRegionLabels, IM_ARRAYSIZE(kRegionLabels)))
+		ApplyRelayConfig();
+
+	if (ImGui::InputText("Contributor key (optional)##RelayKey", _relayKey, sizeof(_relayKey), ImGuiInputTextFlags_Password))
+		ApplyRelayConfig();
+
+	std::string detected = RankingRelayGetDetectedRegion();
+	std::string status = RankingRelayGetLastStatus();
+	uint32_t sent = RankingRelayGetSentCount();
+	ImGui::TextDisabled(
+		"Detected: %s | Relayed: %u | %s",
+		detected.empty() ? "Unknown" : detected.c_str(),
+		sent,
+		status.c_str());
+	ImGui::EndDisabled();
+}
+
 void UiOption::ShowFeatures()
 {
 	ImGui::SeparatorText(LANGMANAGER.GetText("STR_OPTION_SECTION_UNITS").data());
@@ -373,6 +410,7 @@ void UiOption::ShowFeatures()
 	if (ImGui::IsItemHovered())
 		ImGui::SetTooltip("%s", LANGMANAGER.GetText("STR_OPTION_LOG_BOSS_SKILLS_DESC").data());
 	ShowTeamTALFSelector();
+	ShowRankingRelay();
 }
 
 void UiOption::ShowDiscord()
@@ -499,6 +537,7 @@ void UiOption::Init() {
 	// Queued rather than delivered: the hook connects later, and reconnecting
 	// replays whatever was last pushed.
 	ApplyGameTweaks();
+	ApplyRelayConfig();
 }
 
 bool UiOption::GetOption() {
@@ -652,6 +691,20 @@ bool UiOption::GetOption() {
 	attr = ele->FindAttribute("HighDpi");
 	if (attr != nullptr)
 		attr->QueryIntValue(&_highDpi);
+
+	attr = ele->FindAttribute("RelayRanking");
+	if (attr != nullptr)
+		attr->QueryIntValue(&_relayRanking);
+
+	attr = ele->FindAttribute("RelayRegion");
+	if (attr != nullptr) {
+		attr->QueryIntValue(&_relayRegion);
+		if (_relayRegion < 0 || _relayRegion > 4)
+			_relayRegion = 0;
+	}
+
+	if (const char* relayKey = ele->Attribute("RelayKey"))
+		strcpy_s(_relayKey, relayKey);
 
 #if DEBUG_READ_XML == 1
 	LogInstance.WriteLog("Read 1M = %d", _is1M);
@@ -855,6 +908,9 @@ bool UiOption::SaveOption(bool skipWarning) {
 	option->SetAttribute("WinPosX", (float)rect.left / THEME.GetDpiScale());
 	option->SetAttribute("WinPosY", (float)rect.top / THEME.GetDpiScale());
 	option->SetAttribute("HighDpi", _highDpi);
+	option->SetAttribute("RelayRanking", _relayRanking);
+	option->SetAttribute("RelayRegion", _relayRegion);
+	option->SetAttribute("RelayKey", _relayKey);
 
 	// Older builds need every one of these, in this order, or they reset
 	// all options; the <Theme> element below is what this build reads.

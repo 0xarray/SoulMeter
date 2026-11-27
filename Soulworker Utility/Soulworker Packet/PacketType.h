@@ -58,6 +58,9 @@
 enum RecvOPcode {
 	HEARTBEAT = 0x0106,
 
+	/* 0x02 Login / Server Select */
+	SERVER_SELECT_RES = 0x0211,
+
 	/* 0x03 */
 	// Login enters the first world with this instead of WORLDCHANGE; same body.
 	SELECT_CHARACTER = 0x0314,
@@ -116,6 +119,10 @@ enum RecvOPcode {
 	/* 0x2e */
 	BIG_PARTY = 0x2e09,
 
+	/* 0x44 Monthly Ranking */
+	MONTHLY_RANKING_CURRENT = 0x4402,
+	MONTHLY_RANKING_LAST = 0x4407,
+
 	/* VP */
 	SQUAD = 0x1261
 };
@@ -124,6 +131,9 @@ enum class SendOPCode
 {
 	/* 0x01 */
 	HEARTBEAT = 0x0106,
+
+	/* 0x02 */
+	SERVER_SELECT = 0x0205,
 
 	/* 0x06 */
 	DODGE_USE = 0x0606,

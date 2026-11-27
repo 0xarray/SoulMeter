@@ -232,6 +232,7 @@
     <ClInclude Include="Soulworker Packet\HookCommand.h" />
     <ClInclude Include="Soulworker Packet\Injector.h" />
     <ClInclude Include="Soulworker Packet\PipeReceiver.h" />
+    <ClInclude Include="Soulworker Packet\RankingRelay.h" />
     <ClInclude Include="SWConfig.h" />
     <ClInclude Include="Third Party\imgui\backends\imgui_impl_dx11.h" />
     <ClInclude Include="Third Party\imgui\backends\imgui_impl_win32.h" />
@@ -310,6 +311,7 @@
     <ClCompile Include="Soulworker Packet\HookCommand.cpp" />
     <ClCompile Include="Soulworker Packet\Injector.cpp" />
     <ClCompile Include="Soulworker Packet\PipeReceiver.cpp" />
+    <ClCompile Include="Soulworker Packet\RankingRelay.cpp" />
     <ClCompile Include="Third Party\imgui\backends\imgui_impl_dx11.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>

@@ -4,6 +4,7 @@
 #include ".\Soulworker Packet\PipeReceiver.h"
 #include ".\Soulworker Packet\Injector.h"
 #include ".\Soulworker Packet\HookCommand.h"
+#include ".\Soulworker Packet\RankingRelay.h"
 
 SWHEADER* SWPacketMaker::GetSWHeader(std::vector<unsigned char>& packet) {
 
@@ -40,6 +41,9 @@ bool SWPacketMaker::Init() {
 	if (cmdErr != ERROR_SUCCESS)
 		LogInstance.WriteLog("Hook command channel init failed: %lu", cmdErr);
 
+	// Passive ranking board relay worker.
+	RankingRelayStart();
+
 	return ERROR_SUCCESS;
 }
 
@@ -57,6 +61,22 @@ void SWPacketMaker::CreateSWPacket(std::vector<unsigned char>& packet) {
 	switch (swheader->_const_value01) {
 	case 1: // recv
 		switch (op) {
+		case RecvOPcode::SERVER_SELECT_RES:
+		case RecvOPcode::MONTHLY_RANKING_CURRENT:
+		case RecvOPcode::MONTHLY_RANKING_LAST: {
+			const size_t pad = swheader->unk01;
+			const size_t hdr = sizeof(SWHEADER) + pad;
+			const size_t total = swheader->_size;
+			if (total <= packet.size() && total >= hdr) {
+				const uint8_t* payload = data + hdr;
+				const size_t payloadLen = total - hdr;
+				if (op == RecvOPcode::SERVER_SELECT_RES)
+					RankingRelayObserveServerSelectRecv(swheader->_magic, payload, payloadLen);
+				else
+					RankingRelayOnMonthlyPacket(swheader->_magic, (uint8_t)(op & 0xFF), payload, payloadLen);
+			}
+			break;
+		}
 		case RecvOPcode::STATCHANGE:			swpacket = new SWPacketStatChange(swheader, data); break;
 		case RecvOPcode::DEAD:					swpacket = new SWPacketDead(swheader, data); break;
 		case RecvOPcode::CHARACTER_UPDATE_SPECIAL_OPTION_LIST:
@@ -86,6 +106,14 @@ void SWPacketMaker::CreateSWPacket(std::vector<unsigned char>& packet) {
 		break;
 	case 2: // send
 		switch ((SendOPCode)op) {
+		case SendOPCode::SERVER_SELECT: {
+			const size_t pad = swheader->unk01;
+			const size_t hdr = sizeof(SWHEADER) + pad;
+			const size_t total = swheader->_size;
+			if (total <= packet.size() && total >= hdr)
+				RankingRelayObserveServerSelectSend(swheader->_magic, data + hdr, total - hdr);
+			break;
+		}
 		case SendOPCode::DODGE_USE:	swpacket = new SWSPacketMyDodgeUsed(swheader, data); break;
 		case SendOPCode::SKILL_USE:	swpacket = new SWSPacketMySkillUsed(swheader, data); break;
 		}

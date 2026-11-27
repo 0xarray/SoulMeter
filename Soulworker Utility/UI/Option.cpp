@@ -343,7 +343,7 @@ void UiOption::ShowTeamTALFSelector()
 }
 
 void UiOption::ApplyRelayConfig() {
-	RankingRelayConfigure(_relayRanking != FALSE, _relayRegion, _relayKey);
+	RankingRelayConfigure(_relayRanking != FALSE, _relayRegion);
 }
 
 void UiOption::ShowRankingRelay() {
@@ -361,9 +361,6 @@ void UiOption::ShowRankingRelay() {
 	ImGui::BeginDisabled(!_relayRanking);
 	static const char* kRegionLabels[] = { "Auto", "EN", "TC", "KR", "JP" };
 	if (ImGui::Combo("Server region##RelayRegion", &_relayRegion, kRegionLabels, IM_ARRAYSIZE(kRegionLabels)))
-		ApplyRelayConfig();
-
-	if (ImGui::InputText("Contributor key (optional)##RelayKey", _relayKey, sizeof(_relayKey), ImGuiInputTextFlags_Password))
 		ApplyRelayConfig();
 
 	std::string detected = RankingRelayGetDetectedRegion();
@@ -703,9 +700,6 @@ bool UiOption::GetOption() {
 			_relayRegion = 0;
 	}
 
-	if (const char* relayKey = ele->Attribute("RelayKey"))
-		strcpy_s(_relayKey, relayKey);
-
 #if DEBUG_READ_XML == 1
 	LogInstance.WriteLog("Read 1M = %d", _is1M);
 #endif
@@ -910,7 +904,6 @@ bool UiOption::SaveOption(bool skipWarning) {
 	option->SetAttribute("HighDpi", _highDpi);
 	option->SetAttribute("RelayRanking", _relayRanking);
 	option->SetAttribute("RelayRegion", _relayRegion);
-	option->SetAttribute("RelayKey", _relayKey);
 
 	// Older builds need every one of these, in this order, or they reset
 	// all options; the <Theme> element below is what this build reads.

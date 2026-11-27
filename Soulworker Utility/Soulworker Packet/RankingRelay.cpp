@@ -72,7 +72,6 @@ volatile LONG g_running = 0;
 
 bool g_enabled = false;
 int g_regionOverride = 0; // 0=Auto, 1=EN, 2=TC, 3=KR, 4=JP
-std::string g_contributorKey;
 std::string g_detectedRegion;
 std::string g_lastStatus = "Idle";
 uint32_t g_sentCount = 0;
@@ -282,7 +281,7 @@ std::string ResolveRegionLocked(uint16_t magic) {
     return "";
 }
 
-bool PostRelayJob(const RelayJob& job, const std::string& contributorKey, std::string& outStatus) {
+bool PostRelayJob(const RelayJob& job, std::string& outStatus) {
     // Parse RANKING_RELAY_URL via WinHttpCrackUrl.
     std::wstring wurl;
     {
@@ -349,14 +348,6 @@ bool PostRelayJob(const RelayJob& job, const std::string& contributorKey, std::s
             WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES, flags);
         if (hReq) {
             std::wstring headers = L"Content-Type: application/json\r\n";
-            if (!contributorKey.empty()) {
-                int kn = MultiByteToWideChar(CP_UTF8, 0, contributorKey.c_str(), -1, nullptr, 0);
-                if (kn > 1) {
-                    std::wstring wkey((size_t)kn - 1, L'\0');
-                    MultiByteToWideChar(CP_UTF8, 0, contributorKey.c_str(), -1, wkey.data(), kn);
-                    headers += L"X-Relay-Key: " + wkey + L"\r\n";
-                }
-            }
 
             if (WinHttpSendRequest(
                     hReq, headers.c_str(), (DWORD)headers.size(),
@@ -404,18 +395,16 @@ DWORD WINAPI RelayWorkerThread(LPVOID) {
 
         for (;;) {
             RelayJob job;
-            std::string key;
             {
                 std::lock_guard<std::mutex> lk(g_mu);
                 if (g_jobQueue.empty())
                     break;
                 job = std::move(g_jobQueue.front());
                 g_jobQueue.pop_front();
-                key = g_contributorKey;
             }
 
             std::string status;
-            bool ok = PostRelayJob(job, key, status);
+            bool ok = PostRelayJob(job, status);
             {
                 std::lock_guard<std::mutex> lk(g_mu);
                 if (ok)
@@ -454,11 +443,10 @@ void RankingRelayStop() {
     }
 }
 
-void RankingRelayConfigure(bool enabled, int regionOverride, const char* contributorKey) {
+void RankingRelayConfigure(bool enabled, int regionOverride) {
     std::lock_guard<std::mutex> lk(g_mu);
     g_enabled = enabled;
     g_regionOverride = regionOverride;
-    g_contributorKey = contributorKey ? contributorKey : "";
 }
 
 void RankingRelayObserveServerSelectSend(uint16_t magic, const uint8_t* payload, size_t len) {

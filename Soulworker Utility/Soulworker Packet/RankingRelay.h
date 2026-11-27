@@ -17,7 +17,7 @@ void RankingRelayStop();
 
 // Configuration pushed from UiOption.
 // regionOverride: 0 = Auto, 1 = EN, 2 = TC, 3 = KR, 4 = JP.
-void RankingRelayConfigure(bool enabled, int regionOverride, const char* contributorKey);
+void RankingRelayConfigure(bool enabled, int regionOverride);
 
 // Passive observers called from SWPacketMaker (never block).
 void RankingRelayObserveServerSelectSend(uint16_t magic, const uint8_t* payload, size_t len);
